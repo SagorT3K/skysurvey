@@ -19,10 +19,14 @@ export default async function RewardsPage() {
   const config = await getConfig();
   const wallet = await getWalletSummary(user.id);
 
-  const [ledger, redeems] = await Promise.all([
+  const [ledger, allRedeems] = await Promise.all([
     prisma.coinTransaction.findMany({ where: { userId: user.id }, orderBy: { createdAt: "desc" }, take: 25 }),
-    prisma.redeemRequest.findMany({ where: { userId: user.id }, orderBy: { createdAt: "desc" }, take: 5 }),
+    prisma.redeemRequest.findMany({ where: { userId: user.id }, orderBy: { createdAt: "desc" } }),
   ]);
+
+  // Number requests per user (their 1st request is #1), oldest first.
+  const seqOf = new Map([...allRedeems].reverse().map((r, i) => [r.id, i + 1]));
+  const redeems = allRedeems.slice(0, 5);
 
   return (
     <main className="flex-1 bg-cream">
@@ -64,7 +68,7 @@ export default async function RewardsPage() {
                     <tr key={r.id} className="border-b border-coffee-100 last:border-0">
                       <td className="px-5 py-3 font-medium text-stone-700">
                         <span className="inline-flex items-center gap-2">
-                          #{r.id} · {r.coins} coins
+                          #{seqOf.get(r.id)} · {r.coins} coins
                           <ArrowRight size={14} className="text-coffee-400" aria-hidden="true" />
                           ${(r.amountCents / 100).toFixed(2)}
                         </span>

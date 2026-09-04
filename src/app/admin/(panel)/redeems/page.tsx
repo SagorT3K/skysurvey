@@ -12,6 +12,19 @@ export default async function AdminRedeemsPage() {
     include: { user: true },
   });
 
+  // Per-user serial (each user's 1st request is #1) — shown alongside the global id.
+  const allIds = await prisma.redeemRequest.findMany({
+    orderBy: [{ userId: "asc" }, { id: "asc" }],
+    select: { id: true, userId: true },
+  });
+  const seqOf = new Map<number, number>();
+  const perUser = new Map<number, number>();
+  for (const r of allIds) {
+    const n = (perUser.get(r.userId) ?? 0) + 1;
+    perUser.set(r.userId, n);
+    seqOf.set(r.id, n);
+  }
+
   const badge: Record<string, string> = {
     pending: "bg-amber-100 text-amber-700",
     approved: "bg-sky-100 text-sky-700",
@@ -42,7 +55,7 @@ export default async function AdminRedeemsPage() {
           >
             <div>
               <p className="flex items-center gap-2 font-semibold text-slate-900">
-                #{r.id} · {r.coins.toLocaleString()} coins
+                #{seqOf.get(r.id)} · {r.coins.toLocaleString()} coins
                 <ArrowRight size={15} className="text-slate-400" aria-hidden="true" />$
                 {(r.amountCents / 100).toFixed(2)}
               </p>
@@ -50,7 +63,8 @@ export default async function AdminRedeemsPage() {
                 <a href={`/admin/users/${r.userId}`} className="text-sky-600 hover:underline">
                   {r.user.email}
                 </a>{" "}
-                · {methodLabel(r.method)} → {r.destination} · {new Date(r.createdAt).toLocaleString()}
+                · {methodLabel(r.method)} → {r.destination} · request id {r.id} ·{" "}
+                {new Date(r.createdAt).toLocaleString()}
               </p>
               {r.adminNote && <p className="mt-0.5 text-xs text-slate-400">Note: {r.adminNote}</p>}
             </div>

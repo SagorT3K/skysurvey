@@ -64,6 +64,10 @@ export async function POST(req: Request) {
     );
   }
 
+  // Per-user serial for display: the user's 1st request is #1 regardless of how
+  // many requests other users have made.
+  const seq = (await prisma.redeemRequest.count({ where: { userId: user.id } })) + 1;
+
   const redeem = await prisma.redeemRequest.create({
     data: { userId: user.id, coins, amountCents, destination, method },
   });
@@ -73,18 +77,18 @@ export async function POST(req: Request) {
     userId: user.id,
     type: "redeem",
     coins: -coins,
-    description: `Redeem request #${redeem.id}`,
+    description: `Redeem request #${seq}`,
   });
 
   await prisma.activityLog.create({
     data: {
       userId: user.id,
       event: "redeem_request",
-      detail: `redeem=${redeem.id} method=${method} coins=${coins} to=${destination}`,
+      detail: `redeem=${redeem.id} seq=${seq} method=${method} coins=${coins} to=${destination}`,
       ip: clientIp(req),
       userAgent: userAgent(req),
     },
   });
 
-  return NextResponse.json({ ok: true, redeemId: redeem.id });
+  return NextResponse.json({ ok: true, redeemId: redeem.id, seq });
 }

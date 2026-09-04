@@ -62,7 +62,7 @@ export default function RedeemForm({
     }
     setMsg({
       ok: true,
-      text: `Request #${data.redeemId} submitted — ${methodLabel(method)}, $${(amountCents / 100).toFixed(2)}. Admin will review and pay.`,
+      text: `Request #${data.seq} submitted — ${methodLabel(method)}, $${(amountCents / 100).toFixed(2)}. Admin will review and pay.`,
     });
     setMethod(null);
     setAmountCents(null);
