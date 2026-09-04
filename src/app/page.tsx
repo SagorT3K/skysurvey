@@ -15,7 +15,7 @@ import {
   Users,
   Wallet,
 } from "lucide-react";
-import SiteFooter from "@/components/SiteFooter";
+import AppFooter from "@/components/AppFooter";
 import CookieConsent from "@/components/CookieConsent";
 import Logo from "@/components/Logo";
 
@@ -343,7 +343,7 @@ export default function Home() {
         </Link>
       </section>
 
-      <SiteFooter />
+      <AppFooter />
       <CookieConsent />
     </main>
   );

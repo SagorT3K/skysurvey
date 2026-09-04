@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import SiteFooter from "@/components/SiteFooter";
+import AppFooter from "@/components/AppFooter";
 import Logo from "@/components/Logo";
 
 export default function LegalPage({
@@ -31,7 +31,7 @@ export default function LegalPage({
         <p className="mt-2 text-sm text-stone-500">Last updated: {updated}</p>
         <div className="prose-coffee mt-10 space-y-8">{children}</div>
       </article>
-      <SiteFooter />
+      <AppFooter />
     </main>
   );
 }
