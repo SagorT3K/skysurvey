@@ -24,10 +24,36 @@ so it cannot be used with "output: export" config.
 
 Deploy to a host that runs Node instead:
 
-| Host | Database | Extra services needed |
+| Host | Database | Cost |
 | --- | --- | --- |
-| **Fly.io** (configured in this repo) | The SQLite file, on a Fly volume | None |
-| Vercel | Hosted Postgres (Neon, Supabase) | A separate database |
+| **Any VPS** (`docker-compose.yml`) | The SQLite file, in a Docker volume | Paid, or free on Oracle Cloud Always Free |
+| **Fly.io** (`fly.toml`) | The SQLite file, on a Fly volume | Pay as you go |
+| Vercel | Hosted Postgres (Neon free tier) | Free, but Hobby is non-commercial use only |
+
+Render's free plan cannot host this app: free services get no persistent disk, so
+SQLite is impossible, and free Render Postgres databases are deleted 30 days
+after creation.
+
+### Deploying to a VPS
+
+The most capable option: a real server, no serverless limits, SQLite works as-is.
+`docker-compose.yml` runs the app plus Caddy, which fetches a Let's Encrypt
+certificate automatically once `DOMAIN` points at the server.
+
+```bash
+# on the server, with Docker installed
+git clone https://github.com/SagorT3K/skysurvey.git && cd skysurvey
+cp .env.example .env          # set JWT_SECRET, ADMIN_PASSWORD, DOMAIN
+docker compose up -d --build
+docker compose logs -f app
+```
+
+The database lives in the `skysurvey-data` volume, so `docker compose down` and
+rebuilds do not lose it. Back it up with:
+
+```bash
+docker compose exec app sh -c 'cat /data/skysurvey.db' > backup-$(date +%F).db
+```
 
 ### Deploying to Fly.io
 

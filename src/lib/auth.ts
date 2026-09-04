@@ -55,9 +55,30 @@ export async function requireAdmin() {
   return user;
 }
 
+/**
+ * The caller's IP, as reported by the proxy in front of us.
+ *
+ * Order matters for security. Fraud screening counts accounts and attempts per
+ * IP, so a spoofable value defeats it: any client can send its own
+ * X-Forwarded-For and proxies *append* to that header rather than replacing it,
+ * which makes the first entry attacker-controlled. So we prefer headers only a
+ * trusted proxy can set, and fall back to the LAST X-Forwarded-For entry — the
+ * one written by the hop closest to us.
+ */
 export function clientIp(req: Request) {
-  const fwd = req.headers.get("x-forwarded-for");
-  return (fwd ? fwd.split(",")[0].trim() : req.headers.get("x-real-ip")) || "local";
+  const flyClientIp = req.headers.get("fly-client-ip");
+  if (flyClientIp) return flyClientIp.trim();
+
+  const realIp = req.headers.get("x-real-ip");
+  if (realIp) return realIp.trim();
+
+  const forwarded = req.headers.get("x-forwarded-for");
+  if (forwarded) {
+    const hops = forwarded.split(",").map((h) => h.trim()).filter(Boolean);
+    if (hops.length > 0) return hops[hops.length - 1];
+  }
+
+  return "local";
 }
 
 export function userAgent(req: Request) {

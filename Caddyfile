@@ -1,0 +1,12 @@
+# Caddy fetches and renews a Let's Encrypt certificate automatically once DOMAIN
+# is a real hostname pointing at this server. With the default ":80" it serves
+# plain HTTP, which is fine for testing but not for a live router integration.
+{$DOMAIN} {
+	encode zstd gzip
+
+	# The app needs the caller's real IP: fraud screening counts accounts per IP,
+	# and without this every request would look like it came from the proxy.
+	reverse_proxy app:3000 {
+		header_up X-Real-IP {remote_host}
+	}
+}

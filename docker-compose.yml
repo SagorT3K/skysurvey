@@ -1,0 +1,54 @@
+# Self-hosting on a VPS.
+#
+# The same Dockerfile Fly.io uses, plus Caddy in front for automatic HTTPS.
+# SQLite lives in the named volume `skysurvey-data`, so it survives rebuilds.
+#
+#   cp .env.example .env    # set JWT_SECRET, ADMIN_PASSWORD, DOMAIN
+#   docker compose up -d --build
+#
+# Set DOMAIN to a hostname pointed at this server and Caddy fetches a Let's
+# Encrypt certificate on first boot. Leave it as ":80" to serve plain HTTP while
+# testing — a survey router will require real HTTPS before it approves you.
+
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    expose:
+      - "3000"
+    volumes:
+      - skysurvey-data:/data
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: file:/data/skysurvey.db
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET in .env}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@skysurvey.com}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?set ADMIN_PASSWORD in .env}
+      # Router credentials, if you already have them.
+      PROVIDERS: ${PROVIDERS:-}
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      - app
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN:-:80}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+
+volumes:
+  skysurvey-data:
+  caddy-data:
+  caddy-config:
