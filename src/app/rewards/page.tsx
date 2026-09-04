@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/auth";
 import { getConfig } from "@/lib/config";
 import { getWalletSummary } from "@/lib/ledger";
+import { methodLabel } from "@/lib/redeem";
 import RedeemForm from "@/components/RedeemForm";
 import LogoutButton from "@/components/LogoutButton";
 import Logo from "@/components/Logo";
@@ -66,6 +67,9 @@ export default async function RewardsPage() {
                           #{r.id} · {r.coins} coins
                           <ArrowRight size={14} className="text-coffee-400" aria-hidden="true" />
                           ${(r.amountCents / 100).toFixed(2)}
+                        </span>
+                        <span className="block text-xs font-normal text-stone-400">
+                          {methodLabel(r.method)}
                         </span>
                       </td>
                       <td className="px-5 py-3 text-stone-500">{r.destination}</td>
@@ -140,6 +144,7 @@ export default async function RewardsPage() {
             <RedeemForm
               withdrawable={wallet.withdrawable}
               minCoins={config.min_cashout_coins}
+              coinRateCents={config.coin_rate_cents}
               defaultEmail={user.paypalEmail || user.email}
             />
           </div>

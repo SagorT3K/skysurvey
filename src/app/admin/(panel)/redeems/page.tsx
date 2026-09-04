@@ -1,5 +1,6 @@
 import { ArrowRight } from "lucide-react";
 import { prisma } from "@/lib/prisma";
+import { methodLabel } from "@/lib/redeem";
 import RedeemActions from "@/components/admin/RedeemActions";
 
 export const dynamic = "force-dynamic";
@@ -22,8 +23,8 @@ export default async function AdminRedeemsPage() {
     <div>
       <h1 className="text-2xl font-bold text-slate-900">Redeem requests</h1>
       <p className="mt-1 text-sm text-slate-500">
-        Approve the request, send the payment manually via PayPal, then mark it as Paid. Rejected
-        requests refund the coins automatically.
+        Approve the request, send the payment (PayPal / gift card / crypto), then mark it as Paid.
+        Rejected requests refund the coins automatically.
       </p>
 
       <div className="mt-5 space-y-3">
@@ -42,7 +43,7 @@ export default async function AdminRedeemsPage() {
                 <a href={`/admin/users/${r.userId}`} className="text-sky-600 hover:underline">
                   {r.user.email}
                 </a>{" "}
-                · PayPal: {r.destination} · {new Date(r.createdAt).toLocaleString()}
+                · {methodLabel(r.method)} → {r.destination} · {new Date(r.createdAt).toLocaleString()}
               </p>
               {r.adminNote && <p className="mt-0.5 text-xs text-slate-400">Note: {r.adminNote}</p>}
             </div>

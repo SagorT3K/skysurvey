@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getSessionUser, clientIp, userAgent } from "@/lib/auth";
 import { getConfig } from "@/lib/config";
 import { getWalletSummary, creditCoins } from "@/lib/ledger";
+import { REDEEM_METHOD_IDS, REDEEM_AMOUNT_CENTS } from "@/lib/redeem";
 
 export async function POST(req: Request) {
   const user = await getSessionUser();
@@ -18,18 +19,41 @@ export async function POST(req: Request) {
   }
 
   const body = await req.json().catch(() => null);
-  const coins = Number(body?.coins);
-  const destination = String(body?.destination || "").trim();
-  if (!coins || coins <= 0 || !destination) {
-    return NextResponse.json({ error: "Coin amount and payout email are required" }, { status: 400 });
+  const amountCents = Number(body?.amountCents);
+  const method = String(body?.method || "").trim();
+  const rawDestination = String(body?.destination || "").trim();
+
+  if (!REDEEM_AMOUNT_CENTS.includes(amountCents as (typeof REDEEM_AMOUNT_CENTS)[number])) {
+    return NextResponse.json({ error: "Choose a $5, $10 or $15 payout" }, { status: 400 });
+  }
+  if (!REDEEM_METHOD_IDS.has(method)) {
+    return NextResponse.json({ error: "Choose a payout method" }, { status: 400 });
   }
 
   const config = await getConfig();
-  if (coins < config.min_cashout_coins) {
+  const coins = amountCents / config.coin_rate_cents;
+  if (!Number.isInteger(coins) || coins < config.min_cashout_coins) {
     return NextResponse.json(
       { error: `Minimum cashout is ${config.min_cashout_coins} coins` },
       { status: 400 },
     );
+  }
+
+  // PayPal pays to the email the user provides; gift card codes go to the email on
+  // the account; crypto pays to the wallet address the user entered.
+  let destination: string;
+  if (method === "paypal") {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(rawDestination)) {
+      return NextResponse.json({ error: "A valid PayPal email is required" }, { status: 400 });
+    }
+    destination = rawDestination;
+  } else if (method.startsWith("giftcard_")) {
+    destination = user.paypalEmail || user.email;
+  } else {
+    if (rawDestination.length < 20) {
+      return NextResponse.json({ error: "Enter a valid wallet address" }, { status: 400 });
+    }
+    destination = rawDestination;
   }
 
   const wallet = await getWalletSummary(user.id);
@@ -40,10 +64,8 @@ export async function POST(req: Request) {
     );
   }
 
-  const amountCents = coins * config.coin_rate_cents;
-
   const redeem = await prisma.redeemRequest.create({
-    data: { userId: user.id, coins, amountCents, destination, method: "paypal" },
+    data: { userId: user.id, coins, amountCents, destination, method },
   });
 
   // Deduct immediately so the same coins cannot be redeemed twice.
@@ -58,7 +80,7 @@ export async function POST(req: Request) {
     data: {
       userId: user.id,
       event: "redeem_request",
-      detail: `redeem=${redeem.id} coins=${coins} to=${destination}`,
+      detail: `redeem=${redeem.id} method=${method} coins=${coins} to=${destination}`,
       ip: clientIp(req),
       userAgent: userAgent(req),
     },
