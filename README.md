@@ -108,20 +108,43 @@ move to Postgres first.
 
 Vercel is not a static host either — it runs the full app — but its filesystem is
 read-only, so SQLite is out and a hosted Postgres is required. The datasource
-provider is patched at build time from `DATABASE_PROVIDER`, because Prisma does
-not accept `env()` for it; the schema itself validates against Postgres unchanged.
+block is patched at build time from `DATABASE_PROVIDER`, because Prisma does not
+accept `env()` for the provider; the schema itself validates against Postgres
+unchanged, and no query in `src/` uses raw SQL.
 
-1. Create a free Postgres database (Neon or Supabase) and copy its connection string.
-2. Import this repository on Vercel; leave the build command alone, since
-   `npm run build` already runs `prisma generate`.
-3. Set `DATABASE_PROVIDER=postgresql`, `DATABASE_URL=<connection string>` and a
-   fresh `JWT_SECRET`.
-4. Create the tables and demo rows once, from your machine:
+1. Create a Neon project (its free plan is permanent and needs no card) and copy
+   **both** connection strings. They differ by `-pooler` in the hostname:
+   the pooled one is for the app, because serverless functions open many
+   short-lived connections; the direct one is for schema operations.
+2. Create the tables and demo rows once, from your machine:
 
    ```bash
-   DATABASE_PROVIDER=postgresql DATABASE_URL="<connection string>" npm run db:push
-   DATABASE_PROVIDER=postgresql DATABASE_URL="<connection string>" npm run db:seed
+   DATABASE_PROVIDER=postgresql \
+   DATABASE_URL="<pooled>" \
+   DATABASE_URL_UNPOOLED="<direct>" \
+   npm run db:push
+
+   DATABASE_PROVIDER=postgresql DATABASE_URL="<pooled>" \
+   ADMIN_EMAIL="you@example.com" ADMIN_PASSWORD="a-strong-password" \
+   npm run db:seed
    ```
+
+3. Import this repository on Vercel; leave the build command alone, since
+   `npm run build` already runs `prisma generate`. Set these variables:
+
+   | Variable | Value |
+   | --- | --- |
+   | `DATABASE_PROVIDER` | `postgresql` |
+   | `DATABASE_URL` | the **pooled** connection string |
+   | `DATABASE_URL_UNPOOLED` | the **direct** connection string |
+   | `JWT_SECRET` | a long random string, not the local one |
+
+Append `connect_timeout=15` to both connection strings. Neon's free compute
+scales to zero and takes a few seconds to wake, which otherwise surfaces as a
+`P1001` "can't reach database server" error on the first request.
+
+Note that Vercel's Hobby plan is documented as non-commercial, personal use only,
+so it suits testing rather than a site that earns router revenue.
 
 Local development is unaffected either way: `DATABASE_PROVIDER` defaults to
 `sqlite`, so the committed schema and `prisma/dev.db` keep working.
