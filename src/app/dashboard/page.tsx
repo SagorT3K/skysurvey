@@ -32,11 +32,9 @@ export default async function DashboardPage() {
   const wallet = await getWalletSummary(user.id);
 
   const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-  const [surveys, completed, recent, lastDaily, leaderboard, totalEarners] = await Promise.all([
+  const [allSurveys, completed, recent, lastDaily, leaderboard, totalEarners] = await Promise.all([
     prisma.survey.findMany({
       where: { isActive: true, OR: [{ country: user.country }, { country: "ALL" }] },
-      orderBy: { cpiCents: "desc" },
-      take: 12,
     }),
     prisma.surveyAttempt.findMany({ where: { userId: user.id, status: "completed" }, select: { surveyId: true } }),
     prisma.coinTransaction.findMany({ where: { userId: user.id }, orderBy: { createdAt: "desc" }, take: 8 }),
@@ -53,17 +51,26 @@ export default async function DashboardPage() {
     prisma.user.count({ where: { role: "user" } }),
   ]);
 
+  // Rotate the board: only surveys this user hasn't completed, shuffled each load
+  // so every reload surfaces a fresh mix from the pool.
+  const doneIds = new Set(completed.map((a) => a.surveyId));
+  const fresh = allSurveys.filter((s) => !doneIds.has(s.id));
+  for (let i = fresh.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [fresh[i], fresh[j]] = [fresh[j], fresh[i]];
+  }
+  const surveys = fresh.slice(0, 12);
+
   const topIds = leaderboard.map((l) => l.userId);
   const topUsers = await prisma.user.findMany({ where: { id: { in: topIds } }, select: { id: true, username: true } });
   const nameOf = (id: number) => topUsers.find((u) => u.id === id)?.username || "Member";
-  const doneIds = new Set(completed.map((a) => a.surveyId));
   const cards: SurveyCardData[] = surveys.map((s) => ({
     id: s.id,
     title: s.title,
     category: s.category,
     loiMinutes: s.loiMinutes,
     coins: Math.floor((s.cpiCents * config.reward_share_percent) / 100 / config.coin_rate_cents),
-    done: doneIds.has(s.id),
+    done: false, // completed surveys are filtered out of the rotation entirely
   }));
 
   return (
