@@ -1,5 +1,11 @@
 import Link from "next/link";
-import { Coins, LayoutDashboard, Trophy, UserRound } from "lucide-react";
+import {
+  Coins,
+  Gauge,
+  LayoutDashboard,
+  Trophy,
+  UserRound,
+} from "lucide-react";
 import Logo from "@/components/Logo";
 import LogoutButton from "@/components/LogoutButton";
 
@@ -7,7 +13,7 @@ export default function AppHeader({
   active,
   balance,
 }: {
-  active: "surveys" | "rewards" | "profile" | "leaderboard";
+  active: "surveys" | "rewards" | "profile" | "leaderboard" | "mylevel";
   balance: number;
 }) {
   const item =
@@ -57,6 +63,20 @@ export default function AppHeader({
             <span className="flex items-center gap-1.5">
               <Trophy size={15} aria-hidden="true" />
               Leaderboard
+            </span>
+          </Link>
+          <Link
+            href="/my-level"
+            aria-current={active === "mylevel" ? "page" : undefined}
+            className={`${item} ${
+              active === "mylevel"
+                ? "bg-coffee-100 font-semibold text-coffee-900"
+                : "text-stone-600 hover:text-coffee-900"
+            }`}
+          >
+            <span className="flex items-center gap-1.5">
+              <Gauge size={15} aria-hidden="true" />
+              My level
             </span>
           </Link>
           <Link

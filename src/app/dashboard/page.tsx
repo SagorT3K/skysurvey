@@ -142,12 +142,12 @@ export default async function DashboardPage() {
                 your next payout.
               </p>
               {/* Level progress — higher level means a bigger survey share */}
-              <Link href="/profile#levels" className="mt-4 block max-w-xs group/prog">
+              <Link href="/my-level" className="mt-4 block max-w-xs group/prog">
                 <div className="flex justify-between text-xs font-medium text-coffee-200">
                   <span>Level {levelProgress(user.score).level}</span>
                   <span className="underline decoration-coffee-400 underline-offset-2 group-hover/prog:text-white">
                     {levelProgress(user.score).needed - levelProgress(user.score).into} pts to
-                    Level {levelProgress(user.score).level + 1} · how levels work
+                    Level {levelProgress(user.score).level + 1} · my level
                   </span>
                 </div>
                 <div className="mt-1 h-2 overflow-hidden rounded-full bg-coffee-950/40">

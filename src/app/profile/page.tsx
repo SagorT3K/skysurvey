@@ -8,7 +8,6 @@ import { getConfig } from "@/lib/config";
 import AppHeader from "@/components/AppHeader";
 import AppFooter from "@/components/AppFooter";
 import ProfileForm from "@/components/ProfileForm";
-import LevelsExplainer from "@/components/LevelsExplainer";
 import CopyReferralLink from "@/components/CopyReferralLink";
 
 export const dynamic = "force-dynamic";
@@ -121,32 +120,6 @@ export default async function ProfilePage() {
           </p>
         </div>
 
-        {/* Invite friends */}
-        <div className="mt-6 rounded-2xl border border-coffee-200 bg-white p-6 shadow-sm">
-          <h2 className="flex items-center gap-2 text-lg font-bold text-coffee-900">
-            <Users size={20} className="text-coffee-600" aria-hidden="true" />
-            Invite friends
-          </h2>
-          <p className="mt-1 text-sm text-stone-600">
-            Share your referral link and earn{" "}
-            <b>{config.referral_bonus_coins} coins</b> when your friend completes their first
-            paid redemption. So far{" "}
-            <b>
-              {referredCount} friend{referredCount === 1 ? "" : "s"}
-            </b>{" "}
-            joined with your link.
-          </p>
-          <CopyReferralLink link={`skysurvey.com/signup?ref=${user.referralCode}`} />
-        </div>
-
-        {/* How levels work */}
-        <div id="levels" className="mt-6 scroll-mt-24 rounded-2xl border border-coffee-200 bg-white p-6 shadow-sm">
-          <h2 className="text-lg font-bold text-coffee-900">How levels work</h2>
-          <div className="mt-4">
-            <LevelsExplainer score={user.score} />
-          </div>
-        </div>
-
         {/* Edit form */}
         <div className="mt-6 rounded-2xl border border-coffee-200 bg-white p-6 shadow-sm">
           <h2 className="text-lg font-bold text-coffee-900">Personal details</h2>
@@ -177,6 +150,24 @@ export default async function ProfilePage() {
               }}
             />
           </div>
+        </div>
+
+        {/* Invite friends */}
+        <div className="mt-6 rounded-2xl border border-coffee-200 bg-white p-6 shadow-sm">
+          <h2 className="flex items-center gap-2 text-lg font-bold text-coffee-900">
+            <Users size={20} className="text-coffee-600" aria-hidden="true" />
+            Invite friends
+          </h2>
+          <p className="mt-1 text-sm text-stone-600">
+            Share your referral link and earn{" "}
+            <b>{config.referral_bonus_coins} coins</b> when your friend completes their first
+            paid redemption. So far{" "}
+            <b>
+              {referredCount} friend{referredCount === 1 ? "" : "s"}
+            </b>{" "}
+            joined with your link.
+          </p>
+          <CopyReferralLink link={`skysurvey.com/signup?ref=${user.referralCode}`} />
         </div>
       </div>
 
