@@ -1,13 +1,15 @@
 import { redirect } from "next/navigation";
-import { CalendarDays, Mail, ShieldAlert, ShieldCheck, Globe2 } from "lucide-react";
+import { CalendarDays, Copy, Globe2, Mail, ShieldAlert, ShieldCheck, Users } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser, isHeld, holdDurationLeft } from "@/lib/auth";
 import { getWalletSummary } from "@/lib/ledger";
 import { levelFromScore, levelProgress } from "@/lib/score";
+import { getConfig } from "@/lib/config";
 import AppHeader from "@/components/AppHeader";
 import AppFooter from "@/components/AppFooter";
 import ProfileForm from "@/components/ProfileForm";
 import LevelsExplainer from "@/components/LevelsExplainer";
+import CopyReferralLink from "@/components/CopyReferralLink";
 
 export const dynamic = "force-dynamic";
 
@@ -15,9 +17,11 @@ export default async function ProfilePage() {
   const user = await getSessionUser();
   if (!user || user.role === "admin") redirect("/login");
 
+  const config = await getConfig();
   const wallet = await getWalletSummary(user.id);
   const held = isHeld(user);
   const holdLeft = holdDurationLeft(user);
+  const referredCount = await prisma.user.count({ where: { referredById: user.id } });
 
   const demo = [
     { label: "Gender", value: user.gender },
@@ -115,6 +119,24 @@ export default async function ProfilePage() {
               ? "Profile complete — this builds trust when partners review your survey answers."
               : `${filled} of ${demo.length} demographic fields filled. Complete profiles pass partner checks faster and unlock more surveys.`}
           </p>
+        </div>
+
+        {/* Invite friends */}
+        <div className="mt-6 rounded-2xl border border-coffee-200 bg-white p-6 shadow-sm">
+          <h2 className="flex items-center gap-2 text-lg font-bold text-coffee-900">
+            <Users size={20} className="text-coffee-600" aria-hidden="true" />
+            Invite friends
+          </h2>
+          <p className="mt-1 text-sm text-stone-600">
+            Share your referral link and earn{" "}
+            <b>{config.referral_bonus_coins} coins</b> when your friend completes their first
+            paid redemption. So far{" "}
+            <b>
+              {referredCount} friend{referredCount === 1 ? "" : "s"}
+            </b>{" "}
+            joined with your link.
+          </p>
+          <CopyReferralLink link={`skysurvey.com/signup?ref=${user.referralCode}`} />
         </div>
 
         {/* How levels work */}

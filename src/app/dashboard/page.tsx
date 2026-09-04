@@ -6,7 +6,6 @@ import {
   Coins,
   Radio,
   ShieldAlert,
-  Users,
   Wallet,
 } from "lucide-react";
 import { prisma } from "@/lib/prisma";
@@ -166,22 +165,6 @@ export default async function DashboardPage() {
               Redeem coins
               <ArrowRight size={18} className="transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
             </Link>
-          </div>
-        </section>
-
-        {/* Invite friends */}
-        <section className="mt-6">
-          <div className="rounded-2xl border border-coffee-200 bg-white p-5">
-            <h3 className="flex items-center gap-2 font-bold text-coffee-900">
-              <Users size={18} className="text-coffee-600" aria-hidden="true" />
-              Invite friends
-            </h3>
-            <p className="mt-1 text-sm text-stone-600">
-              Share your referral link and earn {config.referral_bonus_coins} coins per friend who joins.
-            </p>
-            <code className="mt-3 block overflow-x-auto rounded-lg bg-coffee-50 px-3 py-2 text-sm font-semibold text-coffee-800 ring-1 ring-coffee-200">
-              skysurvey.com/signup?ref={user.referralCode}
-            </code>
           </div>
         </section>
 
