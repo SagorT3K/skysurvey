@@ -33,7 +33,7 @@ export default function RedeemActions({
     router.refresh();
   }
 
-  if (status !== "pending") {
+  if (status !== "pending" && status !== "approved") {
     return (
       <div className="flex items-center gap-2 text-xs">
         {error && <span className="text-red-600">{error}</span>}
