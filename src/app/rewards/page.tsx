@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { ArrowRight, Coins, Wallet } from "lucide-react";
+import { ArrowRight, Coins, ShieldAlert, Wallet } from "lucide-react";
 import { prisma } from "@/lib/prisma";
-import { getSessionUser } from "@/lib/auth";
+import { getSessionUser, isHeld, holdDurationLeft } from "@/lib/auth";
 import { getConfig } from "@/lib/config";
 import { getWalletSummary } from "@/lib/ledger";
 import { methodLabel } from "@/lib/redeem";
@@ -18,6 +18,8 @@ export default async function RewardsPage() {
 
   const config = await getConfig();
   const wallet = await getWalletSummary(user.id);
+  const held = isHeld(user);
+  const holdLeft = holdDurationLeft(user);
 
   const [ledger, allRedeems] = await Promise.all([
     prisma.coinTransaction.findMany({ where: { userId: user.id }, orderBy: { createdAt: "desc" }, take: 25 }),
@@ -51,6 +53,18 @@ export default async function RewardsPage() {
 
       <div className="mx-auto grid max-w-6xl gap-8 px-4 py-8 lg:grid-cols-[1fr_380px]">
         <div>
+          {held && (
+            <div className="mb-6 flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 p-5 text-red-800">
+              <ShieldAlert size={22} className="mt-0.5 shrink-0" aria-hidden="true" />
+              <div>
+                <p className="font-bold">Sorry, you can&apos;t earn right now.</p>
+                <p className="mt-1 text-sm">
+                  Your account has been held for {holdLeft}. You can still request a payout from
+                  your available balance; earning resumes automatically when the hold ends.
+                </p>
+              </div>
+            </div>
+          )}
           <h1 className="text-2xl font-bold text-coffee-900">Redeem coins</h1>
           <p className="mt-1 text-stone-600">
             1 coin = ${(config.coin_rate_cents / 100).toFixed(2)} · minimum cashout{" "}

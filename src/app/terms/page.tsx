@@ -63,7 +63,19 @@ export default function TermsPage() {
         </p>
       </Section>
 
-      <Section heading="6. Third-party surveys">
+      <Section heading="6. Account holds and suspension">
+        <p>
+          If we detect — or reasonably suspect — a violation of these Terms, including the use of
+          bots, automation, VPNs or proxies to complete surveys, we may place the account on hold
+          for a fixed period or suspend it permanently. A hold prevents the account from earning
+          for the stated duration; the user is shown the remaining time on their account pages.
+          Holds and suspensions may take effect without prior notice where required to protect the
+          integrity of the program. Coins already released as payouts are not affected; pending
+          redemption requests may be rejected if the underlying earnings violate these Terms.
+        </p>
+      </Section>
+
+      <Section heading="7. Third-party surveys">
         <p>
           Surveys are supplied by third-party market research companies. When you start a survey you
           may be redirected to a partner website whose terms and privacy practices apply. We are not
@@ -71,7 +83,7 @@ export default function TermsPage() {
         </p>
       </Section>
 
-      <Section heading="7. Termination">
+      <Section heading="8. Termination">
         <p>
           We may modify, suspend or discontinue the Service, or any part of it, at any time. We may
           terminate your account for any breach of these Terms. Upon termination for breach, any
@@ -79,7 +91,7 @@ export default function TermsPage() {
         </p>
       </Section>
 
-      <Section heading="8. Disclaimer and limitation of liability">
+      <Section heading="9. Disclaimer and limitation of liability">
         <p>
           The Service is provided “as is” without warranties of any kind. To the maximum extent
           permitted by law, SkySurvey shall not be liable for indirect, incidental, special or
@@ -89,7 +101,7 @@ export default function TermsPage() {
         </p>
       </Section>
 
-      <Section heading="9. Changes to these Terms">
+      <Section heading="10. Changes to these Terms">
         <p>
           We may update these Terms from time to time. We will post the revised version on this page
           with a new “Last updated” date. Continued use of the Service after changes take effect
@@ -97,7 +109,7 @@ export default function TermsPage() {
         </p>
       </Section>
 
-      <Section heading="10. Contact">
+      <Section heading="11. Contact">
         <p>
           Questions about these Terms? Contact us at{" "}
           <a href="mailto:support@skysurvey.com" className="font-semibold text-coffee-700 underline">

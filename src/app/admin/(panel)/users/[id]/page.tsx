@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ShieldAlert } from "lucide-react";
+import { Hourglass, ShieldAlert } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { getConfig } from "@/lib/config";
 import { getWalletSummary } from "@/lib/ledger";
@@ -47,8 +47,23 @@ export default async function AdminUserDetailPage({
             Signup IP: {user.signupIp || "not recorded"}
           </p>
         </div>
-        <AdminUserActions userId={user.id} isActive={user.isActive} isFlagged={user.isFlagged} />
+        <AdminUserActions
+          userId={user.id}
+          isActive={user.isActive}
+          isFlagged={user.isFlagged}
+          heldUntil={user.heldUntil ? user.heldUntil.toISOString() : null}
+        />
       </div>
+
+      {user.heldUntil && new Date(user.heldUntil).getTime() > Date.now() && (
+        <div className="mt-5 rounded-xl border border-amber-300 bg-amber-50 p-4">
+          <p className="flex items-center gap-2 font-semibold text-amber-900">
+            <Hourglass size={17} aria-hidden="true" />
+            Account on hold until {new Date(user.heldUntil).toLocaleString()}
+          </p>
+          {user.holdReason && <p className="mt-1 text-sm text-amber-800">{user.holdReason}</p>}
+        </div>
+      )}
 
       {(user.isFlagged || siblings.length > 0) && (
         <div className="mt-5 rounded-xl border border-amber-300 bg-amber-50 p-4">

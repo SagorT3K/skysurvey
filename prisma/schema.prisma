@@ -18,6 +18,8 @@ model User {
   isActive      Boolean           @default(true)
   isFlagged     Boolean           @default(false) // fraud review pending; blocks payouts
   flagReason    String            @default("")
+  heldUntil     DateTime?         // while set, the user cannot earn (admin suspension)
+  holdReason    String            @default("")
   signupIp      String            @default("")
   referralCode  String            @unique @default(cuid())
   referredById  Int?

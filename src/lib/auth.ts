@@ -84,3 +84,22 @@ export function clientIp(req: Request) {
 export function userAgent(req: Request) {
   return req.headers.get("user-agent") || "";
 }
+
+/**
+ * Admin suspensions: while `heldUntil` is in the future the user can sign in and
+ * see their balance, but cannot earn (surveys, check-ins). Payout requests stay
+ * available — the admin release review covers those separately.
+ */
+export function isHeld(user: { heldUntil?: Date | null }) {
+  return !!user.heldUntil && user.heldUntil.getTime() > Date.now();
+}
+
+/** Remaining hold time, phrased for the user-facing banner. */
+export function holdDurationLeft(user: { heldUntil?: Date | null }) {
+  if (!isHeld(user)) return "";
+  const ms = (user.heldUntil as Date).getTime() - Date.now();
+  const hours = Math.ceil(ms / (60 * 60 * 1000));
+  if (hours < 48) return `${hours} hour${hours === 1 ? "" : "s"}`;
+  const days = Math.ceil(hours / 24);
+  return `${days} day${days === 1 ? "" : "s"}`;
+}

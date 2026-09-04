@@ -1,12 +1,19 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getSessionUser, clientIp, userAgent } from "@/lib/auth";
+import { getSessionUser, clientIp, userAgent, isHeld, holdDurationLeft } from "@/lib/auth";
 import { getConfig } from "@/lib/config";
 import { creditCoins } from "@/lib/ledger";
 
 export async function POST(req: Request) {
   const user = await getSessionUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  if (isHeld(user)) {
+    return NextResponse.json(
+      { error: `Sorry, you can't earn right now. Your account has been held for ${holdDurationLeft(user)}.` },
+      { status: 403 },
+    );
+  }
 
   const config = await getConfig();
   if (config.daily_bonus_coins <= 0) {

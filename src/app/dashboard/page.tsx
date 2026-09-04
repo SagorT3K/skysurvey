@@ -6,12 +6,13 @@ import {
   Coins,
   Medal,
   Radio,
+  ShieldAlert,
   Trophy,
   Users,
   Wallet,
 } from "lucide-react";
 import { prisma } from "@/lib/prisma";
-import { getSessionUser } from "@/lib/auth";
+import { getSessionUser, isHeld, holdDurationLeft } from "@/lib/auth";
 import { getConfig } from "@/lib/config";
 import { getWalletSummary } from "@/lib/ledger";
 import SurveyList, { type SurveyCardData } from "@/components/SurveyList";
@@ -59,6 +60,8 @@ export default async function DashboardPage() {
   ]);
   const redeemedCoins = redeemedAgg._sum.coins ?? 0;
   const totalRequests = totalRequestCount;
+  const held = isHeld(user);
+  const holdLeft = holdDurationLeft(user);
   const subRequests =
     totalRequests === 0
       ? "No requests yet"
@@ -110,6 +113,22 @@ export default async function DashboardPage() {
       </header>
 
       <div className="mx-auto max-w-6xl px-4 py-8">
+        {/* Account hold notice */}
+        {held && (
+          <div className="mb-6 flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 p-5 text-red-800">
+            <ShieldAlert size={22} className="mt-0.5 shrink-0" aria-hidden="true" />
+            <div>
+              <p className="font-bold">Sorry, you can&apos;t earn right now.</p>
+              <p className="mt-1 text-sm">
+                Your account has been held for {holdLeft}. Our team reviewed activity on the account
+                for policy violations such as bots, VPN or proxy usage. You can still sign in and
+                view your balance; earning resumes automatically when the hold ends
+                {user.holdReason ? ` (Reason: ${user.holdReason})` : ""}.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Welcome banner */}
         <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-coffee-900 via-coffee-800 to-coffee-700 p-8 text-white">
           <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-coffee-500/30 blur-2xl" />
@@ -151,23 +170,31 @@ export default async function DashboardPage() {
               <p className="text-sm opacity-70">{c.sub}</p>
             </div>
           ))}
-          <DailyCheckIn available={!lastDaily} coins={config.daily_bonus_coins} />
+          <DailyCheckIn available={!lastDaily && !held} coins={config.daily_bonus_coins} />
         </section>
 
-        {/* Surveys */}
+        {/* Surveys — hidden while the account is on hold */}
         <section className="mt-10">
-          <div className="flex items-end justify-between">
-            <div>
-              <h2 className="text-2xl font-bold text-coffee-900">Available surveys</h2>
-              <p className="mt-1 text-sm text-stone-600">Matched to your country ({user.country}) — coin reward shown up front.</p>
+          {held ? (
+            <div className="rounded-2xl border border-dashed border-red-300 bg-white p-10 text-center text-red-700">
+              Survey earning is paused while your account is on hold.
             </div>
-            <span className="rounded-full bg-coffee-100 px-3 py-1 text-xs font-semibold text-coffee-800">
-              {cards.filter((c) => !c.done).length} new
-            </span>
-          </div>
-          <div className="mt-5">
-            <SurveyList surveys={cards} />
-          </div>
+          ) : (
+            <>
+              <div className="flex items-end justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold text-coffee-900">Available surveys</h2>
+                  <p className="mt-1 text-sm text-stone-600">Matched to your country ({user.country}) — coin reward shown up front.</p>
+                </div>
+                <span className="rounded-full bg-coffee-100 px-3 py-1 text-xs font-semibold text-coffee-800">
+                  {cards.length} new
+                </span>
+              </div>
+              <div className="mt-5">
+                <SurveyList surveys={cards} />
+              </div>
+            </>
+          )}
         </section>
 
         {/* Leaderboard + activity */}
