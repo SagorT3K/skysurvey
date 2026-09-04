@@ -37,11 +37,25 @@ export async function POST(req: Request) {
     ip && ip !== "local" ? await prisma.user.count({ where: { signupIp: ip } }) : 0;
   const selfReferral = referrer?.id !== undefined && sameIpCount > 0;
 
+  // Every account gets a unique, searchable username — derived from the chosen
+  // display name or the email prefix, with a numeric suffix when taken.
+  const base =
+    String(body.username || email.split("@")[0])
+      .toLowerCase()
+      .replace(/[^a-z0-9._-]/g, "")
+      .replace(/^[-._]+/, "")
+      .slice(0, 28) || "user";
+  let username = base;
+  let suffix = 2;
+  while (await prisma.user.findFirst({ where: { username } })) {
+    username = `${base}-${suffix++}`;
+  }
+
   const user = await prisma.user.create({
     data: {
       email,
       passwordHash: await bcrypt.hash(String(body.password), 10),
-      username: String(body.username || email.split("@")[0]).slice(0, 40),
+      username,
       country: String(body.country),
       referredById: referrer?.id,
       signupIp: ip,
