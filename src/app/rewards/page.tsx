@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { ArrowRight, Coins, Hourglass, Wallet } from "lucide-react";
+import { ArrowRight, Coins, Wallet } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/auth";
 import { getConfig } from "@/lib/config";
@@ -69,10 +69,14 @@ export default async function RewardsPage() {
                           ${(r.amountCents / 100).toFixed(2)}
                         </span>
                         <span className="block text-xs font-normal text-stone-400">
-                          {methodLabel(r.method)}
+                          {methodLabel(r.method)} → {r.destination}
+                        </span>
+                        <span className="block text-xs font-normal text-stone-400">
+                          Requested {r.createdAt.toLocaleString("en-US")}
+                          {r.status === "paid" && r.processedAt &&
+                            ` · Released ${r.processedAt.toLocaleString("en-US")}`}
                         </span>
                       </td>
-                      <td className="px-5 py-3 text-stone-500">{r.destination}</td>
                       <td className="px-5 py-3 text-right">
                         <span
                           className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
@@ -85,7 +89,7 @@ export default async function RewardsPage() {
                                   : "bg-amber-100 text-amber-700"
                           }`}
                         >
-                          {r.status}
+                          {r.status === "paid" ? "Success" : r.status === "pending" ? "Pending" : r.status}
                         </span>
                       </td>
                     </tr>
@@ -114,9 +118,6 @@ export default async function RewardsPage() {
                           {t.coins}
                         </span>
                       </td>
-                      <td className="px-5 py-3 text-right text-xs text-stone-400">
-                        {t.availableAt > new Date() ? "on hold" : "available"}
-                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -133,12 +134,9 @@ export default async function RewardsPage() {
             </p>
             <p className="mt-1 text-2xl font-bold">{wallet.withdrawable}</p>
             <p className="text-sm">${((wallet.withdrawable * config.coin_rate_cents) / 100).toFixed(2)}</p>
-            {wallet.pending > 0 && (
-              <p className="mt-2 flex items-center gap-1.5 text-xs opacity-80">
-                <Hourglass size={13} aria-hidden="true" />
-                +{wallet.pending} coins on hold (7-day validation)
-              </p>
-            )}
+            <p className="mt-2 text-xs opacity-80">
+              Requests are reviewed by our team and released after verification.
+            </p>
           </div>
           <div className="mt-6">
             <RedeemForm

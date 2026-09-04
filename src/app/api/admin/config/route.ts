@@ -7,7 +7,6 @@ const ALLOWED_KEYS = [
   "coin_rate_cents",
   "min_cashout_coins",
   "reward_share_percent",
-  "hold_days",
   "signup_bonus_coins",
   "referral_bonus_coins",
   "daily_bonus_coins",

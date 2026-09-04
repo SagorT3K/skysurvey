@@ -2,8 +2,8 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import {
   ArrowRight,
+  CircleCheckBig,
   Coins,
-  Hourglass,
   Medal,
   Radio,
   Trophy,
@@ -32,7 +32,7 @@ export default async function DashboardPage() {
   const wallet = await getWalletSummary(user.id);
 
   const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-  const [allSurveys, completed, recent, lastDaily, leaderboard, totalEarners] = await Promise.all([
+  const [allSurveys, completed, recent, lastDaily, leaderboard, totalEarners, redeemedAgg, totalRequestCount, pendingRequestCount] = await Promise.all([
     prisma.survey.findMany({
       where: { isActive: true, OR: [{ country: user.country }, { country: "ALL" }] },
     }),
@@ -49,7 +49,22 @@ export default async function DashboardPage() {
       take: 5,
     }),
     prisma.user.count({ where: { role: "user" } }),
+    // Coins actually paid out so far (released requests only).
+    prisma.redeemRequest.aggregate({
+      where: { userId: user.id, status: "paid" },
+      _sum: { coins: true },
+    }),
+    prisma.redeemRequest.count({ where: { userId: user.id } }),
+    prisma.redeemRequest.count({ where: { userId: user.id, status: "pending" } }),
   ]);
+  const redeemedCoins = redeemedAgg._sum.coins ?? 0;
+  const totalRequests = totalRequestCount;
+  const subRequests =
+    totalRequests === 0
+      ? "No requests yet"
+      : pendingRequestCount > 0
+        ? `${pendingRequestCount} pending`
+        : `${totalRequests} released`;
 
   // Rotate the board: only surveys this user hasn't completed, shuffled each load
   // so every reload surfaces a fresh mix from the pool.
@@ -125,7 +140,7 @@ export default async function DashboardPage() {
           {[
             { icon: Coins, label: "Balance", value: `${wallet.balance}`, sub: `$${((wallet.balance * config.coin_rate_cents) / 100).toFixed(2)} value`, cls: "bg-white border-coffee-200 text-coffee-900" },
             { icon: Wallet, label: "Withdrawable", value: `${wallet.withdrawable}`, sub: wallet.withdrawable >= config.min_cashout_coins ? "Cash out now" : `${config.min_cashout_coins - wallet.withdrawable} to $5`, cls: "bg-emerald-50 border-emerald-200 text-emerald-900" },
-            { icon: Hourglass, label: "On hold (7d)", value: `${wallet.pending}`, sub: "Partner validation", cls: "bg-coffee-100 border-coffee-200 text-coffee-800" },
+            { icon: CircleCheckBig, label: "Redeemed", value: `${redeemedCoins}`, sub: subRequests, cls: "bg-coffee-100 border-coffee-200 text-coffee-800" },
           ].map(({ icon: Icon, ...c }) => (
             <div key={c.label} className={`rounded-2xl border p-5 ${c.cls}`}>
               <p className="flex items-center gap-2 text-sm font-medium opacity-75">

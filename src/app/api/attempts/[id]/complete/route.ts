@@ -34,7 +34,6 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     attemptId: attempt.id,
     rewardSharePercent: config.reward_share_percent,
     coinRateCents: config.coin_rate_cents,
-    holdDays: config.hold_days,
     source: "demo survey",
   });
 

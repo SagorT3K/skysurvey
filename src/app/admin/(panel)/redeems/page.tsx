@@ -18,13 +18,20 @@ export default async function AdminRedeemsPage() {
     paid: "bg-emerald-100 text-emerald-700",
     rejected: "bg-red-100 text-red-600",
   };
+  const statusLabel: Record<string, string> = {
+    pending: "Pending",
+    approved: "Approved",
+    paid: "Success",
+    rejected: "Rejected",
+  };
 
   return (
     <div>
       <h1 className="text-2xl font-bold text-slate-900">Redeem requests</h1>
       <p className="mt-1 text-sm text-slate-500">
-        Approve the request, send the payment (PayPal / gift card / crypto), then mark it as Paid.
-        Rejected requests refund the coins automatically.
+        Verify the request, send the payment (PayPal / gift card / crypto), then Release it — the
+        user sees it as Success with the release time. Rejected requests refund the coins
+        automatically.
       </p>
 
       <div className="mt-5 space-y-3">
@@ -49,7 +56,7 @@ export default async function AdminRedeemsPage() {
             </div>
             <div className="flex items-center gap-3">
               <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${badge[r.status]}`}>
-                {r.status}
+                {statusLabel[r.status] ?? r.status}
               </span>
               <RedeemActions redeemId={r.id} status={r.status} />
             </div>

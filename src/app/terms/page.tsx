@@ -38,8 +38,7 @@ export default function TermsPage() {
           Service. Survey credit is subject to validation by our market research partners. Surveys
           may be reversed (and corresponding coins deducted, including from a negative balance) if a
           partner rejects the underlying response for quality, duplication, inconsistency, or
-          suspected fraud. Coins credited from surveys remain on hold for 7 days before becoming
-          withdrawable.
+          suspected fraud. Coins credited from surveys become withdrawable immediately.
         </p>
       </Section>
 
@@ -47,8 +46,9 @@ export default function TermsPage() {
         <p>
           Coins are a promotional loyalty point with no cash value until redeemed in accordance with
           these Terms. The conversion rate (currently 1 coin = $0.01) and the minimum redemption
-          threshold (currently 500 coins) are set by us and may change. Redemption requests are
-          reviewed and, if approved, paid via PayPal or gift cards. We may refuse or reverse
+          threshold (currently 500 coins) are set by us and may change. Redemption requests stay
+          Pending while we review them and are released via PayPal, gift cards or crypto once
+          verified; the user sees the release time on the request. We may refuse or reverse
           redemptions obtained through fraud, multi-accounting, or other abuse, and may demand the
           return of amounts paid in error. You are responsible for any taxes on rewards you receive.
         </p>

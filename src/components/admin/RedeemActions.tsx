@@ -13,8 +13,9 @@ export default function RedeemActions({
   const router = useRouter();
   const [loading, setLoading] = useState("");
   const [error, setError] = useState("");
+  const [confirming, setConfirming] = useState(false);
 
-  async function act(action: "approve" | "paid" | "reject") {
+  async function act(action: "paid" | "reject") {
     setLoading(action);
     setError("");
     const res = await fetch(`/api/admin/redeems/${redeemId}`, {
@@ -24,6 +25,7 @@ export default function RedeemActions({
     });
     const data = await res.json();
     setLoading("");
+    setConfirming(false);
     if (!res.ok) {
       setError(data.error || "Action failed");
       return;
@@ -31,36 +33,54 @@ export default function RedeemActions({
     router.refresh();
   }
 
-  return (
-    <div className="flex items-center gap-2 text-xs">
-      {error && <span className="text-red-600">{error}</span>}
-      {status === "pending" && (
-        <>
-          <button
-            onClick={() => act("approve")}
-            disabled={!!loading}
-            className="rounded-lg bg-sky-600 px-3 py-1.5 font-semibold text-white hover:bg-sky-700 disabled:opacity-50"
-          >
-            {loading === "approve" ? "..." : "Approve"}
-          </button>
-          <button
-            onClick={() => act("reject")}
-            disabled={!!loading}
-            className="rounded-lg border border-red-300 px-3 py-1.5 font-semibold text-red-600 hover:bg-red-50 disabled:opacity-50"
-          >
-            {loading === "reject" ? "..." : "Reject"}
-          </button>
-        </>
-      )}
-      {status === "approved" && (
+  if (status !== "pending") {
+    return (
+      <div className="flex items-center gap-2 text-xs">
+        {error && <span className="text-red-600">{error}</span>}
+        {status === "rejected" && <span className="text-stone-400">Rejected — coins refunded</span>}
+      </div>
+    );
+  }
+
+  if (confirming) {
+    return (
+      <div className="flex items-center gap-2 text-xs">
+        {error && <span className="text-red-600">{error}</span>}
+        <span className="font-medium text-stone-600">Payment sent?</span>
         <button
           onClick={() => act("paid")}
           disabled={!!loading}
           className="rounded-lg bg-emerald-600 px-3 py-1.5 font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
         >
-          {loading === "paid" ? "..." : "Mark as paid"}
+          {loading === "paid" ? "..." : "Yes, release"}
         </button>
-      )}
+        <button
+          onClick={() => setConfirming(false)}
+          className="rounded-lg border border-stone-300 px-3 py-1.5 font-medium text-stone-600 hover:bg-stone-50"
+        >
+          Cancel
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-2 text-xs">
+      {error && <span className="text-red-600">{error}</span>}
+      <button
+        onClick={() => setConfirming(true)}
+        disabled={!!loading}
+        className="rounded-lg bg-emerald-600 px-3 py-1.5 font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
+      >
+        Release payment
+      </button>
+      <button
+        onClick={() => act("reject")}
+        disabled={!!loading}
+        className="rounded-lg border border-red-300 px-3 py-1.5 font-semibold text-red-600 hover:bg-red-50 disabled:opacity-50"
+      >
+        {loading === "reject" ? "..." : "Reject"}
+      </button>
     </div>
   );
 }

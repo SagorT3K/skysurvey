@@ -90,7 +90,6 @@ async function handle(req: Request, providerKey: string) {
       payoutCents: parsed.payoutCents,
       rewardSharePercent: config.reward_share_percent,
       coinRateCents: config.coin_rate_cents,
-      holdDays: config.hold_days,
       source: `${provider.key} postback`,
     });
     await log(result.duplicate ? "duplicate" : "credited", {

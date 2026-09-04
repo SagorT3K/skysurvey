@@ -7,19 +7,12 @@ export type WalletSummary = {
 };
 
 export async function getWalletSummary(userId: number): Promise<WalletSummary> {
-  const [agg, availAgg] = await Promise.all([
-    prisma.coinTransaction.aggregate({ where: { userId }, _sum: { coins: true } }),
-    prisma.coinTransaction.aggregate({
-      where: { userId, availableAt: { lte: new Date() } },
-      _sum: { coins: true },
-    }),
-  ]);
+  // No hold window anymore: everything on the balance is withdrawable. Risk is
+  // managed by the admin reviewing each redeem request before releasing payment.
+  const agg = await prisma.coinTransaction.aggregate({ where: { userId }, _sum: { coins: true } });
   const balance = agg._sum.coins ?? 0;
-  const settled = availAgg._sum.coins ?? 0;
-  // Coins still inside the hold window count as pending (only positive credits).
-  const pending = Math.max(0, balance - Math.min(balance, settled));
-  const withdrawable = Math.max(0, Math.min(balance, settled));
-  return { balance, withdrawable, pending };
+  const withdrawable = Math.max(0, balance);
+  return { balance, withdrawable, pending: 0 };
 }
 
 export function coinsForPayout(payoutCents: number, rewardSharePercent: number, coinRateCents: number) {
@@ -38,7 +31,6 @@ export async function completeAttempt(opts: {
   payoutCents?: number;
   rewardSharePercent: number;
   coinRateCents: number;
-  holdDays: number;
   source: string;
 }): Promise<{ ok: boolean; duplicate: boolean; coins: number; payoutCents: number }> {
   const attempt = await prisma.surveyAttempt.findUnique({ where: { id: opts.attemptId } });
@@ -62,7 +54,8 @@ export async function completeAttempt(opts: {
         category: "survey",
         coins,
         description: `Survey #${attempt.surveyId} · ${opts.source}`,
-        availableAt: new Date(Date.now() + opts.holdDays * 24 * 60 * 60 * 1000),
+        // No hold window: coins are withdrawable immediately. Payout risk is
+        // handled by the admin reviewing each redeem request before release.
       },
     }),
   ]);

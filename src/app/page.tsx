@@ -76,13 +76,13 @@ const TESTIMONIALS = [
 
 const PAYOUT_NOTES = [
   "Coins are credited right after your survey is validated",
-  "7-day hold protects the quality of the program (and your payouts)",
+  "Every payout request is reviewed by our team before release",
   "PayPal cash or gift cards — you decide every time",
 ];
 
 const FAQS = [
   { q: "How much can I earn?", a: "Surveys typically pay between 40 and 200 coins depending on length. With daily check-ins and referrals, active members earn steadily — your results depend on how many surveys you complete." },
-  { q: "When can I withdraw my coins?", a: "Coins from surveys are held for 7 days while our research partners validate the data, then they become withdrawable. Signup and referral bonuses are available immediately." },
+  { q: "When can I withdraw my coins?", a: "Coins from completed surveys are available right away. When you request a payout, our team reviews the request and releases the payment — pending requests show as Pending until then." },
   { q: "How do I get paid?", a: "We pay via PayPal or popular gift cards (Amazon, Netflix, Starbucks and more). Minimum cashout is 500 coins = $5." },
   { q: "Who can join SkySurvey?", a: "Membership is open to residents of the US, UK, Canada, France and other supported countries. You must be at least 18 years old (or the age of majority in your region) and provide accurate information." },
   { q: "Is SkySurvey free?", a: "Yes — SkySurvey is 100% free to join and use. We never ask for payment details to sign up." },
