@@ -25,7 +25,16 @@ const STATS = [
   { icon: Star, label: "Rating:", value: "4.6 / 5" },
 ];
 
-const BRANDS = ["PayPal", "Amazon", "Netflix", "Starbucks", "Uber", "Visa"];
+const BRANDS = [
+  { name: "PayPal", slug: "paypal" },
+  { name: "Amazon", slug: "amazon" },
+  { name: "Netflix", slug: "netflix" },
+  { name: "Starbucks", slug: "starbucks" },
+  { name: "Uber", slug: "uber" },
+  { name: "Visa", slug: "visa" },
+  { name: "Bitcoin", slug: "bitcoin" },
+  { name: "Crypto (USDT)", slug: "tether" },
+];
 
 const STEPS = [
   {
@@ -142,21 +151,45 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Brands */}
+      {/* Brands — auto-scrolling logo marquee */}
       <section className="border-b border-coffee-200 bg-white py-10">
         <div className="mx-auto max-w-6xl px-4 text-center">
           <p className="inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-coffee-600">
             <Gift size={15} aria-hidden="true" />
             Redeem your coins for rewards from top brands
           </p>
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-            {BRANDS.map((name) => (
-              <span
-                key={name}
-                className="rounded-full border border-coffee-200 bg-cream px-5 py-2.5 text-sm font-semibold tracking-tight text-coffee-700 transition hover:border-coffee-400 hover:text-coffee-900"
+        </div>
+        <div
+          className="marquee-paused group relative mt-8 overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)]"
+          aria-label="Redeem brands"
+        >
+          <div className="animate-marquee flex w-max">
+            {[0, 1].map((copy) => (
+              <ul
+                key={copy}
+                aria-hidden={copy === 1}
+                className="flex items-center gap-4 pr-4"
               >
-                {name}
-              </span>
+                {BRANDS.map(({ name, slug }) => (
+                  <li
+                    key={name}
+                    className="flex shrink-0 items-center gap-2.5 rounded-2xl border border-coffee-200 bg-cream px-6 py-3 shadow-sm transition hover:border-coffee-400 hover:shadow-md"
+                  >
+                    <img
+                      src={`/brands/${slug}.svg`}
+                      alt=""
+                      width={24}
+                      height={24}
+                      loading="lazy"
+                      aria-hidden="true"
+                      className="h-6 w-auto max-w-[110px] object-contain"
+                    />
+                    <span className="text-sm font-semibold tracking-tight text-coffee-800">
+                      {name}
+                    </span>
+                  </li>
+                ))}
+              </ul>
             ))}
           </div>
         </div>
