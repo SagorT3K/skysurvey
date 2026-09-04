@@ -86,6 +86,7 @@ const FAQS = [
   { q: "How do I get paid?", a: "We pay via PayPal or popular gift cards (Amazon, Netflix, Starbucks and more). Minimum cashout is 500 coins = $5." },
   { q: "Who can join SkySurvey?", a: "Membership is open to residents of the US, UK, Canada, France and other supported countries. You must be at least 18 years old (or the age of majority in your region) and provide accurate information." },
   { q: "Is SkySurvey free?", a: "Yes — SkySurvey is 100% free to join and use. We never ask for payment details to sign up." },
+  { q: "How do levels work?", a: "Every member has a trust score that starts at 100 — that is Level 1. You earn points with daily check-ins (+2), completing surveys (+1), and paid redemptions (+5). Reach 200 points for Level 2, 300 for Level 3, and so on. Each level pays +2% more on every survey, and higher levels get their cashouts reviewed first. Points drop if surveys are reversed or rules are broken, so levels reflect how reliable a member you are." },
 ];
 
 export default function Home() {

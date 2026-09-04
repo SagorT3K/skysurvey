@@ -7,6 +7,7 @@ import { levelFromScore, levelProgress } from "@/lib/score";
 import AppHeader from "@/components/AppHeader";
 import AppFooter from "@/components/AppFooter";
 import ProfileForm from "@/components/ProfileForm";
+import LevelsExplainer from "@/components/LevelsExplainer";
 
 export const dynamic = "force-dynamic";
 
@@ -114,6 +115,14 @@ export default async function ProfilePage() {
               ? "Profile complete — this builds trust when partners review your survey answers."
               : `${filled} of ${demo.length} demographic fields filled. Complete profiles pass partner checks faster and unlock more surveys.`}
           </p>
+        </div>
+
+        {/* How levels work */}
+        <div id="levels" className="mt-6 scroll-mt-24 rounded-2xl border border-coffee-200 bg-white p-6 shadow-sm">
+          <h2 className="text-lg font-bold text-coffee-900">How levels work</h2>
+          <div className="mt-4">
+            <LevelsExplainer score={user.score} />
+          </div>
         </div>
 
         {/* Edit form */}
