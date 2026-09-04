@@ -22,12 +22,44 @@ Error: Page "/api/admin/redeems/[id]" is missing "generateStaticParams()"
 so it cannot be used with "output: export" config.
 ```
 
-Deploy to a host that runs Node instead:
+Deploy to a host that runs Node instead. Vercel is not a static host — it runs
+the full app, API routes included — so it is the quickest way to get a live URL.
 
-| Host | Works with the current SQLite setup | Notes |
+| Host | Database | Notes |
 | --- | --- | --- |
-| Render, Railway, Fly.io | Yes, with a persistent disk | No code changes needed |
-| Vercel | No | Serverless filesystem is read-only; switch Prisma to Postgres first |
+| Vercel | Hosted Postgres (Neon, Supabase, Vercel Postgres) | Read-only filesystem, so SQLite cannot be used |
+| Render, Railway, Fly.io | The bundled SQLite file, on a persistent disk | Also works with Postgres |
+
+### Deploying to Vercel
+
+The datasource provider is patched at build time from `DATABASE_PROVIDER`,
+because Prisma does not accept `env()` for it. The schema itself needs no edits —
+it validates unchanged against Postgres.
+
+1. Create a free Postgres database (Neon or Supabase) and copy its connection string.
+2. Import this repository on Vercel. It auto-detects Next.js; leave the build
+   command alone, since `npm run build` already runs `prisma generate`.
+3. Set these environment variables in the Vercel project:
+
+   | Variable | Value |
+   | --- | --- |
+   | `DATABASE_PROVIDER` | `postgresql` |
+   | `DATABASE_URL` | the Postgres connection string |
+   | `JWT_SECRET` | a long random string, not the local one |
+
+4. Create the tables and demo rows once, from your machine, pointed at the same
+   database:
+
+   ```bash
+   DATABASE_PROVIDER=postgresql DATABASE_URL="<connection string>" npm run db:push
+   DATABASE_PROVIDER=postgresql DATABASE_URL="<connection string>" npm run db:seed
+   ```
+
+Local development is unaffected: `DATABASE_PROVIDER` defaults to `sqlite`, so the
+committed schema and `prisma/dev.db` keep working.
+
+**Change the seeded admin password before exposing a deployment.**
+`prisma/seed.js` creates `admin@skysurvey.com` with a known password.
 
 ## Local development
 
