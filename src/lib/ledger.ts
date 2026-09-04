@@ -1,0 +1,140 @@
+import { prisma } from "./prisma";
+
+export type WalletSummary = {
+  balance: number;
+  withdrawable: number;
+  pending: number;
+};
+
+export async function getWalletSummary(userId: number): Promise<WalletSummary> {
+  const [agg, availAgg] = await Promise.all([
+    prisma.coinTransaction.aggregate({ where: { userId }, _sum: { coins: true } }),
+    prisma.coinTransaction.aggregate({
+      where: { userId, availableAt: { lte: new Date() } },
+      _sum: { coins: true },
+    }),
+  ]);
+  const balance = agg._sum.coins ?? 0;
+  const settled = availAgg._sum.coins ?? 0;
+  // Coins still inside the hold window count as pending (only positive credits).
+  const pending = Math.max(0, balance - Math.min(balance, settled));
+  const withdrawable = Math.max(0, Math.min(balance, settled));
+  return { balance, withdrawable, pending };
+}
+
+export function coinsForPayout(payoutCents: number, rewardSharePercent: number, coinRateCents: number) {
+  return Math.max(0, Math.floor((payoutCents * rewardSharePercent) / 100 / coinRateCents));
+}
+
+/**
+ * Settles a survey attempt: marks it completed and credits the user's share of the
+ * router payout, held until the reversal window closes.
+ *
+ * Idempotent — routers retry postbacks, so a non-"started" attempt reports
+ * `duplicate` and leaves the ledger untouched.
+ */
+export async function completeAttempt(opts: {
+  attemptId: number;
+  payoutCents?: number;
+  rewardSharePercent: number;
+  coinRateCents: number;
+  holdDays: number;
+  source: string;
+}): Promise<{ ok: boolean; duplicate: boolean; coins: number; payoutCents: number }> {
+  const attempt = await prisma.surveyAttempt.findUnique({ where: { id: opts.attemptId } });
+  if (!attempt) return { ok: false, duplicate: false, coins: 0, payoutCents: 0 };
+  if (attempt.status !== "started") {
+    return { ok: false, duplicate: true, coins: attempt.coinsCredited, payoutCents: attempt.cpiCents };
+  }
+
+  const payoutCents = opts.payoutCents && opts.payoutCents > 0 ? opts.payoutCents : attempt.cpiCents;
+  const coins = coinsForPayout(payoutCents, opts.rewardSharePercent, opts.coinRateCents);
+
+  await prisma.$transaction([
+    prisma.surveyAttempt.update({
+      where: { id: attempt.id },
+      data: { status: "completed", completedAt: new Date(), coinsCredited: coins, cpiCents: payoutCents },
+    }),
+    prisma.coinTransaction.create({
+      data: {
+        userId: attempt.userId,
+        type: "survey",
+        category: "survey",
+        coins,
+        description: `Survey #${attempt.surveyId} · ${opts.source}`,
+        availableAt: new Date(Date.now() + opts.holdDays * 24 * 60 * 60 * 1000),
+      },
+    }),
+  ]);
+
+  return { ok: true, duplicate: false, coins, payoutCents };
+}
+
+export async function creditCoins(opts: {
+  userId: number;
+  type: string;
+  coins: number;
+  description?: string;
+  category?: string;
+  holdDays?: number;
+}) {
+  const availableAt = opts.holdDays
+    ? new Date(Date.now() + opts.holdDays * 24 * 60 * 60 * 1000)
+    : new Date();
+  return prisma.coinTransaction.create({
+    data: {
+      userId: opts.userId,
+      type: opts.type,
+      category: opts.category ?? "",
+      coins: opts.coins,
+      description: opts.description ?? "",
+      availableAt,
+    },
+  });
+}
+
+/**
+ * Claws back a completed attempt after the router rejected the response.
+ *
+ * The debit is the exact number of coins that were credited, and it is allowed to
+ * push the balance negative: the router has already taken the money back from us,
+ * so if the user cashed out first the shortfall has to sit on their account until
+ * they earn it back. Idempotent — a repeated reversal postback is a no-op.
+ */
+export async function reverseAttempt(opts: {
+  attemptId: number;
+  source: string;
+  note?: string;
+}): Promise<{ ok: boolean; duplicate: boolean; coins: number }> {
+  const attempt = await prisma.surveyAttempt.findUnique({ where: { id: opts.attemptId } });
+  if (!attempt) return { ok: false, duplicate: false, coins: 0 };
+  if (attempt.status === "reversed") return { ok: false, duplicate: true, coins: attempt.coinsCredited };
+  if (attempt.status !== "completed") return { ok: false, duplicate: false, coins: 0 };
+
+  const coins = attempt.coinsCredited;
+
+  await prisma.$transaction([
+    prisma.surveyAttempt.update({
+      where: { id: attempt.id },
+      data: { status: "reversed", reversedAt: new Date() },
+    }),
+    prisma.coinTransaction.create({
+      data: {
+        userId: attempt.userId,
+        type: "reversal",
+        category: "reconciliation",
+        coins: -coins,
+        description: opts.note || `Survey #${attempt.surveyId} rejected by partner · ${opts.source}`,
+      },
+    }),
+    prisma.activityLog.create({
+      data: {
+        userId: attempt.userId,
+        event: "survey_reversal",
+        detail: `attempt=${attempt.id} survey=${attempt.surveyId} coins=-${coins} source=${opts.source}`,
+      },
+    }),
+  ]);
+
+  return { ok: true, duplicate: false, coins };
+}

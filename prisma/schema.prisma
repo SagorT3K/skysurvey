@@ -1,0 +1,135 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            Int               @id @default(autoincrement())
+  email         String            @unique
+  passwordHash  String
+  username      String            @default("")
+  role          String            @default("user") // user | admin
+  country       String            @default("")
+  paypalEmail   String            @default("")
+  isActive      Boolean           @default(true)
+  isFlagged     Boolean           @default(false) // fraud review pending; blocks payouts
+  flagReason    String            @default("")
+  signupIp      String            @default("")
+  referralCode  String            @unique @default(cuid())
+  referredById  Int?
+  createdAt     DateTime          @default(now())
+
+  transactions  CoinTransaction[]
+  attempts      SurveyAttempt[]
+  redeems       RedeemRequest[]
+  activity      ActivityLog[]
+  referredUsers User[]            @relation("Referral")
+  referrer      User?             @relation("Referral", fields: [referredById], references: [id])
+}
+
+model Survey {
+  id         Int             @id @default(autoincrement())
+  provider   String          @default("mock") // mock | trayistats | cpx | bitlabs ...
+  externalId String          @default("")
+  title      String
+  category   String          @default("General")
+  cpiCents   Int // router payout in USD cents
+  loiMinutes Int             @default(10)
+  country    String          @default("ALL") // US, UK, CA, FR ... or ALL
+  liveUrl    String          @default("")
+  isActive   Boolean         @default(true)
+  createdAt  DateTime        @default(now())
+
+  attempts   SurveyAttempt[]
+}
+
+model SurveyAttempt {
+  id            Int         @id @default(autoincrement())
+  userId        Int
+  surveyId      Int
+  // Idempotency key we hand to the router on entry and match on the way back in the postback.
+  txId          String      @unique @default(cuid())
+  status        String      @default("started") // started | completed | reversed | screenout
+  cpiCents      Int
+  coinsCredited Int         @default(0)
+  ip            String      @default("")
+  userAgent     String      @default("")
+  riskFlags     String      @default("") // comma-separated fraud signals seen at entry
+  startedAt     DateTime    @default(now())
+  completedAt   DateTime?
+  reversedAt    DateTime?
+
+  user   User   @relation(fields: [userId], references: [id])
+  survey Survey @relation(fields: [surveyId], references: [id])
+
+  @@index([userId, startedAt])
+}
+
+/// Every server-to-server callback a router sends us, accepted or not.
+/// This is the evidence trail for payout disputes, so nothing is deleted.
+model PostbackLog {
+  id        Int      @id @default(autoincrement())
+  provider  String
+  outcome   String // credited | reversed | duplicate | bad_signature | unknown_tx | unknown_provider | invalid
+  txId      String   @default("")
+  payoutCents Int    @default(0)
+  coins     Int      @default(0)
+  ip        String   @default("")
+  query     String   @default("")
+  note      String   @default("")
+  createdAt DateTime @default(now())
+
+  @@index([txId])
+  @@index([provider, createdAt])
+}
+
+model CoinTransaction {
+  id          Int       @id @default(autoincrement())
+  userId      Int
+  type        String // survey | bonus | referral | redeem | reversal | admin_adjust
+  category    String    @default("") // e.g. reconciliation
+  coins       Int // positive credit, negative debit
+  description String    @default("")
+  availableAt DateTime  @default(now()) // hold period before withdrawable
+  createdAt   DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId, createdAt])
+}
+
+model RedeemRequest {
+  id          Int       @id @default(autoincrement())
+  userId      Int
+  coins       Int
+  amountCents Int // coins * coin_rate
+  method      String    @default("paypal")
+  destination String // paypal email
+  status      String    @default("pending") // pending | approved | paid | rejected
+  adminNote   String    @default("")
+  createdAt   DateTime  @default(now())
+  processedAt DateTime?
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model Config {
+  key   String @id
+  value String
+}
+
+model ActivityLog {
+  id        Int      @id @default(autoincrement())
+  userId    Int?
+  event     String // signup | login | survey_start | survey_complete | redeem_request | admin_action
+  detail    String   @default("")
+  ip        String   @default("")
+  userAgent String   @default("")
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id])
+}

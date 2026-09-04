@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #faf7f2;
+  --foreground: #3a2d22;
 }
 
 @theme inline {
@@ -12,15 +12,23 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Coffee palette (Tailwind v4 theme extension) */
+@theme {
+  --color-coffee-50: #faf7f2;
+  --color-coffee-100: #f2ebdf;
+  --color-coffee-200: #e5d3bd;
+  --color-coffee-300: #d3b694;
+  --color-coffee-400: #bf966d;
+  --color-coffee-500: #a87c52;
+  --color-coffee-600: #8a6240;
+  --color-coffee-700: #6f4e37;
+  --color-coffee-800: #5a3f2d;
+  --color-coffee-900: #463024;
+  --color-coffee-950: #2e2016;
+  --color-cream: #faf7f2;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
 }
