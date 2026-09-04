@@ -163,7 +163,7 @@ export default async function LeaderboardPage({
         </p>
       </div>
 
-      <AppFooter />
+      <AppFooter variant="app" />
     </main>
   );
 }

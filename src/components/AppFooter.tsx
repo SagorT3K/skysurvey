@@ -2,8 +2,9 @@ import Link from "next/link";
 import { Mail } from "lucide-react";
 import Logo from "@/components/Logo";
 
-// Full site footer shared by every page (landing, user app, admin panel).
-export default function AppFooter() {
+// Full site footer. `variant="app"` swaps the public auth links (create account /
+// sign in) for the logged-in navigation, used on pages behind a session.
+export default function AppFooter({ variant = "public" }: { variant?: "public" | "app" }) {
   return (
     <footer className="border-t border-coffee-200 bg-coffee-950 py-12 text-coffee-200">
       <div className="mx-auto grid max-w-6xl gap-10 px-4 md:grid-cols-4">
@@ -17,10 +18,22 @@ export default function AppFooter() {
         <div>
           <p className="text-sm font-semibold uppercase tracking-wide text-coffee-400">Earn</p>
           <ul className="mt-3 space-y-2 text-sm">
-            <li><Link href="/signup" className="hover:text-white">Create account</Link></li>
-            <li><Link href="/login" className="hover:text-white">Sign in</Link></li>
-            <li><Link href="/dashboard" className="hover:text-white">Surveys</Link></li>
-            <li><Link href="/rewards" className="hover:text-white">Redeem coins</Link></li>
+            {variant === "app" ? (
+              <>
+                <li><Link href="/dashboard" className="hover:text-white">Surveys</Link></li>
+                <li><Link href="/rewards" className="hover:text-white">Redeem coins</Link></li>
+                <li><Link href="/leaderboard" className="hover:text-white">Leaderboard</Link></li>
+                <li><Link href="/my-level" className="hover:text-white">My level</Link></li>
+                <li><Link href="/profile" className="hover:text-white">Profile</Link></li>
+              </>
+            ) : (
+              <>
+                <li><Link href="/signup" className="hover:text-white">Create account</Link></li>
+                <li><Link href="/login" className="hover:text-white">Sign in</Link></li>
+                <li><Link href="/dashboard" className="hover:text-white">Surveys</Link></li>
+                <li><Link href="/rewards" className="hover:text-white">Redeem coins</Link></li>
+              </>
+            )}
           </ul>
         </div>
         <div>

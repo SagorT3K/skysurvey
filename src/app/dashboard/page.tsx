@@ -213,7 +213,7 @@ export default async function DashboardPage() {
 
       </div>
 
-      <AppFooter />
+      <AppFooter variant="app" />
     </main>
   );
 }

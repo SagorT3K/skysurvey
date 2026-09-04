@@ -162,7 +162,7 @@ export default async function RewardsPage() {
         </aside>
       </div>
 
-      <AppFooter />
+      <AppFooter variant="app" />
     </main>
   );
 }

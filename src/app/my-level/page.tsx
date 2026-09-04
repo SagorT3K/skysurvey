@@ -145,7 +145,7 @@ export default async function MyLevelPage() {
         </section>
       </div>
 
-      <AppFooter />
+      <AppFooter variant="app" />
     </main>
   );
 }

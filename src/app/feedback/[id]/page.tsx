@@ -39,7 +39,7 @@ export default async function FeedbackPage({ params }: { params: Promise<{ id: s
           surveyTitle={attempt.survey.title}
         />
       </div>
-      <AppFooter />
+      <AppFooter variant="app" />
     </main>
   );
 }

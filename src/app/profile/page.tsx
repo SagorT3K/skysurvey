@@ -171,7 +171,7 @@ export default async function ProfilePage() {
         </div>
       </div>
 
-      <AppFooter />
+      <AppFooter variant="app" />
     </main>
   );
 }
