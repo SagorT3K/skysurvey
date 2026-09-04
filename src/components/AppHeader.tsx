@@ -59,10 +59,14 @@ export default function AppHeader({
               Profile
             </span>
           </Link>
-          <span className="mx-2 hidden items-center gap-1.5 rounded-lg bg-coffee-100 px-3 py-1.5 font-semibold text-coffee-800 sm:flex">
+          <Link
+            href="/rewards"
+            title="View your full coin history"
+            className="mx-2 hidden items-center gap-1.5 rounded-lg bg-coffee-100 px-3 py-1.5 font-semibold text-coffee-800 transition hover:bg-coffee-200 sm:flex"
+          >
             <Coins size={16} aria-hidden="true" />
             {balance}
-          </span>
+          </Link>
           <LogoutButton />
         </nav>
       </div>
