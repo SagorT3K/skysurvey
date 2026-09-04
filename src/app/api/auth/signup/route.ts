@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { signToken, setSessionCookie, clientIp, userAgent } from "@/lib/auth";
 import { getConfig } from "@/lib/config";
 import { creditCoins } from "@/lib/ledger";
+import { notify } from "@/lib/notify";
 
 export async function POST(req: Request) {
   const body = await req.json().catch(() => null);
@@ -83,6 +84,12 @@ export async function POST(req: Request) {
       type: "referral",
       coins: config.referral_bonus_coins,
       description: `Referral bonus for inviting ${email}`,
+    });
+    await notify({
+      userId: referrer.id,
+      type: "referral",
+      title: "A friend joined with your link! 🎉",
+      body: `${username} signed up using your referral — coins are on the way.`,
     });
   }
 

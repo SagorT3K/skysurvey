@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { creditCoins } from "@/lib/ledger";
 import { addScore } from "@/lib/score";
+import { notify } from "@/lib/notify";
 
 // The admin reviews each request manually and either releases the payment
 // ("paid" — shown to the user as Success) or rejects it (coins refunded).
@@ -58,6 +59,30 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       detail: `Redeem request #${redeem.id} released`,
     });
 
+    // Payout method decides the message: voucher code, crypto transfer or PayPal cash.
+    if (redeem.method.startsWith("giftcard_")) {
+      await notify({
+        userId: redeem.userId,
+        type: "voucher",
+        title: "Your gift card has arrived! 🎁",
+        body: `Your $${(redeem.amountCents / 100).toFixed(2)} gift card code was sent to ${redeem.destination}.`,
+      });
+    } else if (redeem.method.startsWith("crypto_")) {
+      await notify({
+        userId: redeem.userId,
+        type: "crypto",
+        title: "Crypto payment sent ✅",
+        body: `${(redeem.amountCents / 100).toFixed(2)} USD was sent to your wallet.`,
+      });
+    } else {
+      await notify({
+        userId: redeem.userId,
+        type: "payout",
+        title: "Payment sent! 💸",
+        body: `$${(redeem.amountCents / 100).toFixed(2)} was sent to your PayPal (${redeem.destination}).`,
+      });
+    }
+
     // Referrer trust bonus lands only on the referred user's FIRST released
     // redemption — paying per signup would reward bot-made referrals.
     const paidCount = await prisma.redeemRequest.count({
@@ -75,8 +100,23 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
           reason: "referral_first_redeem",
           detail: `Referred user ${redeem.userId} completed their first redemption`,
         });
+        await notify({
+          userId: referred.referredById,
+          type: "referral",
+          title: "Referral bonus earned! 🤝",
+          body: "Someone you invited completed their first paid redemption — +5 trust score.",
+        });
       }
     }
+  }
+
+  if (action === "reject") {
+    await notify({
+      userId: redeem.userId,
+      type: "payout",
+      title: "Redeem request rejected",
+      body: `Request #${redeem.id} was rejected and your ${redeem.coins} coins were refunded.`,
+    });
   }
 
   await prisma.activityLog.create({

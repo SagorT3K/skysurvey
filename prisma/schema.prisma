@@ -43,6 +43,7 @@ model User {
   activity      ActivityLog[]
   scoreEvents   ScoreEvent[]
   ratings       SurveyRating[]
+  notifications Notification[]
   referredUsers User[]            @relation("Referral")
   referrer      User?             @relation("Referral", fields: [referredById], references: [id])
 }
@@ -175,4 +176,18 @@ model ActivityLog {
   createdAt DateTime @default(now())
 
   user User? @relation(fields: [userId], references: [id])
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  type      String // survey | screenout | referral | payout | voucher | level | hold | system
+  title     String
+  body      String   @default("")
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId, read])
 }

@@ -1,4 +1,5 @@
 import { prisma } from "./prisma";
+import { notify } from "./notify";
 
 // Trust score: starts at 100. Level 1 = 100-199, level 2 = 200-299, and so on
 // (the level never drops below 1 even when the score goes to 0). Each level
@@ -53,6 +54,22 @@ export async function addScore(opts: {
   ]);
 
   const level = levelFromScore(score);
+  if (level > prevLevel) {
+    await notify({
+      userId: opts.userId,
+      type: "level",
+      title: `Level up! You are now Level ${level} 🎉`,
+      body: "Your survey share bonus increased — every survey now pays more.",
+    });
+  } else if (level < prevLevel) {
+    await notify({
+      userId: opts.userId,
+      type: "level",
+      title: `You dropped to Level ${level}`,
+      body: "Earn points with check-ins and surveys to climb back up.",
+    });
+  }
+
   return {
     score,
     level,

@@ -1,5 +1,6 @@
 import { prisma } from "./prisma";
 import { effectiveSharePercent, addScore } from "./score";
+import { notify } from "./notify";
 
 export type WalletSummary = {
   balance: number;
@@ -72,6 +73,13 @@ export async function completeAttempt(opts: {
     delta: 1,
     reason: "survey_complete",
     detail: `Survey #${attempt.surveyId} · ${opts.source}`,
+  });
+
+  await notify({
+    userId: attempt.userId,
+    type: "survey",
+    title: `Survey completed — +${coins} coins`,
+    body: `You earned ${coins} coins from "${opts.source}"`,
   });
 
   return { ok: true, duplicate: false, coins, payoutCents };
@@ -148,6 +156,13 @@ export async function reverseAttempt(opts: {
     delta: -10,
     reason: "reversal",
     detail: `Survey #${attempt.surveyId} rejected by partner · ${opts.source}`,
+  });
+
+  await notify({
+    userId: attempt.userId,
+    type: "screenout",
+    title: "A survey was reversed",
+    body: `The partner rejected your response to Survey #${attempt.surveyId}. ${coins} coins were deducted.`,
   });
 
   return { ok: true, duplicate: false, coins };

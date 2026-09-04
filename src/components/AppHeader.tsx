@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import Logo from "@/components/Logo";
 import LogoutButton from "@/components/LogoutButton";
+import NotificationBell from "@/components/NotificationBell";
 
 const LINKS = [
   { href: "/dashboard", label: "Surveys", icon: LayoutDashboard, key: "surveys" },
@@ -52,6 +53,7 @@ export default function AppHeader({
               {label}
             </Link>
           ))}
+          <NotificationBell />
           <Link
             href="/rewards"
             title="View your full coin history"
@@ -65,6 +67,7 @@ export default function AppHeader({
 
         {/* Mobile: balance + hamburger */}
         <div className="flex items-center gap-2 lg:hidden">
+          <NotificationBell />
           <Link
             href="/rewards"
             title="View your full coin history"

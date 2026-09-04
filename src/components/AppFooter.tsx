@@ -1,65 +1,35 @@
 import Link from "next/link";
-import { Mail } from "lucide-react";
-import Logo from "@/components/Logo";
 
-// Full site footer. `variant="app"` swaps the public auth links (create account /
-// sign in) for the logged-in navigation, used on pages behind a session.
+// Slim, professional one-line footer shared by every page.
+// `variant="app"` (logged-in pages) shows in-app links; public pages show
+// create account / sign in.
 export default function AppFooter({ variant = "public" }: { variant?: "public" | "app" }) {
   return (
-    <footer className="border-t border-coffee-200 bg-coffee-950 py-12 text-coffee-200">
-      <div className="mx-auto grid max-w-6xl gap-10 px-4 md:grid-cols-4">
-        <div>
-          <Logo tone="dark" size="sm" />
-          <p className="mt-3 text-sm leading-relaxed text-coffee-300">
-            Get paid for your opinions. Take paid surveys, earn coins, and redeem them for PayPal
-            cash and gift cards.
-          </p>
-        </div>
-        <div>
-          <p className="text-sm font-semibold uppercase tracking-wide text-coffee-400">Earn</p>
-          <ul className="mt-3 space-y-2 text-sm">
-            {variant === "app" ? (
-              <>
-                <li><Link href="/dashboard" className="hover:text-white">Surveys</Link></li>
-                <li><Link href="/rewards" className="hover:text-white">Redeem coins</Link></li>
-                <li><Link href="/leaderboard" className="hover:text-white">Leaderboard</Link></li>
-                <li><Link href="/my-level" className="hover:text-white">My level</Link></li>
-                <li><Link href="/profile" className="hover:text-white">Profile</Link></li>
-              </>
-            ) : (
-              <>
-                <li><Link href="/signup" className="hover:text-white">Create account</Link></li>
-                <li><Link href="/login" className="hover:text-white">Sign in</Link></li>
-                <li><Link href="/dashboard" className="hover:text-white">Surveys</Link></li>
-                <li><Link href="/rewards" className="hover:text-white">Redeem coins</Link></li>
-              </>
-            )}
-          </ul>
-        </div>
-        <div>
-          <p className="text-sm font-semibold uppercase tracking-wide text-coffee-400">Legal</p>
-          <ul className="mt-3 space-y-2 text-sm">
-            <li><Link href="/terms" className="hover:text-white">Terms &amp; Conditions</Link></li>
-            <li><Link href="/privacy" className="hover:text-white">Privacy Policy</Link></li>
-            <li><Link href="/cookies" className="hover:text-white">Cookie Policy</Link></li>
-          </ul>
-        </div>
-        <div>
-          <p className="text-sm font-semibold uppercase tracking-wide text-coffee-400">Support</p>
-          <ul className="mt-3 space-y-2 text-sm">
-            <li>
-              <a href="mailto:support@skysurvey.com" className="inline-flex items-center gap-2 hover:text-white">
-                <Mail size={14} aria-hidden="true" />
-                support@skysurvey.com
-              </a>
-            </li>
-            <li><Link href="/#faq" className="hover:text-white">FAQ</Link></li>
-          </ul>
-        </div>
+    <footer className="border-t border-coffee-200 bg-coffee-950 py-5 text-coffee-300">
+      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-6 gap-y-3 px-4 text-sm">
+        <p className="font-semibold text-coffee-100">SkySurvey · 1 coin = $0.01 · min cashout 500 coins</p>
+        <nav className="flex flex-wrap items-center gap-x-5 gap-y-2">
+          {variant === "app" ? (
+            <>
+              <Link href="/dashboard" className="hover:text-white">Surveys</Link>
+              <Link href="/rewards" className="hover:text-white">Rewards</Link>
+              <Link href="/leaderboard" className="hover:text-white">Leaderboard</Link>
+              <Link href="/my-level" className="hover:text-white">My level</Link>
+              <Link href="/profile" className="hover:text-white">Profile</Link>
+            </>
+          ) : (
+            <>
+              <Link href="/signup" className="hover:text-white">Create account</Link>
+              <Link href="/login" className="hover:text-white">Sign in</Link>
+            </>
+          )}
+          <Link href="/terms" className="hover:text-white">Terms</Link>
+          <Link href="/privacy" className="hover:text-white">Privacy</Link>
+          <a href="mailto:support@skysurvey.com" className="hover:text-white">Support</a>
+        </nav>
       </div>
-      <div className="mx-auto mt-10 max-w-6xl border-t border-coffee-800 px-4 pt-6 text-xs text-coffee-400">
-        © {new Date().getFullYear()} SkySurvey. All rights reserved. · 1 coin = $0.01 · Minimum
-        cashout 500 coins.
+      <div className="mx-auto mt-3 max-w-6xl border-t border-coffee-800 px-4 pt-3 text-xs text-coffee-500">
+        © {new Date().getFullYear()} SkySurvey. All rights reserved.
       </div>
     </footer>
   );

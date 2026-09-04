@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { addScore } from "@/lib/score";
+import { notify } from "@/lib/notify";
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const admin = await requireAdmin();
@@ -63,6 +64,22 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       delta: -50,
       reason: "hold",
       detail: data.holdReason || "Account held by admin",
+    });
+    await notify({
+      userId,
+      type: "hold",
+      title: "Your account has been put on hold",
+      body: `${data.holdReason || "Suspicious activity"} — earning and redeeming are paused. ${
+        user.heldUntil ? `Hold ends ${new Date(user.heldUntil).toLocaleString()}.` : ""
+      }`,
+    });
+  }
+  if (wantsHold && body.holdHours === null) {
+    await notify({
+      userId,
+      type: "hold",
+      title: "Your account hold was released ✅",
+      body: "You can earn and redeem again. Welcome back!",
     });
   }
 
