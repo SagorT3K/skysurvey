@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Globe2, Mail, UserRound } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { methodLabel } from "@/lib/redeem";
+import { levelFromScore } from "@/lib/score";
 import RedeemActions from "@/components/admin/RedeemActions";
 
 export const dynamic = "force-dynamic";
@@ -17,7 +18,7 @@ type RedeemRow = {
   adminNote: string;
   createdAt: Date;
   processedAt: Date | null;
-  user: { username: string; email: string; country: string };
+  user: { username: string; email: string; country: string; score: number };
 };
 
 const STATUS: Record<string, { label: string; cls: string }> = {
@@ -44,6 +45,12 @@ function RedeemCard({ r, seq, actions }: { r: RedeemRow; seq: number; actions?: 
             >
               <UserRound size={14} className="text-slate-400" aria-hidden="true" />
               {r.user.username || r.user.email}
+              <span
+                className="ml-1 rounded-full bg-slate-200 px-2 py-0.5 text-[11px] font-bold text-slate-600"
+                title={`Trust score ${r.user.score} — higher level gets released first`}
+              >
+                Lv {levelFromScore(r.user.score)}
+              </span>
             </a>
             <p className="text-xs text-slate-500">
               {r.user.email} · request id {r.id} · {new Date(r.createdAt).toLocaleString()}
@@ -131,11 +138,19 @@ export default async function AdminRedeemsPage({
     seqOf.set(r.id, n);
   }
 
-  // Pending work queue: returning requesters (they have earlier requests) first,
-  // first-time requesters below — newest first within each group.
+  // Pending work queue: higher trust level first, then returning requesters
+  // before first-timers — newest first within each group.
   const pending = all.filter((r) => r.status === "pending" || r.status === "approved");
-  const returning = pending.filter((r) => (seqOf.get(r.id) ?? 1) > 1);
-  const firstTime = pending.filter((r) => (seqOf.get(r.id) ?? 1) === 1);
+  const pendingSorted = [...pending].sort((a, b) => {
+    const lvl = levelFromScore(b.user.score) - levelFromScore(a.user.score);
+    if (lvl !== 0) return lvl;
+    const ret =
+      ((seqOf.get(a.id) ?? 1) > 1 ? 1 : 0) - ((seqOf.get(b.id) ?? 1) > 1 ? 1 : 0);
+    if (ret !== 0) return -ret;
+    return b.createdAt.getTime() - a.createdAt.getTime();
+  });
+  const returning = pendingSorted.filter((r) => (seqOf.get(r.id) ?? 1) > 1);
+  const firstTime = pendingSorted.filter((r) => (seqOf.get(r.id) ?? 1) === 1);
   const paid = all.filter((r) => r.status === "paid");
   const rejected = all.filter((r) => r.status === "rejected");
 
@@ -183,6 +198,9 @@ export default async function AdminRedeemsPage({
               No pending requests — all caught up.
             </div>
           )}
+          <p className="text-xs text-slate-400">
+            Sorted by trust level (highest first) so verified members get released fastest.
+          </p>
           {returning.length > 0 && (
             <section className="space-y-3">
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">

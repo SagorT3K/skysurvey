@@ -11,6 +11,9 @@ export type SurveyCardData = {
   loiMinutes: number;
   coins: number;
   done: boolean;
+  avgStars?: number | null; // community difficulty rating
+  ratingCount?: number;
+  completedCount?: number;
 };
 
 export default function SurveyList({ surveys }: { surveys: SurveyCardData[] }) {
@@ -54,6 +57,17 @@ export default function SurveyList({ surveys }: { surveys: SurveyCardData[] }) {
               </span>
             </div>
             <h3 className="mt-1.5 font-semibold text-stone-900">{s.title}</h3>
+            {s.avgStars != null && s.ratingCount ? (
+              <p className="mt-1 flex items-center gap-2 text-xs text-stone-500">
+                <span className="font-semibold text-amber-500">★ {s.avgStars}</span>
+                <span>
+                  ({s.ratingCount} rating{s.ratingCount > 1 ? "s" : ""} · {s.completedCount ?? 0}{" "}
+                  completed)
+                </span>
+              </p>
+            ) : (
+              <p className="mt-1 text-xs text-stone-400">No ratings yet — be the first to try it</p>
+            )}
             <p className="mt-1 inline-flex items-center gap-1.5 text-sm font-medium text-emerald-600">
               <Coins size={15} aria-hidden="true" />
               {s.coins} coins

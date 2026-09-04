@@ -1,4 +1,5 @@
 import { prisma } from "./prisma";
+import { effectiveSharePercent, addScore } from "./score";
 
 export type WalletSummary = {
   balance: number;
@@ -18,7 +19,6 @@ export async function getWalletSummary(userId: number): Promise<WalletSummary> {
 export function coinsForPayout(payoutCents: number, rewardSharePercent: number, coinRateCents: number) {
   return Math.max(0, Math.floor((payoutCents * rewardSharePercent) / 100 / coinRateCents));
 }
-
 /**
  * Settles a survey attempt: marks it completed and credits the user's share of the
  * router payout, held until the reversal window closes.
@@ -40,7 +40,13 @@ export async function completeAttempt(opts: {
   }
 
   const payoutCents = opts.payoutCents && opts.payoutCents > 0 ? opts.payoutCents : attempt.cpiCents;
-  const coins = coinsForPayout(payoutCents, opts.rewardSharePercent, opts.coinRateCents);
+  // Higher trust level = a bigger slice of the router payout.
+  const attempter = await prisma.user.findUnique({
+    where: { id: attempt.userId },
+    select: { score: true },
+  });
+  const share = effectiveSharePercent(opts.rewardSharePercent, attempter?.score ?? 0);
+  const coins = coinsForPayout(payoutCents, share, opts.coinRateCents);
 
   await prisma.$transaction([
     prisma.surveyAttempt.update({
@@ -60,9 +66,16 @@ export async function completeAttempt(opts: {
     }),
   ]);
 
+  // Trust score: +1 per completed survey.
+  await addScore({
+    userId: attempt.userId,
+    delta: 1,
+    reason: "survey_complete",
+    detail: `Survey #${attempt.surveyId} · ${opts.source}`,
+  });
+
   return { ok: true, duplicate: false, coins, payoutCents };
 }
-
 export async function creditCoins(opts: {
   userId: number;
   type: string;
@@ -128,6 +141,14 @@ export async function reverseAttempt(opts: {
       },
     }),
   ]);
+
+  // Router clawed the response back — that is bad performance, −10 trust score.
+  await addScore({
+    userId: attempt.userId,
+    delta: -10,
+    reason: "reversal",
+    detail: `Survey #${attempt.surveyId} rejected by partner · ${opts.source}`,
+  });
 
   return { ok: true, duplicate: false, coins };
 }

@@ -4,6 +4,7 @@ import { Hourglass, ShieldAlert } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { getConfig } from "@/lib/config";
 import { getWalletSummary } from "@/lib/ledger";
+import { levelFromScore } from "@/lib/score";
 import { relatedAccounts } from "@/lib/fraud";
 import AdminUserActions from "@/components/admin/AdminUserActions";
 
@@ -65,13 +66,14 @@ export default async function AdminUserDetailPage({
   if (!user) notFound();
 
   const config = await getConfig();
-  const [wallet, ledger, attempts, redeems, activity, siblings] = await Promise.all([
+  const [wallet, ledger, attempts, redeems, activity, siblings, scoreEvents] = await Promise.all([
     getWalletSummary(user.id),
     prisma.coinTransaction.findMany({ where: { userId }, orderBy: { createdAt: "desc" }, take: 30 }),
     prisma.surveyAttempt.findMany({ where: { userId }, orderBy: { startedAt: "desc" }, take: 20, include: { survey: true } }),
     prisma.redeemRequest.findMany({ where: { userId }, orderBy: { createdAt: "desc" }, take: 10 }),
     prisma.activityLog.findMany({ where: { userId }, orderBy: { createdAt: "desc" }, take: 30 }),
     relatedAccounts(user.id, user.signupIp),
+    prisma.scoreEvent.findMany({ where: { userId }, orderBy: { createdAt: "desc" }, take: 30 }),
   ]);
 
   const started = await prisma.surveyAttempt.aggregate({ where: { userId }, _count: true });
@@ -131,12 +133,13 @@ export default async function AdminUserDetailPage({
         </div>
       )}
 
-      <div className="mt-5 grid gap-4 sm:grid-cols-4">
+      <div className="mt-5 grid gap-4 sm:grid-cols-5">
         {[
           { label: "Balance", value: `${wallet.balance}`, sub: `$${(wallet.balance * config.coin_rate_cents / 100).toFixed(2)}` },
           { label: "Withdrawable", value: `${wallet.withdrawable}`, sub: "ready to redeem" },
-          { label: "Surveys started", value: started._count, sub: "lifetime" },
-          { label: "Redemptions", value: redeems.length, sub: `${redeems.filter((r) => r.status === "paid").length} paid` },
+          { label: "Trust score", value: `${user.score}`, sub: `Level ${levelFromScore(user.score)}` },
+          { label: "Surveys started", value: `${started._count}`, sub: "lifetime" },
+          { label: "Redemptions", value: `${redeems.length}`, sub: `${redeems.filter((r) => r.status === "paid").length} paid` },
         ].map((c) => (
           <div key={c.label} className="rounded-2xl border border-slate-200 bg-white p-4">
             <p className="text-xs font-medium text-slate-500">{c.label}</p>
@@ -145,6 +148,35 @@ export default async function AdminUserDetailPage({
           </div>
         ))}
       </div>
+
+      {/* Trust score history */}
+      <section className="mt-6 rounded-xl border border-slate-200 bg-white p-4">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
+          Trust score history
+        </h2>
+        <div className="mt-3 max-h-64 overflow-y-auto text-sm">
+          {scoreEvents.length === 0 && <p className="py-4 text-center text-slate-500">No score events.</p>}
+          <ul className="space-y-1.5">
+            {scoreEvents.map((e) => (
+              <li key={e.id} className="flex items-center justify-between gap-3 border-b border-slate-100 pb-1.5 last:border-0">
+                <span>
+                  <span className="font-medium capitalize text-slate-700">
+                    {e.reason.replaceAll("_", " ")}
+                  </span>
+                  {e.detail && <span className="text-slate-500"> · {e.detail}</span>}
+                </span>
+                <span className="flex shrink-0 items-center gap-3">
+                  <span className={`font-bold ${e.delta >= 0 ? "text-emerald-600" : "text-red-600"}`}>
+                    {e.delta >= 0 ? "+" : ""}
+                    {e.delta}
+                  </span>
+                  <span className="text-xs text-slate-400">{new Date(e.createdAt).toLocaleString()}</span>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
 
       <div className="mt-5">
         <Demographics

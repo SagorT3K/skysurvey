@@ -58,5 +58,5 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     },
   });
 
-  return NextResponse.json({ ok: true, coins: result.coins });
+  return NextResponse.json({ ok: true, coins: result.coins, redirect: `/feedback/${attempt.id}` });
 }

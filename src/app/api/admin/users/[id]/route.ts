@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
+import { addScore } from "@/lib/score";
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const admin = await requireAdmin();
@@ -54,6 +55,16 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   }
 
   const user = await prisma.user.update({ where: { id: userId }, data });
+
+  if (wantsHold && body.holdHours !== null) {
+    // A hold is a trust penalty: −50 score each time it is applied.
+    await addScore({
+      userId,
+      delta: -50,
+      reason: "hold",
+      detail: data.holdReason || "Account held by admin",
+    });
+  }
 
   const actions = [
     wantsActive ? (body.isActive ? "unblocked" : "blocked") : null,

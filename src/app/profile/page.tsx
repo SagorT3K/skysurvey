@@ -3,6 +3,7 @@ import { CalendarDays, Mail, ShieldAlert, ShieldCheck, Globe2 } from "lucide-rea
 import { prisma } from "@/lib/prisma";
 import { getSessionUser, isHeld, holdDurationLeft } from "@/lib/auth";
 import { getWalletSummary } from "@/lib/ledger";
+import { levelFromScore, levelProgress } from "@/lib/score";
 import AppHeader from "@/components/AppHeader";
 import AppFooter from "@/components/AppFooter";
 import ProfileForm from "@/components/ProfileForm";
@@ -52,7 +53,7 @@ export default async function ProfilePage() {
         )}
 
         {/* Account snapshot */}
-        <div className="mt-6 grid gap-4 sm:grid-cols-3">
+        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <div className="rounded-2xl border border-coffee-200 bg-white p-5">
             <p className="flex items-center gap-2 text-sm font-medium text-stone-500">
               <Mail size={15} aria-hidden="true" />
@@ -74,6 +75,23 @@ export default async function ProfilePage() {
             </p>
             <p className="mt-1 font-semibold text-coffee-900">
               {new Date(user.createdAt).toLocaleDateString()}
+            </p>
+          </div>
+          <div className="rounded-2xl border border-coffee-300 bg-coffee-50 p-5">
+            <p className="text-sm font-medium text-stone-500">Trust level</p>
+            <p className="mt-1 font-bold text-coffee-900">
+              Lv {levelFromScore(user.score)}{" "}
+              <span className="text-sm font-medium text-stone-500">({user.score} pts)</span>
+            </p>
+            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-coffee-200">
+              <div
+                className="h-full rounded-full bg-coffee-600"
+                style={{ width: `${levelProgress(user.score).pct}%` }}
+              />
+            </div>
+            <p className="mt-1 text-xs text-stone-500">
+              {levelProgress(user.score).needed - levelProgress(user.score).into} pts to level{" "}
+              {levelFromScore(user.score) + 1} · each level = +2% survey coins
             </p>
           </div>
         </div>

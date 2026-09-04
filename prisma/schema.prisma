@@ -20,6 +20,10 @@ model User {
   flagReason    String            @default("")
   heldUntil     DateTime?         // while set, the user cannot earn (admin suspension)
   holdReason    String            @default("")
+  // Trust score drives the user level; level boosts the effective survey share.
+  score         Int               @default(100)
+  checkStreak   Int               @default(0)
+  lastCheckIn   DateTime?
   // Self-reported demographics — used to match surveys and verify router complaints.
   gender        String            @default("")
   ageGroup      String            @default("")
@@ -37,6 +41,8 @@ model User {
   attempts      SurveyAttempt[]
   redeems       RedeemRequest[]
   activity      ActivityLog[]
+  scoreEvents   ScoreEvent[]
+  ratings       SurveyRating[]
   referredUsers User[]            @relation("Referral")
   referrer      User?             @relation("Referral", fields: [referredById], references: [id])
 }
@@ -54,7 +60,8 @@ model Survey {
   isActive   Boolean         @default(true)
   createdAt  DateTime        @default(now())
 
-  attempts   SurveyAttempt[]
+  attempts  SurveyAttempt[]
+  ratings   SurveyRating[]
 }
 
 model SurveyAttempt {
@@ -75,8 +82,34 @@ model SurveyAttempt {
 
   user   User   @relation(fields: [userId], references: [id])
   survey Survey @relation(fields: [surveyId], references: [id])
+  rating SurveyRating?
 
   @@index([userId, startedAt])
+}
+
+model SurveyRating {
+  id        Int      @id @default(autoincrement())
+  attemptId Int      @unique // one rating per survey attempt
+  surveyId  Int
+  userId    Int
+  outcome   String // completed | screenout
+  stars     Int      @default(0) // 0 = skipped
+  createdAt DateTime @default(now())
+
+  attempt SurveyAttempt @relation(fields: [attemptId], references: [id])
+  survey  Survey        @relation(fields: [surveyId], references: [id])
+  user    User          @relation(fields: [userId], references: [id])
+}
+
+model ScoreEvent {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  delta     Int // + earn, − deduct
+  reason    String // signup | check_in | streak_bonus | missed_check_in | survey_complete | screenout | reversal | hold | redemption | referral_first_redeem
+  detail    String   @default("")
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
 }
 
 /// Every server-to-server callback a router sends us, accepted or not.

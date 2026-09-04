@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser, isHeld, holdDurationLeft } from "@/lib/auth";
+import { effectiveSharePercent, levelFromScore, levelProgress } from "@/lib/score";
 import { getConfig } from "@/lib/config";
 import { getWalletSummary } from "@/lib/ledger";
 import AppHeader from "@/components/AppHeader";
@@ -34,7 +35,7 @@ export default async function DashboardPage() {
   const wallet = await getWalletSummary(user.id);
 
   const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-  const [allSurveys, completed, recent, lastDaily, leaderboard, totalEarners, redeemedAgg, totalRequestCount, pendingRequestCount] = await Promise.all([
+  const [allSurveys, completed, recent, lastDaily, leaderboard, totalEarners, redeemedAgg, totalRequestCount, pendingRequestCount, ratingsAgg, completedCounts] = await Promise.all([
     prisma.survey.findMany({
       where: { isActive: true, OR: [{ country: user.country }, { country: "ALL" }] },
     }),
@@ -58,6 +59,17 @@ export default async function DashboardPage() {
     }),
     prisma.redeemRequest.count({ where: { userId: user.id } }),
     prisma.redeemRequest.count({ where: { userId: user.id, status: "pending" } }),
+    // Community ratings shown on survey cards: average stars + how many finished it.
+    prisma.surveyRating.groupBy({
+      by: ["surveyId"],
+      _avg: { stars: true },
+      _count: { _all: true },
+    }),
+    prisma.surveyRating.groupBy({
+      by: ["surveyId"],
+      where: { outcome: "completed" },
+      _count: { _all: true },
+    }),
   ]);
   const redeemedCoins = redeemedAgg._sum.coins ?? 0;
   const totalRequests = totalRequestCount;
@@ -83,14 +95,25 @@ export default async function DashboardPage() {
   const topIds = leaderboard.map((l) => l.userId);
   const topUsers = await prisma.user.findMany({ where: { id: { in: topIds } }, select: { id: true, username: true } });
   const nameOf = (id: number) => topUsers.find((u) => u.id === id)?.username || "Member";
-  const cards: SurveyCardData[] = surveys.map((s) => ({
-    id: s.id,
-    title: s.title,
-    category: s.category,
-    loiMinutes: s.loiMinutes,
-    coins: Math.floor((s.cpiCents * config.reward_share_percent) / 100 / config.coin_rate_cents),
-    done: false, // completed surveys are filtered out of the rotation entirely
-  }));
+  const cards: SurveyCardData[] = surveys.map((s) => {
+    const rating = ratingsAgg.find((r) => r.surveyId === s.id);
+    const completedN = completedCounts.find((c) => c.surveyId === s.id)?._count._all ?? 0;
+    return {
+      id: s.id,
+      title: s.title,
+      category: s.category,
+      loiMinutes: s.loiMinutes,
+      coins: Math.floor(
+        (s.cpiCents * effectiveSharePercent(config.reward_share_percent, user.score)) /
+          100 /
+          config.coin_rate_cents,
+      ),
+      done: false, // completed surveys are filtered out of the rotation entirely
+      avgStars: rating?._avg.stars ? Math.round(rating._avg.stars * 10) / 10 : null,
+      ratingCount: rating?._count._all ?? 0,
+      completedCount: completedN,
+    };
+  });
 
   return (
     <main className="flex min-h-screen flex-1 flex-col bg-cream">
@@ -122,11 +145,35 @@ export default async function DashboardPage() {
                 <Radio size={15} aria-hidden="true" />
                 Live · {totalEarners.toLocaleString()} members earning
               </p>
-              <h1 className="mt-1 text-3xl font-bold">Welcome back, {user.username || "friend"}</h1>
+              <h1 className="mt-1 flex items-center gap-3 text-3xl font-bold">
+                Welcome back, {user.username || "friend"}
+                <span
+                  className="rounded-full bg-coffee-300 px-3 py-1 text-sm font-bold text-coffee-950"
+                  title={`Trust score ${user.score}`}
+                >
+                  Lv {levelFromScore(user.score)}
+                </span>
+              </h1>
               <p className="mt-2 max-w-lg text-coffee-100/85">
                 Complete surveys, keep your streak alive, and invite friends — every coin adds up to
                 your next payout.
               </p>
+              {/* Level progress — higher level means a bigger survey share */}
+              <div className="mt-4 max-w-xs">
+                <div className="flex justify-between text-xs font-medium text-coffee-200">
+                  <span>Level {levelProgress(user.score).level}</span>
+                  <span>
+                    {levelProgress(user.score).needed - levelProgress(user.score).into} pts to
+                    Level {levelProgress(user.score).level + 1}
+                  </span>
+                </div>
+                <div className="mt-1 h-2 overflow-hidden rounded-full bg-coffee-950/40">
+                  <div
+                    className="h-full rounded-full bg-coffee-300"
+                    style={{ width: `${levelProgress(user.score).pct}%` }}
+                  />
+                </div>
+              </div>
             </div>
             <Link
               href="/rewards"

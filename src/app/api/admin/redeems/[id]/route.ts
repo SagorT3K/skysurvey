@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { creditCoins } from "@/lib/ledger";
+import { addScore } from "@/lib/score";
 
 // The admin reviews each request manually and either releases the payment
 // ("paid" — shown to the user as Success) or rejects it (coins refunded).
@@ -46,6 +47,36 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       coins: redeem.coins,
       description: `Redeem request #${redeem.id} rejected`,
     });
+  }
+
+  if (action === "paid") {
+    // A successful redemption is proof of good standing: +5 trust score.
+    await addScore({
+      userId: redeem.userId,
+      delta: 5,
+      reason: "redemption",
+      detail: `Redeem request #${redeem.id} released`,
+    });
+
+    // Referrer trust bonus lands only on the referred user's FIRST released
+    // redemption — paying per signup would reward bot-made referrals.
+    const paidCount = await prisma.redeemRequest.count({
+      where: { userId: redeem.userId, status: "paid" },
+    });
+    if (paidCount === 1) {
+      const referred = await prisma.user.findUnique({
+        where: { id: redeem.userId },
+        select: { referredById: true },
+      });
+      if (referred?.referredById) {
+        await addScore({
+          userId: referred.referredById,
+          delta: 5,
+          reason: "referral_first_redeem",
+          detail: `Referred user ${redeem.userId} completed their first redemption`,
+        });
+      }
+    }
   }
 
   await prisma.activityLog.create({
