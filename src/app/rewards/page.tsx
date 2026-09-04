@@ -59,8 +59,8 @@ export default async function RewardsPage() {
               <div>
                 <p className="font-bold">Sorry, you can&apos;t earn right now.</p>
                 <p className="mt-1 text-sm">
-                  Your account has been held for {holdLeft}. You can still request a payout from
-                  your available balance; earning resumes automatically when the hold ends.
+                  Your account has been held for {holdLeft}. Earning and redeeming are paused; you
+                  can still review your history and activities below.
                 </p>
               </div>
             </div>
@@ -152,17 +152,30 @@ export default async function RewardsPage() {
             </p>
             <p className="mt-1 text-2xl font-bold">{wallet.withdrawable}</p>
             <p className="text-sm">${((wallet.withdrawable * config.coin_rate_cents) / 100).toFixed(2)}</p>
-            <p className="mt-2 text-xs opacity-80">
-              Requests are reviewed by our team and released after verification.
-            </p>
+            {held ? (
+              <p className="mt-2 text-xs font-semibold opacity-90">
+                Redemption is disabled while your account is on hold.
+              </p>
+            ) : (
+              <p className="mt-2 text-xs opacity-80">
+                Requests are reviewed by our team and released after verification.
+              </p>
+            )}
           </div>
           <div className="mt-6">
-            <RedeemForm
-              withdrawable={wallet.withdrawable}
-              minCoins={config.min_cashout_coins}
-              coinRateCents={config.coin_rate_cents}
-              defaultEmail={user.paypalEmail || user.email}
-            />
+            {held ? (
+              <div className="rounded-xl border border-dashed border-red-300 bg-white p-5 text-center text-sm text-red-700">
+                Redeeming is paused while your account is on hold. Your history below stays
+                available.
+              </div>
+            ) : (
+              <RedeemForm
+                withdrawable={wallet.withdrawable}
+                minCoins={config.min_cashout_coins}
+                coinRateCents={config.coin_rate_cents}
+                defaultEmail={user.paypalEmail || user.email}
+              />
+            )}
           </div>
         </aside>
       </div>

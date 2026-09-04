@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getSessionUser, clientIp, userAgent } from "@/lib/auth";
+import { getSessionUser, clientIp, userAgent, isHeld, holdDurationLeft } from "@/lib/auth";
 import { getConfig } from "@/lib/config";
 import { completeAttempt } from "@/lib/ledger";
 
@@ -10,6 +10,13 @@ import { completeAttempt } from "@/lib/ledger";
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const user = await getSessionUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  if (isHeld(user)) {
+    return NextResponse.json(
+      { error: `Sorry, you can't earn right now. Your account has been held for ${holdDurationLeft(user)}.` },
+      { status: 403 },
+    );
+  }
 
   const { id } = await params;
   const attempt = await prisma.surveyAttempt.findUnique({

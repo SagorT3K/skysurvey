@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { getSessionUser, clientIp, userAgent } from "@/lib/auth";
+import { getSessionUser, clientIp, userAgent, isHeld, holdDurationLeft } from "@/lib/auth";
 import { getConfig } from "@/lib/config";
 import { getWalletSummary, creditCoins } from "@/lib/ledger";
 import { REDEEM_METHOD_IDS, REDEEM_AMOUNT_CENTS } from "@/lib/redeem";
@@ -8,6 +8,14 @@ import { REDEEM_METHOD_IDS, REDEEM_AMOUNT_CENTS } from "@/lib/redeem";
 export async function POST(req: Request) {
   const user = await getSessionUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  // Held accounts are read-only: no earning and no redemption until the hold ends.
+  if (isHeld(user)) {
+    return NextResponse.json(
+      { error: `Sorry, you can't redeem right now. Your account has been held for ${holdDurationLeft(user)}.` },
+      { status: 403 },
+    );
+  }
 
   // Flagged accounts keep earning but cannot withdraw until an admin clears the
   // review, because a payout we send is unrecoverable if the router claws it back.
