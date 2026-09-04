@@ -4,10 +4,8 @@ import {
   ArrowRight,
   CircleCheckBig,
   Coins,
-  Medal,
   Radio,
   ShieldAlert,
-  Trophy,
   Users,
   Wallet,
 } from "lucide-react";
@@ -22,9 +20,6 @@ import SurveyList, { type SurveyCardData } from "@/components/SurveyList";
 import DailyCheckIn from "@/components/DailyCheckIn";
 import Logo from "@/components/Logo";
 
-const MEDAL_TONE = ["text-amber-500", "text-stone-400", "text-amber-700"];
-
-
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
@@ -35,20 +30,13 @@ export default async function DashboardPage() {
   const wallet = await getWalletSummary(user.id);
 
   const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-  const [allSurveys, completed, lastDaily, leaderboard, totalEarners, redeemedAgg, totalRequestCount, pendingRequestCount, ratingsAgg, completedCounts] = await Promise.all([
+  const [allSurveys, completed, lastDaily, totalEarners, redeemedAgg, totalRequestCount, pendingRequestCount, ratingsAgg, completedCounts] = await Promise.all([
     prisma.survey.findMany({
       where: { isActive: true, OR: [{ country: user.country }, { country: "ALL" }] },
     }),
     prisma.surveyAttempt.findMany({ where: { userId: user.id, status: "completed" }, select: { surveyId: true } }),
     prisma.coinTransaction.findFirst({
       where: { userId: user.id, type: "bonus", category: "daily", createdAt: { gte: dayAgo } },
-    }),
-    prisma.coinTransaction.groupBy({
-      by: ["userId"],
-      where: { coins: { gt: 0 } },
-      _sum: { coins: true },
-      orderBy: { _sum: { coins: "desc" } },
-      take: 5,
     }),
     prisma.user.count({ where: { role: "user" } }),
     // Coins actually paid out so far (released requests only).
@@ -91,9 +79,6 @@ export default async function DashboardPage() {
   }
   const surveys = fresh.slice(0, 12);
 
-  const topIds = leaderboard.map((l) => l.userId);
-  const topUsers = await prisma.user.findMany({ where: { id: { in: topIds } }, select: { id: true, username: true } });
-  const nameOf = (id: number) => topUsers.find((u) => u.id === id)?.username || "Member";
   const cards: SurveyCardData[] = surveys.map((s) => {
     const rating = ratingsAgg.find((r) => r.surveyId === s.id);
     const completedN = completedCounts.find((c) => c.surveyId === s.id)?._count._all ?? 0;
@@ -184,56 +169,19 @@ export default async function DashboardPage() {
           </div>
         </section>
 
-        {/* Leaderboard — front and centre */}
-        <section className="mt-6 grid gap-6 lg:grid-cols-2">
-          <div>
-            <h2 className="flex items-center gap-2 text-2xl font-bold text-coffee-900">
-              <Trophy size={22} className="text-coffee-600" aria-hidden="true" />
-              Leaderboard
-            </h2>
-            <div className="mt-4 overflow-hidden rounded-2xl border border-coffee-200 bg-white">
-              {leaderboard.map((l, i) => (
-                <div key={l.userId} className={`flex items-center gap-3 border-b border-coffee-100 px-5 py-3.5 last:border-0 ${l.userId === user.id ? "bg-coffee-50" : ""}`}>
-                  <span className="flex w-7 justify-center">
-                    {i < 3 ? (
-                      <Medal size={20} className={MEDAL_TONE[i]} aria-hidden="true" />
-                    ) : (
-                      <span className="text-sm font-bold text-coffee-500">{i + 1}</span>
-                    )}
-                  </span>
-                  <span className="flex-1 font-medium text-stone-700">
-                    {l.userId === user.id ? "You" : nameOf(l.userId)}
-                  </span>
-                  <span className="flex items-center gap-1.5 font-bold text-coffee-800">
-                    <Coins size={15} className="text-coffee-500" aria-hidden="true" />
-                    {(l._sum.coins ?? 0).toLocaleString()}
-                  </span>
-                </div>
-              ))}
-              {leaderboard.length === 0 && <p className="p-6 text-center text-sm text-stone-500">Be the first on the board!</p>}
-            </div>
-            <p className="mt-2 text-xs text-stone-400">
-              Full coin-by-coin history lives in{" "}
-              <Link href="/rewards" className="font-medium text-coffee-700 underline underline-offset-2">
-                Rewards
-              </Link>
-              .
+        {/* Invite friends */}
+        <section className="mt-6">
+          <div className="rounded-2xl border border-coffee-200 bg-white p-5">
+            <h3 className="flex items-center gap-2 font-bold text-coffee-900">
+              <Users size={18} className="text-coffee-600" aria-hidden="true" />
+              Invite friends
+            </h3>
+            <p className="mt-1 text-sm text-stone-600">
+              Share your referral link and earn {config.referral_bonus_coins} coins per friend who joins.
             </p>
-          </div>
-
-          <div>
-            <div className="rounded-2xl border border-coffee-200 bg-white p-5">
-              <h3 className="flex items-center gap-2 font-bold text-coffee-900">
-                <Users size={18} className="text-coffee-600" aria-hidden="true" />
-                Invite friends
-              </h3>
-              <p className="mt-1 text-sm text-stone-600">
-                Share your referral link and earn {config.referral_bonus_coins} coins per friend who joins.
-              </p>
-              <code className="mt-3 block overflow-x-auto rounded-lg bg-coffee-50 px-3 py-2 text-sm font-semibold text-coffee-800 ring-1 ring-coffee-200">
-                skysurvey.com/signup?ref={user.referralCode}
-              </code>
-            </div>
+            <code className="mt-3 block overflow-x-auto rounded-lg bg-coffee-50 px-3 py-2 text-sm font-semibold text-coffee-800 ring-1 ring-coffee-200">
+              skysurvey.com/signup?ref={user.referralCode}
+            </code>
           </div>
         </section>
 
