@@ -41,12 +41,27 @@ The most capable option: a real server, no serverless limits, SQLite works as-is
 certificate automatically once `DOMAIN` points at the server.
 
 ```bash
-# on the server, with Docker installed
+# on the server
+curl -fsSL https://raw.githubusercontent.com/SagorT3K/skysurvey/main/scripts/vps-setup.sh | bash
+
 git clone https://github.com/SagorT3K/skysurvey.git && cd skysurvey
 cp .env.example .env          # set JWT_SECRET, ADMIN_PASSWORD, DOMAIN
 docker compose up -d --build
 docker compose logs -f app
 ```
+
+`scripts/vps-setup.sh` installs Docker, opens TCP 80/443 on the host firewall and
+adds swap. On Oracle Cloud specifically, opening the ports takes **two** changes
+and missing either one looks identical from outside:
+
+- the subnet's security list needs stateful ingress rules for TCP 80 and 443
+- the instance's own iptables chain allows only TCP 22 by default and ends in a
+  `REJECT`, so a rule appended with `-A` lands after it and silently never
+  matches — the script inserts before that line instead
+
+Do not use `ufw` on an OCI Ubuntu image; Oracle warns it can leave the instance
+unable to boot. Never run `iptables -F` either, as that removes the iSCSI rules
+protecting the boot volume.
 
 The database lives in the `skysurvey-data` volume, so `docker compose down` and
 rebuilds do not lose it. Back it up with:
