@@ -12,6 +12,8 @@ const DEFAULT_CONFIG = {
   signup_bonus_coins: "100",
   referral_bonus_coins: "50",
   daily_bonus_coins: "10",
+  max_attempts_per_hour: "20", // per user, then the entry is blocked and flagged
+  max_accounts_per_ip: "2", // extra signups from one IP are flagged
 };
 
 const MOCK_SURVEYS = [
@@ -34,18 +36,32 @@ async function main() {
     await prisma.config.upsert({ where: { key }, update: {}, create: { key, value } });
   }
 
-  const adminEmail = "admin@skysurvey.com";
+  const adminEmail = (process.env.ADMIN_EMAIL || "admin@skysurvey.com").toLowerCase();
+  const adminPassword = process.env.ADMIN_PASSWORD || "";
+
   const existingAdmin = await prisma.user.findUnique({ where: { email: adminEmail } });
   if (!existingAdmin) {
+    // A publicly reachable deployment must not get the well-known local password,
+    // otherwise anyone who has read this repo owns the admin panel.
+    if (!adminPassword && process.env.NODE_ENV === "production") {
+      throw new Error(
+        "Refusing to seed an admin account in production without ADMIN_PASSWORD set.",
+      );
+    }
+    const password = adminPassword || "Admin@123";
     await prisma.user.create({
       data: {
         email: adminEmail,
-        passwordHash: await bcrypt.hash("Admin@123", 10),
+        passwordHash: await bcrypt.hash(password, 10),
         username: "Admin",
         role: "admin",
       },
     });
-    console.log("Admin created:", adminEmail, "/ Admin@123");
+    console.log(
+      adminPassword
+        ? `Admin created: ${adminEmail} (password from ADMIN_PASSWORD)`
+        : `Admin created: ${adminEmail} / Admin@123  — local default, change it before deploying`,
+    );
   }
 
   const surveyCount = await prisma.survey.count();

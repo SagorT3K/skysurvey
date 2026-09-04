@@ -1,0 +1,5 @@
+# core.autocrlf would otherwise give these CRLF endings on a Windows checkout, and
+# a CRLF shebang makes the container fail with "/bin/sh^M: bad interpreter".
+*.sh text eol=lf
+Dockerfile text eol=lf
+docker-entrypoint.sh text eol=lf

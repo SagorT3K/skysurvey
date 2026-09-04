@@ -1,0 +1,32 @@
+app = "skysurvey"
+primary_region = "sin"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  PORT = "3000"
+  DATABASE_URL = "file:/data/skysurvey.db"
+
+# The SQLite file lives here. Create it once with:
+#   fly volumes create skysurvey_data --size 1 --region sin
+[mounts]
+  source = "skysurvey_data"
+  destination = "/data"
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  # SQLite tolerates exactly one writer, so this app must never run two machines.
+  auto_stop_machines = "suspend"
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [http_service.concurrency]
+    type = "requests"
+    soft_limit = 200
+    hard_limit = 250
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"

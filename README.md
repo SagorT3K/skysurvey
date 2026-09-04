@@ -22,44 +22,70 @@ Error: Page "/api/admin/redeems/[id]" is missing "generateStaticParams()"
 so it cannot be used with "output: export" config.
 ```
 
-Deploy to a host that runs Node instead. Vercel is not a static host — it runs
-the full app, API routes included — so it is the quickest way to get a live URL.
+Deploy to a host that runs Node instead:
 
-| Host | Database | Notes |
+| Host | Database | Extra services needed |
 | --- | --- | --- |
-| Vercel | Hosted Postgres (Neon, Supabase, Vercel Postgres) | Read-only filesystem, so SQLite cannot be used |
-| Render, Railway, Fly.io | The bundled SQLite file, on a persistent disk | Also works with Postgres |
+| **Fly.io** (configured in this repo) | The SQLite file, on a Fly volume | None |
+| Vercel | Hosted Postgres (Neon, Supabase) | A separate database |
+
+### Deploying to Fly.io
+
+`Dockerfile`, `fly.toml` and `docker-entrypoint.sh` are committed, and the SQLite
+database lives on a Fly volume at `/data`, so no separate database is needed.
+
+```bash
+flyctl auth login
+fly launch --no-deploy --copy-config --name skysurvey   # reuses fly.toml
+fly volumes create skysurvey_data --size 1 --region sin
+
+fly secrets set \
+  JWT_SECRET="$(openssl rand -hex 32)" \
+  ADMIN_EMAIL="you@example.com" \
+  ADMIN_PASSWORD="a-strong-password"
+
+fly deploy --remote-only    # --remote-only builds on Fly, no local Docker needed
+fly open
+```
+
+On first boot the entrypoint applies the schema with `prisma db push` and seeds
+the config, admin account and demo surveys. Both steps are idempotent, so later
+restarts leave existing data alone. Fly release commands run without volumes
+attached, which is why this happens at container start rather than as a
+`release_command`.
+
+**This app must stay on one machine.** SQLite allows a single writer, and two Fly
+machines would get two independent volumes whose data silently diverges. Do not
+run `fly scale count 2`; to grow, move to Postgres first.
 
 ### Deploying to Vercel
 
-The datasource provider is patched at build time from `DATABASE_PROVIDER`,
-because Prisma does not accept `env()` for it. The schema itself needs no edits —
-it validates unchanged against Postgres.
+Vercel is not a static host either — it runs the full app — but its filesystem is
+read-only, so SQLite is out and a hosted Postgres is required. The datasource
+provider is patched at build time from `DATABASE_PROVIDER`, because Prisma does
+not accept `env()` for it; the schema itself validates against Postgres unchanged.
 
 1. Create a free Postgres database (Neon or Supabase) and copy its connection string.
-2. Import this repository on Vercel. It auto-detects Next.js; leave the build
-   command alone, since `npm run build` already runs `prisma generate`.
-3. Set these environment variables in the Vercel project:
-
-   | Variable | Value |
-   | --- | --- |
-   | `DATABASE_PROVIDER` | `postgresql` |
-   | `DATABASE_URL` | the Postgres connection string |
-   | `JWT_SECRET` | a long random string, not the local one |
-
-4. Create the tables and demo rows once, from your machine, pointed at the same
-   database:
+2. Import this repository on Vercel; leave the build command alone, since
+   `npm run build` already runs `prisma generate`.
+3. Set `DATABASE_PROVIDER=postgresql`, `DATABASE_URL=<connection string>` and a
+   fresh `JWT_SECRET`.
+4. Create the tables and demo rows once, from your machine:
 
    ```bash
    DATABASE_PROVIDER=postgresql DATABASE_URL="<connection string>" npm run db:push
    DATABASE_PROVIDER=postgresql DATABASE_URL="<connection string>" npm run db:seed
    ```
 
-Local development is unaffected: `DATABASE_PROVIDER` defaults to `sqlite`, so the
-committed schema and `prisma/dev.db` keep working.
+Local development is unaffected either way: `DATABASE_PROVIDER` defaults to
+`sqlite`, so the committed schema and `prisma/dev.db` keep working.
 
-**Change the seeded admin password before exposing a deployment.**
-`prisma/seed.js` creates `admin@skysurvey.com` with a known password.
+### Admin account
+
+The seed reads `ADMIN_EMAIL` and `ADMIN_PASSWORD`. With `NODE_ENV=production` and
+no `ADMIN_PASSWORD` set it refuses to run rather than create an account with the
+password published in this repository. Locally it falls back to
+`admin@skysurvey.com` / `Admin@123`.
 
 ## Local development
 
