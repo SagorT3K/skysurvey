@@ -15,8 +15,9 @@ import { prisma } from "@/lib/prisma";
 import { getSessionUser, isHeld, holdDurationLeft } from "@/lib/auth";
 import { getConfig } from "@/lib/config";
 import { getWalletSummary } from "@/lib/ledger";
+import AppHeader from "@/components/AppHeader";
+import AppFooter from "@/components/AppFooter";
 import SurveyList, { type SurveyCardData } from "@/components/SurveyList";
-import LogoutButton from "@/components/LogoutButton";
 import DailyCheckIn from "@/components/DailyCheckIn";
 import Logo from "@/components/Logo";
 
@@ -92,25 +93,8 @@ export default async function DashboardPage() {
   }));
 
   return (
-    <main className="flex-1 bg-cream">
-      <header className="sticky top-0 z-40 border-b border-coffee-200 bg-white/90 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-          <Logo href="/dashboard" size="sm" />
-          <nav className="flex items-center gap-2 text-sm">
-            <Link href="/dashboard" className="rounded-lg px-3 py-1.5 font-medium text-coffee-800 hover:bg-coffee-100">
-              Surveys
-            </Link>
-            <Link href="/rewards" className="rounded-lg px-3 py-1.5 font-medium text-stone-600 hover:bg-coffee-100">
-              Rewards
-            </Link>
-            <span className="mx-2 hidden items-center gap-1.5 rounded-lg bg-coffee-100 px-3 py-1.5 font-semibold text-coffee-800 sm:flex">
-              <Coins size={16} aria-hidden="true" />
-              {wallet.balance}
-            </span>
-            <LogoutButton />
-          </nav>
-        </div>
-      </header>
+    <main className="flex min-h-screen flex-1 flex-col bg-cream">
+      <AppHeader active="surveys" balance={wallet.balance} />
 
       <div className="mx-auto max-w-6xl px-4 py-8">
         {/* Account hold notice */}
@@ -271,14 +255,7 @@ export default async function DashboardPage() {
         </section>
       </div>
 
-      <footer className="border-t border-coffee-200 bg-white py-6">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-x-6 gap-y-2 px-4 text-xs text-stone-500">
-          <span>© {new Date().getFullYear()} SkySurvey</span>
-          <Link href="/terms" className="hover:text-coffee-700">Terms &amp; Conditions</Link>
-          <Link href="/privacy" className="hover:text-coffee-700">Privacy Policy</Link>
-          <Link href="/cookies" className="hover:text-coffee-700">Cookie Policy</Link>
-        </div>
-      </footer>
+      <AppFooter />
     </main>
   );
 }

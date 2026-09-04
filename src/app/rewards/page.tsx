@@ -1,14 +1,13 @@
 import { redirect } from "next/navigation";
-import Link from "next/link";
-import { ArrowRight, Coins, ShieldAlert, Wallet } from "lucide-react";
+import { ArrowRight, ShieldAlert, Wallet } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser, isHeld, holdDurationLeft } from "@/lib/auth";
 import { getConfig } from "@/lib/config";
 import { getWalletSummary } from "@/lib/ledger";
 import { methodLabel } from "@/lib/redeem";
 import RedeemForm from "@/components/RedeemForm";
-import LogoutButton from "@/components/LogoutButton";
-import Logo from "@/components/Logo";
+import AppHeader from "@/components/AppHeader";
+import AppFooter from "@/components/AppFooter";
 
 export const dynamic = "force-dynamic";
 
@@ -31,27 +30,10 @@ export default async function RewardsPage() {
   const redeems = allRedeems.slice(0, 5);
 
   return (
-    <main className="flex-1 bg-cream">
-      <header className="sticky top-0 z-40 border-b border-coffee-200 bg-white/90 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-          <Logo href="/dashboard" size="sm" />
-          <nav className="flex items-center gap-2 text-sm">
-            <Link href="/dashboard" className="rounded-lg px-3 py-1.5 font-medium text-stone-600 hover:bg-coffee-100">
-              Surveys
-            </Link>
-            <Link href="/rewards" className="rounded-lg px-3 py-1.5 font-medium text-coffee-800 hover:bg-coffee-100">
-              Rewards
-            </Link>
-            <span className="mx-2 hidden items-center gap-1.5 rounded-lg bg-coffee-100 px-3 py-1.5 font-semibold text-coffee-800 sm:flex">
-              <Coins size={16} aria-hidden="true" />
-              {wallet.balance}
-            </span>
-            <LogoutButton />
-          </nav>
-        </div>
-      </header>
+    <main className="flex min-h-screen flex-1 flex-col bg-cream">
+      <AppHeader active="rewards" balance={wallet.balance} />
 
-      <div className="mx-auto grid max-w-6xl gap-8 px-4 py-8 lg:grid-cols-[1fr_380px]">
+      <div className="mx-auto grid w-full max-w-6xl flex-1 gap-8 px-4 py-8 lg:grid-cols-[1fr_380px]">
         <div>
           {held && (
             <div className="mb-6 flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 p-5 text-red-800">
@@ -179,6 +161,8 @@ export default async function RewardsPage() {
           </div>
         </aside>
       </div>
+
+      <AppFooter />
     </main>
   );
 }

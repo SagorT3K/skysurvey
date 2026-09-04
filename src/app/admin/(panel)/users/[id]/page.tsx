@@ -9,6 +9,49 @@ import AdminUserActions from "@/components/admin/AdminUserActions";
 
 export const dynamic = "force-dynamic";
 
+function Demographics({ user }: { user: { [key: string]: string | undefined } }) {
+  const rows: { label: string; value: string }[] = [
+    { label: "Gender", value: user.gender || "" },
+    { label: "Age group", value: user.ageGroup || "" },
+    { label: "Ethnicity", value: user.ethnicity || "" },
+    { label: "Education", value: user.education || "" },
+    { label: "Household income", value: user.householdIncome || "" },
+    { label: "Employment", value: user.employment || "" },
+    { label: "State / region", value: user.state || "" },
+    { label: "PayPal email", value: user.paypalEmail || "" },
+  ];
+  const filled = rows.filter((r) => r.value).length;
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white p-4">
+      <div className="flex items-center justify-between">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
+          Self-reported demographics
+        </h2>
+        <span
+          className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+            filled === rows.length ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"
+          }`}
+        >
+          {filled}/{rows.length} filled
+        </span>
+      </div>
+      <dl className="mt-3 grid gap-x-6 gap-y-2 text-sm sm:grid-cols-2">
+        {rows.map((r) => (
+          <div key={r.label} className="flex justify-between gap-3 border-b border-slate-100 pb-1.5">
+            <dt className="text-slate-500">{r.label}</dt>
+            <dd className={`text-right font-medium ${r.value ? "text-slate-800" : "text-slate-300"}`}>
+              {r.value || "not provided"}
+            </dd>
+          </div>
+        ))}
+      </dl>
+      <p className="mt-2 text-xs text-slate-400">
+        Compare these against survey answers when a router disputes a response.
+      </p>
+    </div>
+  );
+}
+
 export default async function AdminUserDetailPage({
   params,
 }: {
@@ -91,7 +134,7 @@ export default async function AdminUserDetailPage({
       <div className="mt-5 grid gap-4 sm:grid-cols-4">
         {[
           { label: "Balance", value: `${wallet.balance}`, sub: `$${(wallet.balance * config.coin_rate_cents / 100).toFixed(2)}` },
-          { label: "Withdrawable", value: `${wallet.withdrawable}`, sub: "after hold window" },
+          { label: "Withdrawable", value: `${wallet.withdrawable}`, sub: "ready to redeem" },
           { label: "Surveys started", value: started._count, sub: "lifetime" },
           { label: "Redemptions", value: redeems.length, sub: `${redeems.filter((r) => r.status === "paid").length} paid` },
         ].map((c) => (
@@ -101,6 +144,21 @@ export default async function AdminUserDetailPage({
             <p className="text-xs text-slate-400">{c.sub}</p>
           </div>
         ))}
+      </div>
+
+      <div className="mt-5">
+        <Demographics
+          user={{
+            gender: user.gender,
+            ageGroup: user.ageGroup,
+            ethnicity: user.ethnicity,
+            education: user.education,
+            householdIncome: user.householdIncome,
+            employment: user.employment,
+            state: user.state,
+            paypalEmail: user.paypalEmail,
+          }}
+        />
       </div>
 
       <div className="mt-8 grid gap-6 xl:grid-cols-2">

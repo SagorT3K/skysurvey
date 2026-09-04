@@ -20,6 +20,14 @@ model User {
   flagReason    String            @default("")
   heldUntil     DateTime?         // while set, the user cannot earn (admin suspension)
   holdReason    String            @default("")
+  // Self-reported demographics — used to match surveys and verify router complaints.
+  gender        String            @default("")
+  ageGroup      String            @default("")
+  ethnicity     String            @default("")
+  education     String            @default("")
+  householdIncome String          @default("")
+  employment    String            @default("")
+  state         String            @default("")
   signupIp      String            @default("")
   referralCode  String            @unique @default(cuid())
   referredById  Int?
