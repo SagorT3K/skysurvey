@@ -36,15 +36,19 @@ database lives on a Fly volume at `/data`, so no separate database is needed.
 
 ```bash
 flyctl auth login
-fly launch --no-deploy --copy-config --name skysurvey   # reuses fly.toml
-fly volumes create skysurvey_data --size 1 --region sin
+
+fly apps create skysurvey --org personal
+fly volumes create skysurvey_data --size 1 --region sin --yes
 
 fly secrets set \
   JWT_SECRET="$(openssl rand -hex 32)" \
   ADMIN_EMAIL="you@example.com" \
   ADMIN_PASSWORD="a-strong-password"
 
-fly deploy --remote-only    # --remote-only builds on Fly, no local Docker needed
+# --ha=false is required: fly deploy otherwise starts two machines for high
+# availability, and each would get its own volume with its own copy of the data.
+# --remote-only builds on Fly, so no local Docker is needed.
+fly deploy --remote-only --ha=false
 fly open
 ```
 
@@ -55,8 +59,9 @@ attached, which is why this happens at container start rather than as a
 `release_command`.
 
 **This app must stay on one machine.** SQLite allows a single writer, and two Fly
-machines would get two independent volumes whose data silently diverges. Do not
-run `fly scale count 2`; to grow, move to Postgres first.
+machines would get two independent volumes whose data silently diverges. Deploy
+with `--ha=false`, do not run `fly scale count 2`, and to grow beyond one machine
+move to Postgres first.
 
 ### Deploying to Vercel
 
