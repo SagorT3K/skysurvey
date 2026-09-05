@@ -18,7 +18,10 @@ export async function getWalletSummary(userId: number): Promise<WalletSummary> {
 }
 
 export function coinsForPayout(payoutCents: number, rewardSharePercent: number, coinRateCents: number) {
-  return Math.max(0, Math.floor((payoutCents * rewardSharePercent) / 100 / coinRateCents));
+  // Round, don't floor: routers promise users fractional coins (CPX displays
+  // "1.00 Coins" for a $0.01 screenout bonus, i.e. 0.7 at our 70% share), and
+  // flooring would silently pay 0 on tiny completions.
+  return Math.max(0, Math.round((payoutCents * rewardSharePercent) / 100 / coinRateCents));
 }
 /**
  * Settles a survey attempt: marks it completed and credits the user's share of the
