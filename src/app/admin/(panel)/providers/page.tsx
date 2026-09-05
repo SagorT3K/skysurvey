@@ -5,14 +5,22 @@ import { listProviders } from "@/lib/providers";
 export const dynamic = "force-dynamic";
 
 // Well-known router signup pages — exact param names come from each router's
-// publisher docs after signup.
+// publisher docs after signup. BitLabs needs 50k+ MAU (see PROVIDERS-SETUP.md);
+// the others are self-serve with no traffic minimum.
 const KNOWN: Record<string, { name: string; signup: string }> = {
-  bitlabs: { name: "BitLabs", signup: "https://www.bitlabs.ai/" },
-  cpx: { name: "CPX Research", signup: "https://www.cpx-research.com/main/" },
+  cpx: {
+    name: "CPX Research",
+    signup: "https://publisher.cpx-research.com/index.php?page=register",
+  },
+  torox: { name: "Torox (OfferToro)", signup: "https://torox.io/register/" },
+  inbrain: { name: "inBrain.ai", signup: "https://publisher.inbrain.ai/account/signup" },
+  theoremreach: {
+    name: "TheoremReach",
+    signup: "https://publishers.theoremreach.com/sign_up",
+  },
+  adgate: { name: "AdGate Media", signup: "https://dash.adgatemedia.com/account/signup" },
   trayistats: { name: "TrayiStats", signup: "https://trayi.co/" },
-  probit: { name: "YourSurveys (ProBit)", signup: "https://www.yoursurveys.com/" },
-  pollfish: { name: "Pollfish", signup: "https://www.pollfish.com/publisher/" },
-  inbrain: { name: "inBrain.ai", signup: "https://inbrain.ai/" },
+  bitlabs: { name: "BitLabs (needs 50k+ MAU)", signup: "https://www.bitlabs.ai/" },
 };
 
 export default function AdminProvidersPage() {

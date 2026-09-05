@@ -10,51 +10,51 @@ postback endpoint (`/api/postback/[provider]`). To go live you only need to:
 
 ---
 
-## Postback URL (same shape for every router)
+## Which routers to apply to (verified 2026-09)
 
-```
-https://skysurvey.vercel.app/api/postback/<provider-key>?txId={txId}&payout={payout}&status={status}
-```
+**Start today (no traffic minimum, self-serve):**
 
-Replace `<provider-key>` with the key you chose (e.g. `bitlabs`), and the query
-param names with whatever the router actually sends — you map them via the
-`PROVIDER_<KEY>_P_*` env vars below. Check `/admin/postbacks` after the first
-callback to confirm it was accepted.
+| Router | Key | Signup |
+|---|---|---|
+| CPX Research ⭐ best first | `cpx` | https://publisher.cpx-research.com/index.php?page=register |
+| Torox (runs OfferToro) | `torox` | https://torox.io/register/ |
+| inBrain.ai | `inbrain` | https://publisher.inbrain.ai/account/signup |
+| TheoremReach | `theoremreach` | https://publishers.theoremreach.com/sign_up |
+| AdGate Media (later, once live) | `adgate` | https://dash.adgatemedia.com/account/signup |
+
+**BitLabs — NOT yet.** They require 50,000+ monthly active users plus a live
+platform, approval is sales-led, a rejection is permanent (no reapply), and
+their minimum payout is $100. Revisit at ~50k MAU: https://www.bitlabs.ai/
+
+**Dead:** YourSurveys.com (domain parked, product defunct) — ignore older guides.
 
 ---
 
-## 1. BitLabs  (provider key: `bitlabs`)
+## Postback URL (same shape for every router)
 
-- **Signup:** https://www.bitlabs.ai/ → *Become a publisher*. Approval is usually instant.
-- **Where to find keys:** dashboard → your app → *API key* / *Hash key*.
-- **Postback config:** dashboard → *Postback settings* → set the URL above.
-
-```env
-PROVIDERS=bitlabs
-PROVIDER_BITLABS_LABEL=BitLabs
-PROVIDER_BITLABS_PUBLISHER_ID=<uid from dashboard>
-PROVIDER_BITLABS_API_KEY=<api key>
-PROVIDER_BITLABS_SECRET=<hash key>
-PROVIDER_BITLABS_ENTRY_URL=https://web.bitlabs.ai/?uid={userId}&api_key={apiKey}&tx_id={txId}
-# BitLabs signs callbacks with an md5 "hash" param — confirm the exact
-# template in their docs before going live:
-PROVIDER_BITLABS_SIG_MODE=md5
-PROVIDER_BITLABS_SIG_PARAM=hash
-PROVIDER_BITLABS_SIG_TEMPLATE={transaction_id}{uid}{currency_amount}{status}{secret}
-PROVIDER_BITLABS_P_TXID=transaction_id
-PROVIDER_BITLABS_P_PAYOUT=currency_amount
-PROVIDER_BITLABS_P_STATUS=status
+```
+https://skysurvey.vercel.app/api/postback/<provider-key>
 ```
 
-## 2. CPX Research  (provider key: `cpx`)
+Replace `<provider-key>` with the key you chose (e.g. `cpx`), and map the query
+param names the router actually sends via the `PROVIDER_<KEY>_P_*` env vars
+below. Check `/admin/postbacks` after the first callback to confirm it was
+accepted.
 
-- **Signup:** https://www.cpx-research.com/main/ → *Publishers*. Small review before approval.
-- **Where to find keys:** dashboard → *API credentials* (`api_key`, `app_id`, secure hash).
-- CPX also exposes a **survey list API** (`get-surveys`) — once the key works we can
-  sync real per-survey inventory into the `Survey` table instead of one wall entry.
+---
+
+## 1. CPX Research  (provider key: `cpx`) — apply first
+
+- **Signup:** https://publisher.cpx-research.com/index.php?page=register — open
+  registration, small review before approval.
+- **Where to find keys:** dashboard → *API credentials* (`api_key`, `app_id`,
+  secure hash).
+- CPX also exposes a **survey list API** (`get-surveys`) — once the key works we
+  can sync real per-survey inventory into the `Survey` table instead of one
+  wall entry.
 
 ```env
-PROVIDERS=bitlabs,cpx          # append to the same list
+PROVIDERS=cpx
 PROVIDER_CPX_LABEL=CPX Research
 PROVIDER_CPX_PUBLISHER_ID=<app id>
 PROVIDER_CPX_API_KEY=<api key>
@@ -68,27 +68,64 @@ PROVIDER_CPX_P_PAYOUT=currency_amount
 PROVIDER_CPX_P_STATUS=status
 ```
 
-## 3. YourSurveys / ProBit  (provider key: `probit`)
+## 2. Torox / OfferToro  (provider key: `torox`)
 
-- **Signup:** https://www.yoursurveys.com/ → publisher / API access request.
-- Approval takes a little longer; they email you publisher credentials.
+- **Signup:** https://torox.io/register/ — self-serve, no commitment, monthly
+  auto payouts via bank/PayPal.
+- Copy the postback URL into their dashboard and map their param names below.
 
 ```env
-PROVIDERS=bitlabs,cpx,probit
-PROVIDER_PROBIT_LABEL=YourSurveys
-PROVIDER_PROBIT_PUBLISHER_ID=<publisher id>
-PROVIDER_PROBIT_API_KEY=<api key>
-PROVIDER_PROBIT_SECRET=<shared secret>
-PROVIDER_PROBIT_ENTRY_URL=<from their integration email — template with {userId}/{txId}>
-PROVIDER_PROBIT_SIG_MODE=md5    # confirm mode/params in their docs
+PROVIDERS=cpx,torox
+PROVIDER_TOROX_LABEL=Torox
+PROVIDER_TOROX_PUBLISHER_ID=<publisher id>
+PROVIDER_TOROX_API_KEY=<api key>
+PROVIDER_TOROX_SECRET=<secret>
+PROVIDER_TOROX_ENTRY_URL=<wall link from their docs, template with {userId}/{txId}>
+# Map signature + postback params from their integration docs before going live.
+```
+
+## 3. inBrain.ai  (provider key: `inbrain`)
+
+- **Signup:** https://publisher.inbrain.ai/account/signup — survey wall via
+  link / iframe / SDK / API.
+
+```env
+PROVIDERS=cpx,torox,inbrain
+PROVIDER_INBRAIN_LABEL=inBrain
+PROVIDER_INBRAIN_PUBLISHER_ID=<publisher/account id>
+PROVIDER_INBRAIN_API_KEY=<api key>
+PROVIDER_INBRAIN_SECRET=<secret>
+PROVIDER_INBRAIN_ENTRY_URL=<wall link from their dashboard, template with {userId}/{txId}>
 ```
 
 ## 4. Others
 
-`TrayiStats`, `Pollfish`, `inBrain.ai` and friends all follow the same pattern —
-the provider layer is fully env-driven, so any router with an entry link and a
-signed postback plugs in without code changes. Signup links are listed on
-`/admin/providers`.
+TheoremReach (`theoremreach`), AdGate Media (`adgate`), TrayiStats
+(`trayistats`) and friends all follow the same pattern — the provider layer is
+fully env-driven, so any router with an entry link and a signed postback plugs
+in without code changes. Signup links are listed on `/admin/providers`.
+
+## BitLabs  (provider key: `bitlabs`) — only at 50k+ MAU
+
+- **Signup:** sales-led via https://www.bitlabs.ai/ (partnerships@bitlabs.ai);
+  you get a personalized sign-up link, then verification takes 2–3 business days.
+- **Requirements:** live platform + 50,000 monthly active users (both required).
+  Rejection is permanent. Minimum payout $100, NET-30.
+
+```env
+PROVIDERS=<existing list>,bitlabs
+PROVIDER_BITLABS_LABEL=BitLabs
+PROVIDER_BITLABS_PUBLISHER_ID=<uid from dashboard>
+PROVIDER_BITLABS_API_KEY=<api key>
+PROVIDER_BITLABS_SECRET=<hash key>
+PROVIDER_BITLABS_ENTRY_URL=https://web.bitlabs.ai/?uid={userId}&api_key={apiKey}&tx_id={txId}
+PROVIDER_BITLABS_SIG_MODE=md5
+PROVIDER_BITLABS_SIG_PARAM=hash
+PROVIDER_BITLABS_SIG_TEMPLATE={transaction_id}{uid}{currency_amount}{status}{secret}
+PROVIDER_BITLABS_P_TXID=transaction_id
+PROVIDER_BITLABS_P_PAYOUT=currency_amount
+PROVIDER_BITLABS_P_STATUS=status
+```
 
 ---
 
@@ -115,13 +152,13 @@ under **Admin → Router postbacks** before going live.
 
 ## Creating the survey rows
 
-With a wall-style router (BitLabs) one `Survey` row is enough — users click it and
-see the router's full wall:
+Wall-style routers (CPX full wall, Torox, inBrain) need one `Survey` row each —
+users click it and see the router's full wall:
 
 ```
-provider=bitlabs, externalId=wall, title="Surveys by BitLabs",
+provider=cpx, externalId=wall, title="Surveys by CPX Research",
 cpiCents=<average>, country=ALL, liveUrl=<router url>, isActive=true
 ```
 
-Per-survey routers (CPX) should be synced from their list API into individual
-rows — that sync can be added once your API key is live.
+Per-survey routers should be synced from their list API into individual rows —
+that sync can be added once your API key is live (CPX supports this).
