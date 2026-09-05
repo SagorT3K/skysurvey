@@ -6,6 +6,7 @@ import { getConfig } from "@/lib/config";
 import { getWalletSummary } from "@/lib/ledger";
 import { methodLabel } from "@/lib/redeem";
 import RedeemForm from "@/components/RedeemForm";
+import CoinLedger from "@/components/CoinLedger";
 import AppHeader from "@/components/AppHeader";
 import AppFooter from "@/components/AppFooter";
 
@@ -21,7 +22,7 @@ export default async function RewardsPage() {
   const holdLeft = holdDurationLeft(user);
 
   const [ledger, allRedeems] = await Promise.all([
-    prisma.coinTransaction.findMany({ where: { userId: user.id }, orderBy: { createdAt: "desc" }, take: 100 }),
+    prisma.coinTransaction.findMany({ where: { userId: user.id }, orderBy: { createdAt: "desc" }, take: 25 }),
     prisma.redeemRequest.findMany({ where: { userId: user.id }, orderBy: { createdAt: "desc" } }),
   ]);
 
@@ -100,37 +101,13 @@ export default async function RewardsPage() {
           </div>
 
           <h2 className="mt-8 text-lg font-bold text-coffee-900">Coin ledger</h2>
-          <div className="mt-3 max-h-[26rem] overflow-y-auto rounded-xl border border-coffee-200 bg-white">
-            {ledger.length === 0 ? (
+          {ledger.length === 0 ? (
+            <div className="mt-3 rounded-xl border border-coffee-200 bg-white">
               <p className="p-6 text-center text-stone-500">Nothing here yet.</p>
-            ) : (
-              <table className="w-full text-sm">
-                <thead className="sticky top-0 z-10 bg-white shadow-[0_1px_0_0_var(--color-coffee-100)]">
-                  <tr className="text-xs uppercase tracking-wide text-coffee-500">
-                    <th className="px-5 py-2.5 text-left font-semibold">Type</th>
-                    <th className="px-5 py-2.5 text-left font-semibold">Details</th>
-                    <th className="px-5 py-2.5 text-right font-semibold">Coins</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {ledger.map((t) => (
-                    <tr key={t.id} className="border-b border-coffee-100 last:border-0">
-                      <td className="px-5 py-3 capitalize text-stone-700">
-                        {t.category || t.type}
-                      </td>
-                      <td className="px-5 py-3 text-stone-500">{t.description || "—"}</td>
-                      <td className="px-5 py-3 text-right font-semibold">
-                        <span className={t.coins >= 0 ? "text-emerald-600" : "text-red-600"}>
-                          {t.coins >= 0 ? "+" : ""}
-                          {t.coins}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </div>
+            </div>
+          ) : (
+            <CoinLedger initial={ledger} />
+          )}
         </div>
 
         <aside className="h-fit rounded-2xl border border-coffee-200 bg-white p-6 shadow-sm">
