@@ -15,6 +15,10 @@ import crypto from "node:crypto";
  *   PROVIDER_KEY_SECRET         shared secret used to sign postbacks
  *   PROVIDER_KEY_ENTRY_URL      entry template, e.g.
  *                               https://router.example/start?pub={publisherId}&uid={userId}&tx={txId}
+ *   PROVIDER_KEY_ENTRY_HASH_MODE      none | md5 | sha1 | sha256 | hmac-sha256 (default none)
+ *   PROVIDER_KEY_ENTRY_HASH_TEMPLATE  what gets hashed into {entryHash} in the entry
+ *                               URL (default {userId}-{secret}). CPX Research, for
+ *                               example, wants secure_hash=md5(extUserId-secureHash).
  *   PROVIDER_KEY_SIG_MODE       none | md5 | sha1 | sha256 | hmac-sha256 (default none)
  *   PROVIDER_KEY_SIG_PARAM      query param carrying the signature (default hash)
  *   PROVIDER_KEY_SIG_TEMPLATE   what gets hashed, e.g. {txId}{payout}{secret}
@@ -40,6 +44,8 @@ export type ProviderDef = {
   apiKey: string;
   secret: string;
   entryUrl: string;
+  entryHashMode: SignatureMode;
+  entryHashTemplate: string;
   signatureMode: SignatureMode;
   signatureParam: string;
   signatureTemplate: string;
@@ -68,6 +74,20 @@ function envPrefix(key: string) {
   return `PROVIDER_${key.toUpperCase().replace(/[^A-Z0-9]/g, "_")}`;
 }
 
+const SIG_MODES: string[] = ["none", "md5", "sha1", "sha256", "hmac-sha256"];
+
+function parseMode(value: string): SignatureMode {
+  const mode = value.toLowerCase();
+  return SIG_MODES.includes(mode) ? (mode as SignatureMode) : "none";
+}
+
+/** Digests `base` with `mode`, keying an HMAC with the provider secret. */
+function digest(mode: SignatureMode, secret: string, base: string): string {
+  return mode === "hmac-sha256"
+    ? crypto.createHmac("sha256", secret).update(base).digest("hex")
+    : crypto.createHash(mode).update(base).digest("hex");
+}
+
 export function getProvider(key: string): ProviderDef | null {
   const normalized = key.toLowerCase();
   if (!list(env("PROVIDERS")).includes(normalized)) return null;
@@ -87,9 +107,9 @@ export function getProvider(key: string): ProviderDef | null {
     apiKey: env(`${p}_API_KEY`),
     secret: env(`${p}_SECRET`),
     entryUrl,
-    signatureMode: (["none", "md5", "sha1", "sha256", "hmac-sha256"] as string[]).includes(mode)
-      ? mode
-      : "none",
+    entryHashMode: parseMode(env(`${p}_ENTRY_HASH_MODE`, "none")),
+    entryHashTemplate: env(`${p}_ENTRY_HASH_TEMPLATE`, "{userId}-{secret}"),
+    signatureMode: parseMode(mode),
     signatureParam: env(`${p}_SIG_PARAM`, "hash"),
     signatureTemplate: env(`${p}_SIG_TEMPLATE`, defaultTemplate),
     paramTxId: env(`${p}_P_TXID`, "txId"),
@@ -119,7 +139,7 @@ export function buildEntryUrl(
   provider: ProviderDef,
   vars: { txId: string; userId: number; surveyId: number; externalId: string; country: string; ip: string },
 ) {
-  return fill(provider.entryUrl, {
+  const urlVars: TemplateVars = {
     publisherId: provider.publisherId,
     apiKey: provider.apiKey,
     txId: vars.txId,
@@ -128,7 +148,17 @@ export function buildEntryUrl(
     externalId: vars.externalId,
     country: vars.country,
     ip: vars.ip,
-  });
+  };
+
+  // Some routers (CPX Research) want a per-user digest in the entry URL itself.
+  // The secret is only ever fed to the hash, never to the URL template, so a
+  // stray {secret} in ENTRY_URL cannot leak it into a user-visible redirect.
+  if (provider.entryHashMode !== "none") {
+    const base = fill(provider.entryHashTemplate, { ...urlVars, secret: provider.secret });
+    urlVars.entryHash = digest(provider.entryHashMode, provider.secret, base);
+  }
+
+  return fill(provider.entryUrl, urlVars);
 }
 
 /** Recomputes the router's signature and compares it in constant time. */
@@ -146,10 +176,7 @@ export function verifySignature(provider: ProviderDef, query: URLSearchParams): 
   vars.status = query.get(provider.paramStatus) || "";
 
   const base = fill(provider.signatureTemplate, vars);
-  const expected =
-    provider.signatureMode === "hmac-sha256"
-      ? crypto.createHmac("sha256", provider.secret).update(base).digest("hex")
-      : crypto.createHash(provider.signatureMode).update(base).digest("hex");
+  const expected = digest(provider.signatureMode, provider.secret, base);
 
   const a = Buffer.from(expected.toLowerCase());
   const b = Buffer.from(supplied.toLowerCase());

@@ -43,30 +43,71 @@ accepted.
 
 ---
 
-## 1. CPX Research  (provider key: `cpx`) — apply first
+## 1. CPX Research  (provider key: `cpx`) — **registered, app created**
 
 - **Signup:** https://publisher.cpx-research.com/index.php?page=register — open
   registration, small review before approval.
-- **Where to find keys:** dashboard → *API credentials* (`api_key`, `app_id`,
-  secure hash).
+- **Account status:** registered; app **SkySurvey** created, **App ID `35940`**.
+- **Where to find the keys:** dashboard → *Apps* → *Edit App SkySurvey* → the
+  **INFO** tab. The app id is in the blue "YOUR APP ID IS" badge; the app's
+  secure hash is the 32-character string inside the *Example PHP* snippet at the
+  bottom (`md5($user_id.'-<secure hash>')`).
 - CPX also exposes a **survey list API** (`get-surveys`) — once the key works we
   can sync real per-survey inventory into the `Survey` table instead of one
   wall entry.
 
+### Two things CPX still requires before the app goes live
+
+The Edit App page shows both as red warnings until they are done:
+
+1. **Postback Settings tab** — paste `https://skysurvey.vercel.app/api/postback/cpx`
+   and append CPX's own macros. Read the macro names off that tab and map them
+   into the `PROVIDER_CPX_P_*` / `PROVIDER_CPX_SIG_*` vars below; the values in
+   this file are the expected shape, not verified output.
+2. **Reward Settings tab** — CPX needs the coin-per-USD conversion. SkySurvey
+   pays `cpiCents` → coins via the config share percent, so set CPX's currency
+   name to `Coins` and its rate to match `COINS_PER_USD` in the admin config.
+
+### Entry URL
+
+CPX's dashboard gives the wall URL under *Frame* integration. `secure_hash`
+there is **not** the raw app secret — it is `md5(extUserId + "-" + appSecureHash)`,
+which is what `ENTRY_HASH_MODE`/`ENTRY_HASH_TEMPLATE` compute into `{entryHash}`.
+
 ```env
 PROVIDERS=cpx
 PROVIDER_CPX_LABEL=CPX Research
-PROVIDER_CPX_PUBLISHER_ID=<app id>
+PROVIDER_CPX_PUBLISHER_ID=35940
 PROVIDER_CPX_API_KEY=<api key>
-PROVIDER_CPX_SECRET=<secure hash>
-PROVIDER_CPX_ENTRY_URL=https://www.cpx-research.com/survey/?app_id={publisherId}&ext_user_id={userId}&secure_hash={apiKey}&surveys=full
-PROVIDER_CPX_SIG_MODE=sha256   # CPX uses sha256 "secure_hash" — verify in docs
-PROVIDER_CPX_SIG_PARAM=secure_hash
-PROVIDER_CPX_SIG_TEMPLATE={transaction_id}{user_id}{currency_amount}{status}{secret}
-PROVIDER_CPX_P_TXID=transaction_id
-PROVIDER_CPX_P_PAYOUT=currency_amount
+PROVIDER_CPX_SECRET=<app secure hash from the Example PHP snippet>
+PROVIDER_CPX_ENTRY_URL=https://offers.cpx-research.com/index.php?app_id={publisherId}&ext_user_id={userId}&secure_hash={entryHash}&subid_1={txId}
+PROVIDER_CPX_ENTRY_HASH_MODE=md5
+PROVIDER_CPX_ENTRY_HASH_TEMPLATE={userId}-{secret}
+# --- postback mapping: confirmed from CPX Postback Settings tab (placeholder list) ---
+# Main Postback URL pasted there:
+# https://skysurvey.vercel.app/api/postback/cpx?status={status}&trans_id={trans_id}
+#   &user_id={user_id}&sub_id={subid_1}&sub_id_2={subid_2}&amount_local={amount_local}
+#   &amount_usd={amount_usd}&offer_id={offer_id}&hash={secure_hash}&ip_click={ip_click}
+PROVIDER_CPX_SIG_MODE=md5
+PROVIDER_CPX_SIG_PARAM=hash
+# CPX doc: "the hash is a md5 hash: md5({trans_id}-yourappsecurehash)"
+PROVIDER_CPX_SIG_TEMPLATE={trans_id}-{secret}
+PROVIDER_CPX_P_TXID=sub_id            # subid_1 carries our SurveyAttempt txId
+PROVIDER_CPX_P_PAYOUT=amount_usd
 PROVIDER_CPX_P_STATUS=status
+PROVIDER_CPX_STATUS_OK=1
+# CPX reverses fraud completions in 15-60 days with status -2 (their doc says
+# "the status will change to -2"); map both spellings to be safe.
+PROVIDER_CPX_STATUS_REVERSE=2,-2
+# CPX postback whitelist IPs (from their INFORMATION box) — enable once clientIp
+# on Vercel is confirmed to pass the real source IP:
+# PROVIDER_CPX_IP_ALLOWLIST=188.40.3.73,157.90.97.92,2a01:4f8:d0a:30ff::2
 ```
+
+`subid_1={txId}` is what ties a CPX completion back to our `SurveyAttempt`; if
+CPX echoes it under a different name, point `PROVIDER_CPX_P_TXID` at that name
+instead. Verify with one real completion in `/admin/postbacks` before trusting it.
+
 
 ## 2. Torox / OfferToro  (provider key: `torox`)
 
