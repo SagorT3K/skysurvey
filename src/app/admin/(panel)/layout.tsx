@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { LayoutDashboard, Radio, Receipt, ShieldCheck, SlidersHorizontal, Users } from "lucide-react";
+import { LayoutDashboard, Plug, Radio, Receipt, ShieldCheck, SlidersHorizontal, Users } from "lucide-react";
 import { requireAdmin } from "@/lib/auth";
 import LogoutButton from "@/components/LogoutButton";
 
@@ -9,6 +9,7 @@ const NAV = [
   { href: "/admin/users", label: "Users", icon: Users },
   { href: "/admin/redeems", label: "Redeem requests", icon: Receipt },
   { href: "/admin/postbacks", label: "Router postbacks", icon: Radio },
+  { href: "/admin/providers", label: "Survey providers", icon: Plug },
   { href: "/admin/config", label: "Settings", icon: SlidersHorizontal },
 ];
 
