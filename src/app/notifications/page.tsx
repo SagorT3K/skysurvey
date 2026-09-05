@@ -1,25 +1,13 @@
 import { redirect } from "next/navigation";
-import { Bell, Coins, Gift, TrendingDown, TrendingUp, Trophy, UserPlus, Wallet } from "lucide-react";
+import { Bell } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { getSessionUser } from "@/lib/auth";
 import { getWalletSummary } from "@/lib/ledger";
+import { TYPE_META } from "@/lib/notification-meta";
 import AppHeader from "@/components/AppHeader";
 import AppFooter from "@/components/AppFooter";
 
 export const dynamic = "force-dynamic";
-
-const TYPE_META: Record<string, { icon: typeof Bell; cls: string }> = {
-  survey: { icon: Coins, cls: "bg-emerald-100 text-emerald-700" },
-  screenout: { icon: TrendingDown, cls: "bg-red-100 text-red-600" },
-  coins: { icon: TrendingUp, cls: "bg-emerald-100 text-emerald-700" },
-  referral: { icon: UserPlus, cls: "bg-sky-100 text-sky-700" },
-  payout: { icon: Wallet, cls: "bg-coffee-100 text-coffee-800" },
-  voucher: { icon: Gift, cls: "bg-purple-100 text-purple-700" },
-  crypto: { icon: Coins, cls: "bg-orange-100 text-orange-700" },
-  level: { icon: Trophy, cls: "bg-amber-100 text-amber-700" },
-  hold: { icon: TrendingDown, cls: "bg-red-100 text-red-600" },
-  system: { icon: Bell, cls: "bg-slate-100 text-slate-600" },
-};
 
 export default async function NotificationsPage() {
   const user = await getSessionUser();
