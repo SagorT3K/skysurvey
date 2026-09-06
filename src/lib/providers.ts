@@ -30,6 +30,12 @@ import crypto from "node:crypto";
  *   PROVIDER_KEY_STATUS_REVERSE values meaning "reversal"  (default 2,reversal,reversed,chargeback)
  *   PROVIDER_KEY_STATUS_SCREEN  values meaning "screenout" (default 3,screenout,disqualified)
  *   PROVIDER_KEY_IP_ALLOWLIST   optional comma-separated postback source IPs
+ *   PROVIDER_KEY_SURVEYS_URL    per-user survey-list API template (optional; when set
+ *                               the dashboard renders each live survey as its own card).
+ *                               Placeholders: {publisherId} {userId} {ip} {userAgent}
+ *                               {limit} {entryHash}. CPX Research, for example:
+ *                               https://live-api.cpx-research.com/api/get-surveys.php?app_id={publisherId}&ext_user_id={userId}&output_method=api&ip_user={ip}&user_agent={userAgent}&limit={limit}&secure_hash={entryHash}
+ *   PROVIDER_KEY_SURVEYS_LIMIT  how many surveys to request (default 12)
  *
  * Take the exact names from the router's own integration docs — a wrong mapping
  * silently drops completions, so verify against a test postback before going live.
@@ -57,6 +63,8 @@ export type ProviderDef = {
   statusReverse: string[];
   statusScreenout: string[];
   ipAllowlist: string[];
+  surveysUrl: string;
+  surveyLimit: number;
 };
 
 function env(key: string, fallback = "") {
@@ -120,6 +128,8 @@ export function getProvider(key: string): ProviderDef | null {
     statusReverse: list(env(`${p}_STATUS_REVERSE`, "2,reversal,reversed,chargeback")),
     statusScreenout: list(env(`${p}_STATUS_SCREEN`, "3,screenout,disqualified")),
     ipAllowlist: list(env(`${p}_IP_ALLOWLIST`)),
+    surveysUrl: env(`${p}_SURVEYS_URL`),
+    surveyLimit: Math.max(1, Math.min(50, Number(env(`${p}_SURVEYS_LIMIT`, "12")) || 12)),
   };
 }
 
@@ -219,6 +229,96 @@ export function parsePostback(provider: ProviderDef, query: URLSearchParams): Pa
 export function ipAllowed(provider: ProviderDef, ip: string) {
   if (provider.ipAllowlist.length === 0) return true;
   return provider.ipAllowlist.includes(ip.toLowerCase());
+}
+
+export type LiveSurvey = {
+  externalId: string;
+  cpiCents: number;
+  loiMinutes: number;
+  ratingAvg: number | null;
+  ratingCount: number;
+  top: boolean;
+  href: string;
+};
+
+/**
+ * Calls the provider's per-user survey-list API (PROVIDER_<KEY>_SURVEYS_URL).
+ *
+ * These APIs are user-bound: the response is targeted at ext_user_id (+ IP and
+ * user agent where the template passes {ip}/{userAgent}), and the returned href
+ * may only be shown to that same user. Auth rides on the same app id + entry
+ * hash as the wall — CPX Research's get-surveys has no separate API key.
+ *
+ * Field names vary slightly across routers, so parsing accepts the common
+ * spellings and prefers the publisher-USD payout when both currencies exist.
+ */
+export async function fetchProviderSurveys(
+  provider: ProviderDef,
+  vars: { userId: number; ip: string; userAgent: string },
+): Promise<LiveSurvey[]> {
+  if (!provider.surveysUrl) return [];
+
+  const templateVars: TemplateVars = {
+    publisherId: provider.publisherId,
+    userId: String(vars.userId),
+    ip: encodeURIComponent(vars.ip),
+    userAgent: encodeURIComponent(vars.userAgent),
+    limit: String(provider.surveyLimit),
+  };
+  if (provider.entryHashMode !== "none") {
+    templateVars.entryHash = digest(
+      provider.entryHashMode,
+      provider.secret,
+      fill(provider.entryHashTemplate, { ...templateVars, secret: provider.secret }),
+    );
+  }
+
+  const res = await fetch(fill(provider.surveysUrl, templateVars), {
+    headers: { Accept: "application/json" },
+    signal: AbortSignal.timeout(8000),
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error(`survey list API returned HTTP ${res.status}`);
+  const data: unknown = await res.json().catch(() => null);
+  if (!data || typeof data !== "object") throw new Error("survey list API returned invalid JSON");
+
+  const root = data as Record<string, unknown>;
+  const rows = Array.isArray(root.surveys)
+    ? root.surveys
+    : Array.isArray(root.data)
+      ? root.data
+      : Array.isArray(data)
+        ? data
+        : null;
+  if (!rows) throw new Error("survey list API response has no surveys array");
+
+  function num(v: unknown) {
+    const n = Number(String(v ?? "").replace(/[^0-9.-]/g, ""));
+    return Number.isFinite(n) ? n : 0;
+  }
+
+  return rows
+    .map((raw): LiveSurvey | null => {
+      const row = (raw ?? {}) as Record<string, unknown>;
+      const externalId = String(row.id ?? row.survey_id ?? row.offer_id ?? "").trim();
+      const href = String(row.href ?? row.entry_url ?? row.entry_link ?? row.link ?? "").trim();
+      if (!externalId || !/^https?:\/\//i.test(href)) return null;
+      // payout_publisher_usd is in USD; "payout" may be the user's local currency.
+      const usdCents = num(row.payout_publisher_usd) * 100;
+      const fallbackCents = num(row.cpi ?? row.payout) * 100;
+      const ratingAvg = num(row.statistics_rating_avg ?? row.rating);
+      return {
+        externalId,
+        cpiCents: Math.round(usdCents > 0 ? usdCents : fallbackCents),
+        loiMinutes: Math.max(1, Math.round(num(row.loi ?? row.loi_minutes) || 10)),
+        ratingAvg: ratingAvg > 0 ? ratingAvg : null,
+        ratingCount: Math.round(num(row.statistics_rating_count ?? row.rating_count)),
+        top: String(row.top ?? "0") === "1",
+        href,
+      };
+    })
+    .filter((s): s is LiveSurvey => s !== null)
+    .sort((a, b) => (a.top === b.top ? b.cpiCents - a.cpiCents : a.top ? -1 : 1));
 }
 
 

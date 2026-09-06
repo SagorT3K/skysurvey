@@ -61,9 +61,12 @@ export default function AdminProvidersPage() {
         <div className="mt-6 space-y-3">
           {providers.map((p) => {
             const known = KNOWN[p.key];
+            // CPX needs no API key: its survey-list API authenticates with
+            // app_id + secure_hash, which the SECRET already covers.
+            const needsApiKey = p.key !== "cpx";
             const miss: string[] = [];
             if (!p.publisherId) miss.push("PUBLISHER_ID");
-            if (!p.apiKey) miss.push("API_KEY");
+            if (!p.apiKey && needsApiKey) miss.push("API_KEY");
             if (!p.secret) miss.push("SECRET");
             return (
               <div key={p.key} className="rounded-xl border border-slate-200 bg-white p-5">

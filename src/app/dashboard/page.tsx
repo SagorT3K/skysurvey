@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -13,6 +14,8 @@ import { getSessionUser, isHeld, holdDurationLeft } from "@/lib/auth";
 import { effectiveSharePercent, levelFromScore, levelProgress } from "@/lib/score";
 import { getConfig } from "@/lib/config";
 import { getWalletSummary } from "@/lib/ledger";
+import { listProviders } from "@/lib/providers";
+import { getLiveSurveys } from "@/lib/live-surveys";
 import AppHeader from "@/components/AppHeader";
 import AppFooter from "@/components/AppFooter";
 import SurveyList, { type SurveyCardData } from "@/components/SurveyList";
@@ -78,9 +81,9 @@ export default async function DashboardPage() {
   }
   const surveys = fresh.slice(0, 12);
 
-  const cards: SurveyCardData[] = surveys.map((s) => {
+  const dbCards: SurveyCardData[] = surveys.map((s) => {
     const rating = ratingsAgg.find((r) => r.surveyId === s.id);
-    const completedN = completedCounts.find((c) => c.surveyId === s.id)?._count._all ?? 0;
+    const completedN = completedCounts.find((c) => s.id === c.surveyId)?._count._all ?? 0;
     return {
       id: s.id,
       title: s.title,
@@ -97,6 +100,40 @@ export default async function DashboardPage() {
       completedCount: completedN,
     };
   });
+
+  // Live router inventory: every provider with a SURVEYS_URL is asked for this
+  // user's targeted offers (cached ~2 min per router policy). Failures or slow
+  // routers degrade silently to the DB-backed cards above.
+  const liveCards: SurveyCardData[] = [];
+  if (!held) {
+    const hdrs = await headers();
+    const ip = hdrs.get("x-forwarded-for")?.split(",")[0]?.trim() || "";
+    const ua = hdrs.get("user-agent") || "";
+    const share = effectiveSharePercent(config.reward_share_percent, user.score);
+    const liveProviders = listProviders().filter((p) => p.surveysUrl);
+    const lists = await Promise.all(
+      liveProviders.map((p) => getLiveSurveys(p, { userId: user.id, ip, userAgent: ua })),
+    );
+    for (let i = 0; i < lists.length; i++) {
+      const provider = liveProviders[i];
+      for (const s of lists[i].surveys.slice(0, 8)) {
+        liveCards.push({
+          id: `live:${provider.key}:${s.externalId}`,
+          liveProvider: provider.key,
+          liveId: s.externalId,
+          title: `Survey #${s.externalId}`,
+          category: provider.label,
+          loiMinutes: s.loiMinutes,
+          coins: Math.floor((s.cpiCents * share) / 100 / config.coin_rate_cents),
+          done: false,
+          avgStars: s.ratingAvg,
+          ratingCount: s.ratingCount,
+        });
+      }
+    }
+  }
+
+  const cards: SurveyCardData[] = [...liveCards, ...dbCards].slice(0, 12);
 
   return (
     <main className="flex min-h-screen flex-1 flex-col bg-cream">

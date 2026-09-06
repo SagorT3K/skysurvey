@@ -52,9 +52,11 @@ accepted.
   **INFO** tab. The app id is in the blue "YOUR APP ID IS" badge; the app's
   secure hash is the 32-character string inside the *Example PHP* snippet at the
   bottom (`md5($user_id.'-<secure hash>')`).
-- CPX also exposes a **survey list API** (`get-surveys`) — once the key works we
-  can sync real per-survey inventory into the `Survey` table instead of one
-  wall entry.
+- CPX also exposes a **per-user survey list API** (`get-surveys`, documented
+  under the *Api* integration card on the app page). It needs **no API key** —
+  same `app_id` + `secure_hash` as the wall — and is wired up via
+  `PROVIDER_CPX_SURVEYS_URL` above, so each live offer renders as its own
+  dashboard card.
 
 ### Two things CPX still requires before the app goes live
 
@@ -78,11 +80,17 @@ which is what `ENTRY_HASH_MODE`/`ENTRY_HASH_TEMPLATE` compute into `{entryHash}`
 PROVIDERS=cpx
 PROVIDER_CPX_LABEL=CPX Research
 PROVIDER_CPX_PUBLISHER_ID=35940
-PROVIDER_CPX_API_KEY=<api key>
+# NOTE: CPX has no API key. Both the wall and the get-surveys API authenticate
+# with app_id + secure_hash, which the SECRET below already covers.
 PROVIDER_CPX_SECRET=<app secure hash from the Example PHP snippet>
 PROVIDER_CPX_ENTRY_URL=https://offers.cpx-research.com/index.php?app_id={publisherId}&ext_user_id={userId}&secure_hash={entryHash}&subid_1={txId}
 PROVIDER_CPX_ENTRY_HASH_MODE=md5
 PROVIDER_CPX_ENTRY_HASH_TEMPLATE={userId}-{secret}
+# Per-user survey list (CPX API doc, "Api" integration card). Renders each live
+# offer as its own dashboard card; auth = app_id + secure_hash, targeting
+# sharpens with the user's IP and user agent. Max cache 120 seconds.
+PROVIDER_CPX_SURVEYS_URL=https://live-api.cpx-research.com/api/get-surveys.php?app_id={publisherId}&ext_user_id={userId}&output_method=api&ip_user={ip}&user_agent={userAgent}&limit={limit}&secure_hash={entryHash}
+PROVIDER_CPX_SURVEYS_LIMIT=12
 # --- postback mapping: confirmed from CPX Postback Settings tab (placeholder list) ---
 # Main Postback URL pasted there:
 # https://skysurvey.vercel.app/api/postback/cpx?status={status}&trans_id={trans_id}

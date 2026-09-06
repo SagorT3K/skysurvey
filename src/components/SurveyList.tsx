@@ -5,7 +5,11 @@ import { useRouter } from "next/navigation";
 import { Check, Clock, Coins, LoaderCircle, TriangleAlert } from "lucide-react";
 
 export type SurveyCardData = {
-  id: number;
+  id: number | string;
+  // Live router inventory: when set, Start goes through the per-user live API
+  // instead of a Survey table row.
+  liveProvider?: string;
+  liveId?: string;
   title: string;
   category: string;
   loiMinutes: number;
@@ -18,13 +22,24 @@ export type SurveyCardData = {
 
 export default function SurveyList({ surveys }: { surveys: SurveyCardData[] }) {
   const router = useRouter();
-  const [startingId, setStartingId] = useState<number | null>(null);
+  const [startingId, setStartingId] = useState<number | string | null>(null);
   const [error, setError] = useState("");
 
-  async function start(id: number) {
-    setStartingId(id);
+  async function start(s: SurveyCardData) {
+    setStartingId(s.id);
     setError("");
-    const res = await fetch(`/api/surveys/${id}/start`, { method: "POST" });
+    const res = await fetch(
+      s.liveProvider ? "/api/surveys/live/start" : `/api/surveys/${s.id}/start`,
+      {
+        method: "POST",
+        ...(s.liveProvider
+          ? {
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ provider: s.liveProvider, externalId: s.liveId }),
+            }
+          : {}),
+      },
+    );
     const data = await res.json();
     setStartingId(null);
     if (!res.ok) {
@@ -65,6 +80,8 @@ export default function SurveyList({ surveys }: { surveys: SurveyCardData[] }) {
                   completed)
                 </span>
               </p>
+            ) : s.liveProvider ? (
+              <p className="mt-1 text-xs text-stone-400">Fresh from the router — be the first to try it</p>
             ) : (
               <p className="mt-1 text-xs text-stone-400">No ratings yet — be the first to try it</p>
             )}
@@ -74,7 +91,7 @@ export default function SurveyList({ surveys }: { surveys: SurveyCardData[] }) {
             </p>
           </div>
           <button
-            onClick={() => start(s.id)}
+            onClick={() => start(s)}
             disabled={s.done || startingId === s.id}
             className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-coffee-700 px-4 py-2 text-sm font-semibold text-white hover:bg-coffee-800 disabled:cursor-not-allowed disabled:opacity-50"
           >
