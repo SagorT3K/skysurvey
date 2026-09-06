@@ -65,15 +65,13 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: risk.reason }, { status: 403 });
   }
 
-  // Only surveys the router actually offered this user are startable — the
-  // lookup re-verifies against the (cached) live list.
+  // Prefer re-verifying against the (cached) live list so only offers the
+  // router actually made are startable. But the router's inventory rotates and
+  // is IP-targeted — a strict 410 on a stale list would block legitimate users
+  // mid-session (this exact bug made surveys unopenable). The payout is set by
+  // the postback, not by the client, so proceeding with a neutral fallback is
+  // safe; unknown ids just earn 0 until the provider says otherwise.
   const live = await findLiveSurvey(provider, { userId: user.id, ip, userAgent: ua, externalId });
-  if (!live) {
-    return NextResponse.json(
-      { error: "That survey is no longer available — pick another one." },
-      { status: 410 },
-    );
-  }
 
   // The Survey table is optional for live inventory: reuse an existing row for
   // this provider+externalId (keeps ratings grouped), otherwise run without one.
@@ -89,8 +87,8 @@ export async function POST(req: Request) {
         provider: provider.key,
         externalId,
         title: `${provider.label} survey #${externalId}`,
-        cpiCents: live.cpiCents,
-        loiMinutes: live.loiMinutes,
+        cpiCents: live?.cpiCents ?? 0,
+        loiMinutes: live?.loiMinutes ?? 10,
         country: "ALL",
         isActive: false,
       },
@@ -100,7 +98,7 @@ export async function POST(req: Request) {
     data: {
       userId: user.id,
       surveyId: survey.id,
-      cpiCents: live.cpiCents,
+      cpiCents: live?.cpiCents ?? survey.cpiCents,
       ip,
       userAgent: ua,
       riskFlags: risk.flags.join(","),
@@ -117,12 +115,11 @@ export async function POST(req: Request) {
     },
   });
 
-  // The router's href is user-bound; our txId rides in subid_1 so the postback
-  // finds the attempt. CPX hrefs already carry EMPTY subid_1/subid_2 params —
-  // searchParams.set replaces every existing occurrence, so we never end up
-  // with a duplicate empty param shadowing ours.
-  const entry = new URL(live.href);
-  entry.searchParams.set("subid_1", attempt.txId);
+  // Direct per-survey href, only when the router's live list actually offered
+  // it. CPX hrefs carry EMPTY subid_1/subid_2 params — searchParams.set
+  // replaces every occurrence, so a duplicate empty param never shadows ours.
+  const entry = live ? new URL(live.href) : null;
+  entry?.searchParams.set("subid_1", attempt.txId);
 
   // CPX's API surveys bounce the user to CPX's own wall page when they end —
   // there is no return URL to pass, so a new tab strands the user there. Their
@@ -144,7 +141,7 @@ export async function POST(req: Request) {
 
   return NextResponse.json({
     ok: true,
-    redirect: entry.toString(),
+    redirect: entry ? entry.toString() : embedUrl,
     embedUrl,
     txId: attempt.txId,
     attemptId: attempt.id,

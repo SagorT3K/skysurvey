@@ -396,7 +396,8 @@ export default function SurveyList({ surveys }: { surveys: SurveyCardData[] }) {
             <div className="min-w-0">
               <p className="truncate text-sm font-bold">{waiting.title}</p>
               <p className="text-xs text-coffee-200">
-                You&apos;re on SkySurvey — finish the survey in this window
+                You&apos;re on SkySurvey — press Start inside, finish the survey in the window it
+                opens, then come back here
               </p>
             </div>
             <span className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-emerald-300">
