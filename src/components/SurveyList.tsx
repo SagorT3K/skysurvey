@@ -45,6 +45,11 @@ const POLL_MS = 5000;
 const MAX_WAIT_MS = 20 * 60 * 1000;
 const RESTORE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
 
+// Handle to the survey tab we opened. Module scope (not state) so it survives
+// client-side navigation within the dashboard — when the postback lands we
+// close that tab ourselves, dropping the user back on our result card.
+let openedSurveyWindow: Window | null = null;
+
 type Waiting = {
   txId: string;
   title: string;
@@ -129,11 +134,22 @@ export default function SurveyList({ surveys }: { surveys: SurveyCardData[] }) {
         if (!res.ok) return;
         const data = await res.json();
         if (cancelled || !data.status || data.status === "started") return;
+
         updateWaiting((w) =>
           w.txId === txId
             ? { ...w, hidden: false, result: { status: data.status, coins: data.coins ?? 0 } }
             : w,
         );
+        // Bring the user home: close the survey tab we opened and focus ours.
+        // Script-opened windows may always be closed by their opener.
+        try {
+          if (openedSurveyWindow && !openedSurveyWindow.closed) openedSurveyWindow.close();
+        } catch {
+          // some browsers refuse — the result card still waits here
+        }
+        openedSurveyWindow = null;
+        window.focus();
+        router.refresh();
       } catch {
         // network hiccup — next tick retries
       }
@@ -147,12 +163,32 @@ export default function SurveyList({ surveys }: { surveys: SurveyCardData[] }) {
     }, POLL_MS);
     // First check right away: the postback may have beaten us here.
     const immediate = setTimeout(check, 800);
+    // Tab was in the background while the user answered — check the instant
+    // they (or our auto-close) bring it back to the front.
+    const onVisible = () => {
+      if (document.visibilityState === "visible") check();
+    };
+    document.addEventListener("visibilitychange", onVisible);
     return () => {
       cancelled = true;
       clearTimeout(immediate);
       clearInterval(timer);
+      document.removeEventListener("visibilitychange", onVisible);
     };
-  }, [txId, finished, waiting?.ts, updateWaiting]);
+  }, [txId, finished, waiting?.ts, updateWaiting, router]);
+
+  // If the user closes the survey tab themselves, shrink the waiting card to
+  // the pill so it stops covering the dashboard; the result still pops up the
+  // moment the postback lands.
+  useEffect(() => {
+    if (!txId || finished) return;
+    const t = setInterval(() => {
+      if (openedSurveyWindow?.closed) {
+        updateWaiting((w) => (w.result || w.timedOut ? w : { ...w, hidden: true }));
+      }
+    }, 2000);
+    return () => clearInterval(t);
+  }, [txId, finished, updateWaiting]);
 
   async function start(s: SurveyCardData) {
     setStartingId(s.id);
@@ -192,7 +228,11 @@ export default function SurveyList({ surveys }: { surveys: SurveyCardData[] }) {
       loiMinutes: s.loiMinutes,
       ts: Date.now(),
     };
-    const win = window.open(data.redirect, "_blank", "noopener");
+    // Open the survey in a real new tab (NO "noopener" — that makes
+    // window.open return null, which silently fell back to same-tab navigation
+    // and killed the poller). We keep the handle to close the tab when the
+    // postback lands, dropping the user back onto our result card.
+    const win = window.open(data.redirect, "_blank");
     if (!win) {
       // Popup blocked — take the same tab; the journey resumes when the user
       // comes back (back button / router return).
@@ -200,6 +240,7 @@ export default function SurveyList({ surveys }: { surveys: SurveyCardData[] }) {
       router.push(data.redirect);
       return;
     }
+    openedSurveyWindow = win;
     updateWaiting(() => w);
   }
 
