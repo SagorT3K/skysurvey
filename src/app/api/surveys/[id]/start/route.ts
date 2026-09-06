@@ -91,5 +91,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     });
   }
 
-  return NextResponse.json({ ok: true, redirect, holdDays: config.hold_days });
+  return NextResponse.json({
+    ok: true,
+    redirect,
+    txId: attempt.txId,
+    attemptId: attempt.id,
+    external: survey.provider !== "mock",
+    holdDays: config.hold_days,
+  });
 }

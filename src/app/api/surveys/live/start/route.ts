@@ -119,6 +119,8 @@ export async function POST(req: Request) {
   return NextResponse.json({
     ok: true,
     redirect: `${live.href}${sep}subid_1=${encodeURIComponent(attempt.txId)}`,
+    txId: attempt.txId,
+    attemptId: attempt.id,
     holdDays: config.hold_days,
   });
 }

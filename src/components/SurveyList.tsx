@@ -1,8 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Clock, Coins, LoaderCircle, ShieldCheck, Star, TriangleAlert, X } from "lucide-react";
+import {
+  Check,
+  CircleAlert,
+  Clock,
+  Coins,
+  ExternalLink,
+  LoaderCircle,
+  Minimize2,
+  ShieldCheck,
+  Star,
+  TriangleAlert,
+  X,
+} from "lucide-react";
 
 export type SurveyCardData = {
   id: number | string;
@@ -19,6 +31,30 @@ export type SurveyCardData = {
   avgStars?: number | null; // community difficulty rating
   ratingCount?: number;
   completedCount?: number;
+};
+
+/**
+ * Live survey journeys can't redirect back (routers don't take a return URL
+ * for API surveys), so the survey opens in a new tab while this page polls the
+ * attempt status. The moment the provider's postback lands, the result card
+ * pops up here automatically. The pending journey survives navigation/back via
+ * sessionStorage.
+ */
+const STORAGE_KEY = "skysurvey.awaiting";
+const POLL_MS = 5000;
+const MAX_WAIT_MS = 20 * 60 * 1000;
+const RESTORE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+
+type Waiting = {
+  txId: string;
+  title: string;
+  coins: number;
+  usd?: number;
+  loiMinutes: number;
+  ts: number;
+  hidden?: boolean; // minimized to a small pill
+  timedOut?: boolean; // gave up polling, provider still silent
+  result?: { status: "completed" | "screenout" | "reversed"; coins: number } | null;
 };
 
 function Stars({ avg }: { avg?: number | null }) {
@@ -41,16 +77,82 @@ export default function SurveyList({ surveys }: { surveys: SurveyCardData[] }) {
   const [startingId, setStartingId] = useState<number | string | null>(null);
   const [selected, setSelected] = useState<SurveyCardData | null>(null);
   const [error, setError] = useState("");
+  const [waiting, setWaiting] = useState<Waiting | null>(null);
 
-  // Escape closes the detail card; backdrop click does too.
+  const updateWaiting = useCallback((fn: (w: Waiting) => Waiting) => {
+    setWaiting((prev) => {
+      if (!prev) return prev;
+      const next = fn(prev);
+      if (next) sessionStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      else sessionStorage.removeItem(STORAGE_KEY);
+      return next;
+    });
+  }, []);
+
+  const clearWaiting = useCallback(() => {
+    sessionStorage.removeItem(STORAGE_KEY);
+    setWaiting(null);
+    router.refresh(); // refresh balance/ledger data behind the card
+  }, [router]);
+
+  // Resume a pending journey after back-navigation or a full page load.
+  // sessionStorage is the external system here; useState's lazy initializer is
+  // not enough because the component may remount on the same page load.
   useEffect(() => {
-    if (!selected) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setSelected(null);
+    const raw = sessionStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    try {
+      const w = JSON.parse(raw) as Waiting;
+      if (!w.txId || Date.now() - w.ts > RESTORE_MAX_AGE_MS) {
+        sessionStorage.removeItem(STORAGE_KEY);
+        return;
+      }
+      // Defer the restore out of the effect body so it behaves like an
+      // external-system subscription firing, not a synchronous render cascade.
+      const id = requestAnimationFrame(() => setWaiting(w));
+      return () => cancelAnimationFrame(id);
+    } catch {
+      sessionStorage.removeItem(STORAGE_KEY);
+    }
+  }, []);
+
+  // Poll the attempt status until the provider's postback flips it.
+  const txId = waiting?.txId;
+  const finished = Boolean(waiting?.result || waiting?.timedOut);
+  useEffect(() => {
+    if (!txId || finished) return;
+    let cancelled = false;
+    const check = async () => {
+      if (!txId || cancelled) return;
+      try {
+        const res = await fetch(`/api/attempts/tx/${txId}`, { cache: "no-store" });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (cancelled || !data.status || data.status === "started") return;
+        updateWaiting((w) =>
+          w.txId === txId
+            ? { ...w, hidden: false, result: { status: data.status, coins: data.coins ?? 0 } }
+            : w,
+        );
+      } catch {
+        // network hiccup — next tick retries
+      }
     };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [selected]);
+    const timer = setInterval(() => {
+      if (Date.now() - (waiting?.ts ?? Date.now()) > MAX_WAIT_MS) {
+        updateWaiting((w) => (w.txId === txId ? { ...w, timedOut: true } : w));
+        return;
+      }
+      check();
+    }, POLL_MS);
+    // First check right away: the postback may have beaten us here.
+    const immediate = setTimeout(check, 800);
+    return () => {
+      cancelled = true;
+      clearTimeout(immediate);
+      clearInterval(timer);
+    };
+  }, [txId, finished, waiting?.ts, updateWaiting]);
 
   async function start(s: SurveyCardData) {
     setStartingId(s.id);
@@ -74,18 +176,40 @@ export default function SurveyList({ surveys }: { surveys: SurveyCardData[] }) {
       return;
     }
     setSelected(null);
-    router.push(data.redirect);
+
+    // Internal journeys (mock surveys) have their own feedback pages.
+    const external = Boolean(data.external) || /^https?:\/\//i.test(data.redirect);
+    if (!external) {
+      router.push(data.redirect);
+      return;
+    }
+
+    const w: Waiting = {
+      txId: data.txId,
+      title: s.title,
+      coins: s.coins,
+      usd: s.usd,
+      loiMinutes: s.loiMinutes,
+      ts: Date.now(),
+    };
+    const win = window.open(data.redirect, "_blank", "noopener");
+    if (!win) {
+      // Popup blocked — take the same tab; the journey resumes when the user
+      // comes back (back button / router return).
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(w));
+      router.push(data.redirect);
+      return;
+    }
+    updateWaiting(() => w);
   }
 
-  if (surveys.length === 0) {
+  if (surveys.length === 0 && !waiting) {
     return (
       <div className="rounded-xl border border-dashed border-coffee-300 bg-white p-10 text-center text-stone-500">
         No surveys available for your country right now — check back soon.
       </div>
     );
   }
-
-  const starting = selected ? startingId === selected.id : false;
 
   return (
     <>
@@ -135,12 +259,12 @@ export default function SurveyList({ surveys }: { surveys: SurveyCardData[] }) {
         </p>
       )}
 
-      {/* Survey detail card — shown before anything starts, like the big survey
-          sites: the grid card only opens this preview. */}
+      {/* Survey detail card — shown before anything starts: the grid card only
+          opens this preview. */}
       {selected && (
         <div
           className="fixed inset-0 z-50 flex items-end justify-center bg-stone-900/50 p-0 backdrop-blur-sm sm:items-center sm:p-4"
-          onClick={() => !starting && setSelected(null)}
+          onClick={() => setSelected(null)}
           role="dialog"
           aria-modal="true"
           aria-label={`${selected.title} details`}
@@ -210,17 +334,17 @@ export default function SurveyList({ surveys }: { surveys: SurveyCardData[] }) {
             <div className="mt-5 flex gap-3">
               <button
                 onClick={() => setSelected(null)}
-                disabled={starting}
+                disabled={startingId === selected.id}
                 className="flex-1 rounded-xl border border-stone-200 px-4 py-3 text-sm font-semibold text-stone-600 hover:bg-stone-50 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Maybe later
               </button>
               <button
                 onClick={() => start(selected)}
-                disabled={starting}
+                disabled={startingId === selected.id}
                 className="inline-flex flex-[2] items-center justify-center gap-2 rounded-xl bg-coffee-700 px-4 py-3 text-sm font-bold text-white hover:bg-coffee-800 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {starting ? (
+                {startingId === selected.id ? (
                   <>
                     <LoaderCircle size={16} className="animate-spin" aria-hidden="true" />
                     Starting…
@@ -229,6 +353,139 @@ export default function SurveyList({ surveys }: { surveys: SurveyCardData[] }) {
                   "Start survey"
                 )}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Waiting / result journey */}
+      {waiting && waiting.hidden && !waiting.result && !waiting.timedOut && (
+        <button
+          onClick={() => updateWaiting((w) => ({ ...w, hidden: false }))}
+          className="fixed bottom-4 right-4 z-40 inline-flex items-center gap-2 rounded-full bg-coffee-800 px-4 py-2.5 text-sm font-semibold text-white shadow-lg hover:bg-coffee-900"
+        >
+          <LoaderCircle size={15} className="animate-spin" aria-hidden="true" />
+          Checking survey…
+        </button>
+      )}
+
+      {waiting && !waiting.hidden && (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-stone-900/50 p-0 backdrop-blur-sm sm:items-center sm:p-4"
+          onClick={() =>
+            !waiting.result && !waiting.timedOut && updateWaiting((w) => ({ ...w, hidden: true }))
+          }
+          role="dialog"
+          aria-modal="true"
+        >
+          <div
+            className="w-full max-w-md rounded-t-2xl bg-white p-6 text-center shadow-xl sm:rounded-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {waiting.result?.status === "completed" ? (
+              <>
+                <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100">
+                  <Check size={32} className="text-emerald-600" aria-hidden="true" />
+                </span>
+                <h3 className="mt-4 text-xl font-bold text-stone-900">Survey completed!</h3>
+                <p className="mt-2 text-sm text-stone-600">
+                  <span className="text-lg font-bold text-emerald-700">
+                    +{waiting.result.coins} coins
+                  </span>{" "}
+                  added to your balance
+                  {waiting.usd != null && (
+                    <span className="text-stone-400"> (${waiting.usd.toFixed(2)})</span>
+                  )}
+                  .
+                </p>
+              </>
+            ) : waiting.result?.status === "screenout" ? (
+              <>
+                <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-amber-100">
+                  <CircleAlert size={32} className="text-amber-600" aria-hidden="true" />
+                </span>
+                <h3 className="mt-4 text-xl font-bold text-stone-900">Screened out this time</h3>
+                <p className="mt-2 text-sm text-stone-600">
+                  {waiting.result.coins > 0 ? (
+                    <>
+                      You still earned{" "}
+                      <span className="font-bold text-emerald-700">
+                        +{waiting.result.coins} bonus coin
+                        {waiting.result.coins > 1 ? "s" : ""}
+                      </span>{" "}
+                      for your effort.
+                    </>
+                  ) : (
+                    "No coins this time — fresh surveys land all the time, so keep going."
+                  )}
+                </p>
+              </>
+            ) : waiting.result?.status === "reversed" ? (
+              <>
+                <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
+                  <TriangleAlert size={32} className="text-red-600" aria-hidden="true" />
+                </span>
+                <h3 className="mt-4 text-xl font-bold text-stone-900">Completion reversed</h3>
+                <p className="mt-2 text-sm text-stone-600">
+                  The research partner reversed this survey, so its coins were withdrawn. Contact
+                  support if you think this is a mistake.
+                </p>
+              </>
+            ) : waiting.timedOut ? (
+              <>
+                <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-stone-100">
+                  <Clock size={32} className="text-stone-500" aria-hidden="true" />
+                </span>
+                <h3 className="mt-4 text-xl font-bold text-stone-900">Still processing</h3>
+                <p className="mt-2 text-sm text-stone-600">
+                  The research partner hasn&apos;t confirmed yet. Coins land automatically the
+                  moment it does — check your Rewards page in a few minutes.
+                </p>
+              </>
+            ) : (
+              <>
+                <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-coffee-100">
+                  <ExternalLink size={30} className="text-coffee-700" aria-hidden="true" />
+                </span>
+                <h3 className="mt-4 text-xl font-bold text-stone-900">Survey opened</h3>
+                <p className="mt-1 text-sm font-medium text-stone-500">{waiting.title}</p>
+                <p className="mt-3 text-sm leading-relaxed text-stone-600">
+                  Finish the survey in the tab that just opened. The moment you complete it — or
+                  get screened out — this page updates automatically.
+                </p>
+                <p className="mt-2 inline-flex items-center gap-1.5 text-xs text-stone-400">
+                  <Clock size={13} aria-hidden="true" />~{waiting.loiMinutes} min · keep this tab
+                  open while you answer
+                </p>
+              </>
+            )}
+
+            <div className="mt-6 flex gap-3">
+              {!waiting.result && !waiting.timedOut && (
+                <>
+                  <button
+                    onClick={() => updateWaiting((w) => ({ ...w, hidden: true }))}
+                    className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-stone-200 px-4 py-3 text-sm font-semibold text-stone-600 hover:bg-stone-50"
+                  >
+                    <Minimize2 size={15} aria-hidden="true" />
+                    Minimize
+                  </button>
+                  <button
+                    onClick={clearWaiting}
+                    className="flex-1 rounded-xl px-4 py-3 text-sm font-semibold text-stone-400 hover:text-stone-600"
+                  >
+                    Stop checking
+                  </button>
+                </>
+              )}
+              {(waiting.result || waiting.timedOut) && (
+                <button
+                  onClick={clearWaiting}
+                  className="w-full rounded-xl bg-coffee-700 px-4 py-3 text-sm font-bold text-white hover:bg-coffee-800"
+                >
+                  {waiting.result ? "Back to surveys" : "Close"}
+                </button>
+              )}
             </div>
           </div>
         </div>
