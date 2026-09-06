@@ -81,35 +81,17 @@ export default async function DashboardPage() {
   }
   const surveys = fresh.slice(0, 12);
 
-  const dbCards: SurveyCardData[] = surveys.map((s) => {
-    const rating = ratingsAgg.find((r) => r.surveyId === s.id);
-    const completedN = completedCounts.find((c) => s.id === c.surveyId)?._count._all ?? 0;
-    return {
-      id: s.id,
-      title: s.title,
-      category: s.category,
-      loiMinutes: s.loiMinutes,
-      coins: Math.floor(
-        (s.cpiCents * effectiveSharePercent(config.reward_share_percent, user.score)) /
-          100 /
-          config.coin_rate_cents,
-      ),
-      done: false, // completed surveys are filtered out of the rotation entirely
-      avgStars: rating?._avg.stars ? Math.round(rating._avg.stars * 10) / 10 : null,
-      ratingCount: rating?._count._all ?? 0,
-      completedCount: completedN,
-    };
-  });
+  const share = effectiveSharePercent(config.reward_share_percent, user.score);
+  const toCoins = (cpiCents: number) => Math.floor((cpiCents * share) / 100 / config.coin_rate_cents);
 
   // Live router inventory: every provider with a SURVEYS_URL is asked for this
   // user's targeted offers (cached ~2 min per router policy). Failures or slow
-  // routers degrade silently to the DB-backed cards above.
+  // routers degrade silently to the DB-backed cards below.
   const liveCards: SurveyCardData[] = [];
   if (!held) {
     const hdrs = await headers();
     const ip = hdrs.get("x-forwarded-for")?.split(",")[0]?.trim() || "";
     const ua = hdrs.get("user-agent") || "";
-    const share = effectiveSharePercent(config.reward_share_percent, user.score);
     const liveProviders = listProviders().filter((p) => p.surveysUrl);
     const lists = await Promise.all(
       liveProviders.map((p) => getLiveSurveys(p, { userId: user.id, ip, userAgent: ua })),
@@ -117,14 +99,16 @@ export default async function DashboardPage() {
     for (let i = 0; i < lists.length; i++) {
       const provider = liveProviders[i];
       for (const s of lists[i].surveys.slice(0, 8)) {
+        const coins = toCoins(s.cpiCents);
         liveCards.push({
           id: `live:${provider.key}:${s.externalId}`,
           liveProvider: provider.key,
           liveId: s.externalId,
-          title: `Survey #${s.externalId}`,
+          title: `${provider.label} survey #${s.externalId}`,
           category: provider.label,
           loiMinutes: s.loiMinutes,
-          coins: Math.floor((s.cpiCents * share) / 100 / config.coin_rate_cents),
+          coins,
+          usd: (coins * config.coin_rate_cents) / 100,
           done: false,
           avgStars: s.ratingAvg,
           ratingCount: s.ratingCount,
@@ -132,6 +116,27 @@ export default async function DashboardPage() {
       }
     }
   }
+
+  // When live inventory is flowing, the router's wall entry (externalId "") is
+  // redundant — hide it and let the per-survey cards take the board.
+  const dbSurveys = liveCards.length > 0 ? surveys.filter((s) => s.externalId !== "") : surveys;
+  const dbCards: SurveyCardData[] = dbSurveys.map((s) => {
+    const rating = ratingsAgg.find((r) => r.surveyId === s.id);
+    const completedN = completedCounts.find((c) => s.id === c.surveyId)?._count._all ?? 0;
+    const coins = toCoins(s.cpiCents);
+    return {
+      id: s.id,
+      title: s.title,
+      category: s.category,
+      loiMinutes: s.loiMinutes,
+      coins,
+      usd: (coins * config.coin_rate_cents) / 100,
+      done: false, // completed surveys are filtered out of the rotation entirely
+      avgStars: rating?._avg.stars ? Math.round(rating._avg.stars * 10) / 10 : null,
+      ratingCount: rating?._count._all ?? 0,
+      completedCount: completedN,
+    };
+  });
 
   const cards: SurveyCardData[] = [...liveCards, ...dbCards].slice(0, 12);
 

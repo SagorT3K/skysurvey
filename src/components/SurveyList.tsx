@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Clock, Coins, LoaderCircle, TriangleAlert } from "lucide-react";
+import { Check, Clock, LoaderCircle, Star, TriangleAlert } from "lucide-react";
 
 export type SurveyCardData = {
   id: number | string;
@@ -14,11 +14,27 @@ export type SurveyCardData = {
   category: string;
   loiMinutes: number;
   coins: number;
+  usd?: number; // dollar value shown as the card's headline
   done: boolean;
   avgStars?: number | null; // community difficulty rating
   ratingCount?: number;
   completedCount?: number;
 };
+
+function Stars({ avg }: { avg?: number | null }) {
+  const filled = Math.round(avg ?? 0);
+  return (
+    <span className="inline-flex items-center gap-0.5" aria-hidden="true">
+      {[1, 2, 3, 4, 5].map((i) => (
+        <Star
+          key={i}
+          size={13}
+          className={i <= filled ? "fill-amber-400 text-amber-400" : "fill-stone-200 text-stone-200"}
+        />
+      ))}
+    </span>
+  );
+}
 
 export default function SurveyList({ surveys }: { surveys: SurveyCardData[] }) {
   const router = useRouter();
@@ -58,65 +74,60 @@ export default function SurveyList({ surveys }: { surveys: SurveyCardData[] }) {
   }
 
   return (
-    <div className="grid gap-4 md:grid-cols-2">
-      {surveys.map((s) => (
-        <div key={s.id} className="flex items-center justify-between rounded-xl border border-coffee-200 bg-white p-5 transition hover:border-coffee-300 hover:shadow-sm">
-          <div className="pr-4">
-            <div className="flex items-center gap-2">
-              <span className="rounded-md bg-coffee-50 px-2 py-0.5 text-xs font-medium text-coffee-700">
-                {s.category}
+    <>
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {surveys.map((s) => {
+          const starting = startingId === s.id;
+          return (
+            <button
+              key={s.id}
+              onClick={() => start(s)}
+              disabled={s.done || starting}
+              title={`${s.title} · ${s.category}`}
+              aria-label={s.done ? `${s.title} (completed)` : `Start ${s.title}`}
+              className="flex flex-col gap-1.5 rounded-xl border border-stone-200 bg-white p-4 text-left transition hover:border-coffee-300 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <span className="inline-flex items-center gap-1.5 text-xs font-medium text-stone-500">
+                <Clock size={13} aria-hidden="true" />~{s.loiMinutes} min
               </span>
-              <span className="inline-flex items-center gap-1 text-xs text-stone-400">
-                <Clock size={12} aria-hidden="true" />
-                ~{s.loiMinutes} min
-              </span>
-            </div>
-            <h3 className="mt-1.5 font-semibold text-stone-900">{s.title}</h3>
-            {s.avgStars != null && s.ratingCount ? (
-              <p className="mt-1 flex items-center gap-2 text-xs text-stone-500">
-                <span className="font-semibold text-amber-500">★ {s.avgStars}</span>
-                <span>
-                  ({s.ratingCount} rating{s.ratingCount > 1 ? "s" : ""} · {s.completedCount ?? 0}{" "}
-                  completed)
+              {s.done ? (
+                <span className="inline-flex items-center gap-1.5 text-lg font-bold text-stone-400">
+                  <Check size={18} aria-hidden="true" />
+                  Completed
                 </span>
-              </p>
-            ) : s.liveProvider ? (
-              <p className="mt-1 text-xs text-stone-400">Fresh from the router — be the first to try it</p>
-            ) : (
-              <p className="mt-1 text-xs text-stone-400">No ratings yet — be the first to try it</p>
-            )}
-            <p className="mt-1 inline-flex items-center gap-1.5 text-sm font-medium text-emerald-600">
-              <Coins size={15} aria-hidden="true" />
-              {s.coins} coins
-            </p>
-          </div>
-          <button
-            onClick={() => start(s)}
-            disabled={s.done || startingId === s.id}
-            className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-coffee-700 px-4 py-2 text-sm font-semibold text-white hover:bg-coffee-800 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {s.done ? (
-              <>
-                <Check size={15} aria-hidden="true" />
-                Completed
-              </>
-            ) : startingId === s.id ? (
-              <>
-                <LoaderCircle size={15} className="animate-spin" aria-hidden="true" />
-                Starting
-              </>
-            ) : (
-              "Start"
-            )}
-          </button>
-        </div>
-      ))}
+              ) : starting ? (
+                <span className="inline-flex items-center gap-1.5 text-lg font-bold text-stone-400">
+                  <LoaderCircle size={18} className="animate-spin" aria-hidden="true" />
+                  Starting…
+                </span>
+              ) : s.usd != null ? (
+                <span className="text-xl font-bold text-emerald-700">
+                  ${s.usd.toFixed(2)}{" "}
+                  <span className="text-xs font-semibold text-stone-400">USD</span>
+                </span>
+              ) : (
+                <span className="text-xl font-bold text-emerald-700">
+                  {s.coins}{" "}
+                  <span className="text-xs font-semibold text-stone-400">coins</span>
+                </span>
+              )}
+              <span className="inline-flex items-center gap-1.5">
+                <Stars avg={s.avgStars} />
+                {s.ratingCount ? (
+                  <span className="text-xs text-stone-400">({s.ratingCount})</span>
+                ) : null}
+              </span>
+              <span className="text-xs font-medium text-emerald-600">≈ {s.coins} coins</span>
+            </button>
+          );
+        })}
+      </div>
       {error && (
-        <p className="inline-flex items-center gap-2 text-sm text-red-600 md:col-span-2">
+        <p className="mt-3 inline-flex items-center gap-2 text-sm text-red-600">
           <TriangleAlert size={15} aria-hidden="true" />
           {error}
         </p>
       )}
-    </div>
+    </>
   );
 }
