@@ -126,6 +126,30 @@ export default function SurveyList({ surveys }: { surveys: SurveyCardData[] }) {
   // The provider survey window (null when blocked or after a reload).
   const winRef = useRef<Window | null>(null);
 
+  // Browsers ignore focus() calls made from a background tab, so when the
+  // postback lands while the user is inside the survey window we also flash
+  // this tab's title — that's what actually pulls them back to the dashboard.
+  const baseTitle = useRef("SkySurvey");
+  useEffect(() => {
+    baseTitle.current = document.title;
+    return () => {
+      document.title = baseTitle.current;
+    };
+  }, []);
+  const result = waiting?.result;
+  useEffect(() => {
+    if (!result) return;
+    document.title =
+      result.status === "completed"
+        ? `✓ +${result.coins} coins — SkySurvey`
+        : result.status === "screenout"
+          ? "✓ Survey checked — SkySurvey"
+          : "Survey checked — SkySurvey";
+    return () => {
+      document.title = baseTitle.current;
+    };
+  }, [result]);
+
   // Re-open the survey window from a fresh click gesture — this is the
   // fallback when the first window.open was popup-blocked or the page was
   // reloaded while the survey was still running.
@@ -439,12 +463,18 @@ export default function SurveyList({ surveys }: { surveys: SurveyCardData[] }) {
             <h3 className="mt-4 text-xl font-bold text-stone-900">Survey opened</h3>
             <p className="mt-1 text-sm font-medium text-stone-500">{waiting.title}</p>
             <p className="mt-3 text-sm leading-relaxed text-stone-600">
-              Finish the survey in the window that just opened. The moment you complete it — or get
-              screened out — this page updates automatically and shows your reward.
+              Finish the survey in the window that just opened. When it ends, the research partner
+              shows a short confirmation page — just leave it be. Within a few minutes we detect
+              your result automatically, close that window and bring you back here with your
+              reward.
             </p>
             <p className="mt-2 inline-flex items-center gap-1.5 text-xs text-stone-400">
               <Clock size={13} aria-hidden="true" />~{waiting.loiMinutes} min · keep this page open
               while you answer
+            </p>
+            <p className="mt-3 text-xs leading-relaxed text-stone-400">
+              Want another survey? Come back here and pick a fresh card — surveys started from the
+              partner&apos;s own list can&apos;t be tracked for rewards.
             </p>
             <div className="mt-6 space-y-3">
               {(waiting.url || waiting.embedUrl) && (
