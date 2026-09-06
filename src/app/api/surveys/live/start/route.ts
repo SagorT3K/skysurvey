@@ -77,6 +77,9 @@ export async function POST(req: Request) {
 
   // The Survey table is optional for live inventory: reuse an existing row for
   // this provider+externalId (keeps ratings grouped), otherwise run without one.
+  // Rows are created isActive:false — the Survey table must never render live
+  // inventory as cards, or stale entries would route users to the plain wall
+  // entry instead of their targeted survey.
   const survey =
     (await prisma.survey.findFirst({
       where: { provider: provider.key, externalId },
@@ -89,6 +92,7 @@ export async function POST(req: Request) {
         cpiCents: live.cpiCents,
         loiMinutes: live.loiMinutes,
         country: "ALL",
+        isActive: false,
       },
     }));
 
