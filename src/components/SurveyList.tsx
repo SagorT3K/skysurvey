@@ -34,21 +34,17 @@ export type SurveyCardData = {
 };
 
 /**
- * Live survey journeys can't redirect back (routers don't take a return URL
- * for API surveys), so the survey opens in a new tab while this page polls the
- * attempt status. The moment the provider's postback lands, the result card
- * pops up here automatically. The pending journey survives navigation/back via
- * sessionStorage.
+ * Live routers give API surveys no return URL, and CPX sends no postback for
+ * plain non-qualifications — so a new tab strands users on CPX's wall. Instead
+ * the survey runs in a full-screen iframe ON our site (CPX's own script-tag
+ * integration embeds the same wall), while the dashboard polls the attempt
+ * status. The moment the provider's postback lands, the result card replaces
+ * the iframe. Non-qualifications end when the user closes the survey frame.
  */
 const STORAGE_KEY = "skysurvey.awaiting";
 const POLL_MS = 5000;
-const MAX_WAIT_MS = 20 * 60 * 1000;
+const MAX_WAIT_MS = 45 * 60 * 1000;
 const RESTORE_MAX_AGE_MS = 24 * 60 * 60 * 1000;
-
-// Handle to the survey tab we opened. Module scope (not state) so it survives
-// client-side navigation within the dashboard — when the postback lands we
-// close that tab ourselves, dropping the user back on our result card.
-let openedSurveyWindow: Window | null = null;
 
 type Waiting = {
   txId: string;
@@ -57,6 +53,8 @@ type Waiting = {
   usd?: number;
   loiMinutes: number;
   ts: number;
+  // In-site survey frame; null once the user closes it (then we poll quietly).
+  embedUrl?: string | null;
   hidden?: boolean; // minimized to a small pill
   timedOut?: boolean; // gave up polling, provider still silent
   result?: { status: "completed" | "screenout" | "reversed"; coins: number } | null;
@@ -140,15 +138,6 @@ export default function SurveyList({ surveys }: { surveys: SurveyCardData[] }) {
             ? { ...w, hidden: false, result: { status: data.status, coins: data.coins ?? 0 } }
             : w,
         );
-        // Bring the user home: close the survey tab we opened and focus ours.
-        // Script-opened windows may always be closed by their opener.
-        try {
-          if (openedSurveyWindow && !openedSurveyWindow.closed) openedSurveyWindow.close();
-        } catch {
-          // some browsers refuse — the result card still waits here
-        }
-        openedSurveyWindow = null;
-        window.focus();
         router.refresh();
       } catch {
         // network hiccup — next tick retries
@@ -163,32 +152,12 @@ export default function SurveyList({ surveys }: { surveys: SurveyCardData[] }) {
     }, POLL_MS);
     // First check right away: the postback may have beaten us here.
     const immediate = setTimeout(check, 800);
-    // Tab was in the background while the user answered — check the instant
-    // they (or our auto-close) bring it back to the front.
-    const onVisible = () => {
-      if (document.visibilityState === "visible") check();
-    };
-    document.addEventListener("visibilitychange", onVisible);
     return () => {
       cancelled = true;
       clearTimeout(immediate);
       clearInterval(timer);
-      document.removeEventListener("visibilitychange", onVisible);
     };
   }, [txId, finished, waiting?.ts, updateWaiting, router]);
-
-  // If the user closes the survey tab themselves, shrink the waiting card to
-  // the pill so it stops covering the dashboard; the result still pops up the
-  // moment the postback lands.
-  useEffect(() => {
-    if (!txId || finished) return;
-    const t = setInterval(() => {
-      if (openedSurveyWindow?.closed) {
-        updateWaiting((w) => (w.result || w.timedOut ? w : { ...w, hidden: true }));
-      }
-    }, 2000);
-    return () => clearInterval(t);
-  }, [txId, finished, updateWaiting]);
 
   async function start(s: SurveyCardData) {
     setStartingId(s.id);
@@ -227,11 +196,20 @@ export default function SurveyList({ surveys }: { surveys: SurveyCardData[] }) {
       usd: s.usd,
       loiMinutes: s.loiMinutes,
       ts: Date.now(),
+      embedUrl: data.embedUrl ?? null,
+      hidden: false,
     };
-    // Open the survey in a real new tab (NO "noopener" — that makes
-    // window.open return null, which silently fell back to same-tab navigation
-    // and killed the poller). We keep the handle to close the tab when the
-    // postback lands, dropping the user back onto our result card.
+
+    // Embeddable providers (CPX) run inside our own iframe modal — the user
+    // never leaves the site, so there is nothing to "come back" from.
+    if (w.embedUrl) {
+      updateWaiting(() => w);
+      return;
+    }
+
+    // Fallback for non-embeddable providers: a real new tab (NO "noopener" —
+    // that makes window.open return null, which silently fell back to
+    // same-tab navigation and killed the poller).
     const win = window.open(data.redirect, "_blank");
     if (!win) {
       // Popup blocked — take the same tab; the journey resumes when the user
@@ -240,7 +218,6 @@ export default function SurveyList({ surveys }: { surveys: SurveyCardData[] }) {
       router.push(data.redirect);
       return;
     }
-    openedSurveyWindow = win;
     updateWaiting(() => w);
   }
 
@@ -410,12 +387,89 @@ export default function SurveyList({ surveys }: { surveys: SurveyCardData[] }) {
         </button>
       )}
 
-      {waiting && !waiting.hidden && (
+      {/* In-site survey frame: the router's wall (with our subid_1 and the
+          deep-opened survey) runs on top of the dashboard, so the journey
+          never leaves the site. Closing it just minimizes to the pill. */}
+      {waiting && !waiting.hidden && waiting.embedUrl && !waiting.result && !waiting.timedOut && (
+        <div className="fixed inset-0 z-50 flex flex-col bg-stone-900/70" role="dialog" aria-modal="true">
+          <div className="flex items-center justify-between gap-3 bg-coffee-900 px-4 py-2.5 text-white">
+            <div className="min-w-0">
+              <p className="truncate text-sm font-bold">{waiting.title}</p>
+              <p className="text-xs text-coffee-200">
+                You&apos;re on SkySurvey — finish the survey in this window
+              </p>
+            </div>
+            <span className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-emerald-300">
+              <Coins size={14} aria-hidden="true" />
+              {waiting.coins}
+            </span>
+            <button
+              onClick={() => updateWaiting((w) => ({ ...w, hidden: true }))}
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-white/10 px-3 py-1.5 text-sm font-semibold hover:bg-white/20"
+            >
+              <X size={15} aria-hidden="true" />
+              Close
+            </button>
+          </div>
+          <iframe src={waiting.embedUrl} title="Survey" className="w-full flex-1 bg-white" />
+        </div>
+      )}
+
+      {/* Tab-mode fallback (non-embeddable providers) */}
+      {waiting && !waiting.hidden && !waiting.embedUrl && !waiting.result && !waiting.timedOut && (
         <div
           className="fixed inset-0 z-50 flex items-end justify-center bg-stone-900/50 p-0 backdrop-blur-sm sm:items-center sm:p-4"
-          onClick={() =>
-            !waiting.result && !waiting.timedOut && updateWaiting((w) => ({ ...w, hidden: true }))
-          }
+          onClick={() => updateWaiting((w) => ({ ...w, hidden: true }))}
+          role="dialog"
+          aria-modal="true"
+        >
+          <div
+            className="w-full max-w-md rounded-t-2xl bg-white p-6 text-center shadow-xl sm:rounded-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-coffee-100">
+              <ExternalLink size={30} className="text-coffee-700" aria-hidden="true" />
+            </span>
+            <h3 className="mt-4 text-xl font-bold text-stone-900">Survey opened</h3>
+            <p className="mt-1 text-sm font-medium text-stone-500">{waiting.title}</p>
+            <p className="mt-3 text-sm leading-relaxed text-stone-600">
+              Finish the survey in the tab that just opened. The moment you complete it — or get
+              screened out — this page updates automatically.
+            </p>
+            <p className="mt-2 inline-flex items-center gap-1.5 text-xs text-stone-400">
+              <Clock size={13} aria-hidden="true" />~{waiting.loiMinutes} min · keep this tab open
+              while you answer
+            </p>
+            <div className="mt-6 flex gap-3">
+              <button
+                onClick={() => updateWaiting((w) => ({ ...w, hidden: true }))}
+                className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-stone-200 px-4 py-3 text-sm font-semibold text-stone-600 hover:bg-stone-50"
+              >
+                <Minimize2 size={15} aria-hidden="true" />
+                Minimize
+              </button>
+              <button
+                onClick={clearWaiting}
+                className="flex-1 rounded-xl px-4 py-3 text-sm font-semibold text-stone-400 hover:text-stone-600"
+              >
+                Stop checking
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {waiting?.embedUrl && waiting.hidden && !waiting.result && !waiting.timedOut && (
+        <p className="mt-3 text-xs leading-relaxed text-stone-400">
+          Survey window closed — we&apos;re still checking for the partner&apos;s confirmation.
+          Completions usually confirm within a few minutes and the coins land automatically; if
+          you didn&apos;t qualify, nothing is charged — just pick another survey.
+        </p>
+      )}
+
+      {waiting && !waiting.hidden && (!!waiting.result || waiting.timedOut) && (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-stone-900/50 p-0 backdrop-blur-sm sm:items-center sm:p-4"
           role="dialog"
           aria-modal="true"
         >
@@ -483,50 +537,15 @@ export default function SurveyList({ surveys }: { surveys: SurveyCardData[] }) {
                   moment it does — check your Rewards page in a few minutes.
                 </p>
               </>
-            ) : (
-              <>
-                <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-coffee-100">
-                  <ExternalLink size={30} className="text-coffee-700" aria-hidden="true" />
-                </span>
-                <h3 className="mt-4 text-xl font-bold text-stone-900">Survey opened</h3>
-                <p className="mt-1 text-sm font-medium text-stone-500">{waiting.title}</p>
-                <p className="mt-3 text-sm leading-relaxed text-stone-600">
-                  Finish the survey in the tab that just opened. The moment you complete it — or
-                  get screened out — this page updates automatically.
-                </p>
-                <p className="mt-2 inline-flex items-center gap-1.5 text-xs text-stone-400">
-                  <Clock size={13} aria-hidden="true" />~{waiting.loiMinutes} min · keep this tab
-                  open while you answer
-                </p>
-              </>
-            )}
+            ) : null}
 
             <div className="mt-6 flex gap-3">
-              {!waiting.result && !waiting.timedOut && (
-                <>
-                  <button
-                    onClick={() => updateWaiting((w) => ({ ...w, hidden: true }))}
-                    className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-stone-200 px-4 py-3 text-sm font-semibold text-stone-600 hover:bg-stone-50"
-                  >
-                    <Minimize2 size={15} aria-hidden="true" />
-                    Minimize
-                  </button>
-                  <button
-                    onClick={clearWaiting}
-                    className="flex-1 rounded-xl px-4 py-3 text-sm font-semibold text-stone-400 hover:text-stone-600"
-                  >
-                    Stop checking
-                  </button>
-                </>
-              )}
-              {(waiting.result || waiting.timedOut) && (
-                <button
-                  onClick={clearWaiting}
-                  className="w-full rounded-xl bg-coffee-700 px-4 py-3 text-sm font-bold text-white hover:bg-coffee-800"
-                >
-                  {waiting.result ? "Back to surveys" : "Close"}
-                </button>
-              )}
+              <button
+                onClick={clearWaiting}
+                className="w-full rounded-xl bg-coffee-700 px-4 py-3 text-sm font-bold text-white hover:bg-coffee-800"
+              >
+                {waiting.result ? "Back to surveys" : "Close"}
+              </button>
             </div>
           </div>
         </div>

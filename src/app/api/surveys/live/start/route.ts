@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { getSessionUser, clientIp, userAgent, isHeld, holdDurationLeft } from "@/lib/auth";
 import { getConfig } from "@/lib/config";
 import { assessSurveyEntry, flagUser } from "@/lib/fraud";
-import { getProvider } from "@/lib/providers";
+import { buildEntryUrl, getProvider } from "@/lib/providers";
 import { findLiveSurvey } from "@/lib/live-surveys";
 
 /**
@@ -119,9 +119,29 @@ export async function POST(req: Request) {
   // with a duplicate empty param shadowing ours.
   const entry = new URL(live.href);
   entry.searchParams.set("subid_1", attempt.txId);
+
+  // CPX's API surveys bounce the user to CPX's own wall page when they end —
+  // there is no return URL to pass, so a new tab strands the user there. Their
+  // script-tag integration instead embeds the wall itself in an iframe on the
+  // publisher's page (no X-Frame-Options), and the wall accepts survey_id to
+  // deep-open one survey. We hand back that embed URL so the client can run the
+  // whole journey inside our site; subid_1 round-trips through postbacks just
+  // like the plain wall flow.
+  const embedUrl = /cpx-research\.com/i.test(provider.entryUrl)
+    ? `${buildEntryUrl(provider, {
+        txId: attempt.txId,
+        userId: user.id,
+        surveyId: survey.id,
+        externalId,
+        country: user.country,
+        ip,
+      })}&survey_id=${encodeURIComponent(externalId)}`
+    : undefined;
+
   return NextResponse.json({
     ok: true,
     redirect: entry.toString(),
+    embedUrl,
     txId: attempt.txId,
     attemptId: attempt.id,
     holdDays: config.hold_days,
