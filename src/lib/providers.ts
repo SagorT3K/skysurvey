@@ -301,7 +301,11 @@ export async function fetchProviderSurveys(
     .map((raw): LiveSurvey | null => {
       const row = (raw ?? {}) as Record<string, unknown>;
       const externalId = String(row.id ?? row.survey_id ?? row.offer_id ?? "").trim();
-      const href = String(row.href ?? row.entry_url ?? row.entry_link ?? row.link ?? "").trim();
+      // CPX's doc table lists href_new ("always use the new design") next to
+      // the legacy href the sample JSON still carries.
+      const href = String(
+        row.href_new ?? row.href ?? row.entry_url ?? row.entry_link ?? row.link ?? "",
+      ).trim();
       if (!externalId || !/^https?:\/\//i.test(href)) return null;
       // payout_publisher_usd is in USD; "payout" may be the user's local currency.
       const usdCents = num(row.payout_publisher_usd) * 100;

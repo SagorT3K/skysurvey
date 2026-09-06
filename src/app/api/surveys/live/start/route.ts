@@ -114,11 +114,14 @@ export async function POST(req: Request) {
   });
 
   // The router's href is user-bound; our txId rides in subid_1 so the postback
-  // finds the attempt. Anything after the first & is already-encoded params.
-  const sep = live.href.includes("?") ? "&" : "?";
+  // finds the attempt. CPX hrefs already carry EMPTY subid_1/subid_2 params —
+  // searchParams.set replaces every existing occurrence, so we never end up
+  // with a duplicate empty param shadowing ours.
+  const entry = new URL(live.href);
+  entry.searchParams.set("subid_1", attempt.txId);
   return NextResponse.json({
     ok: true,
-    redirect: `${live.href}${sep}subid_1=${encodeURIComponent(attempt.txId)}`,
+    redirect: entry.toString(),
     txId: attempt.txId,
     attemptId: attempt.id,
     holdDays: config.hold_days,
