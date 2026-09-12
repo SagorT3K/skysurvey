@@ -77,7 +77,7 @@ export default async function AdminUsersPage({
             name="q"
             defaultValue={q}
             placeholder="Search by username or email..."
-            className="w-64 rounded-lg border border-slate-300 px-3 py-1.5 text-sm outline-none focus:border-sky-500"
+            className="w-64 rounded-lg border border-slate-300 px-3 py-1.5 text-sm outline-none focus:border-brand-500"
           />
           <button className="rounded-lg bg-slate-800 px-4 py-1.5 text-sm font-medium text-white hover:bg-slate-700">
             Search
@@ -161,7 +161,7 @@ export default async function AdminUsersPage({
                   <td className="px-5 py-3 text-right">
                     <Link
                       href={`/admin/users/${u.id}`}
-                      className="inline-flex items-center gap-1 font-medium text-sky-600 hover:underline"
+                      className="inline-flex items-center gap-1 font-medium text-brand-600 hover:underline"
                     >
                       View
                       <ArrowRight size={14} aria-hidden="true" />

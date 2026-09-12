@@ -50,7 +50,7 @@ export default function ConfigForm({ initial }: { initial: Record<string, string
           <input
             value={values[f.key] ?? ""}
             onChange={(e) => setValues((v) => ({ ...v, [f.key]: e.target.value }))}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
           />
           <p className="mt-0.5 text-xs text-slate-400">{f.hint}</p>
         </div>
@@ -63,7 +63,7 @@ export default function ConfigForm({ initial }: { initial: Record<string, string
       <button
         type="submit"
         disabled={loading}
-        className="rounded-lg bg-sky-600 px-6 py-2.5 font-semibold text-white hover:bg-sky-700 disabled:opacity-60"
+        className="rounded-lg bg-brand-600 px-6 py-2.5 font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
       >
         {loading ? "Saving..." : "Save settings"}
       </button>

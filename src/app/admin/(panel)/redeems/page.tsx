@@ -23,7 +23,7 @@ type RedeemRow = {
 
 const STATUS: Record<string, { label: string; cls: string }> = {
   pending: { label: "Pending review", cls: "bg-amber-100 text-amber-700 ring-amber-200" },
-  approved: { label: "Approved", cls: "bg-sky-100 text-sky-700 ring-sky-200" },
+  approved: { label: "Approved", cls: "bg-brand-100 text-brand-700 ring-brand-200" },
   paid: { label: "Success", cls: "bg-emerald-100 text-emerald-700 ring-emerald-200" },
   rejected: { label: "Rejected", cls: "bg-red-100 text-red-600 ring-red-200" },
 };
@@ -41,7 +41,7 @@ function RedeemCard({ r, seq, actions }: { r: RedeemRow; seq: number; actions?: 
           <div>
             <a
               href={`/admin/users/${r.userId}`}
-              className="flex items-center gap-1.5 font-semibold text-slate-900 hover:text-sky-700 hover:underline"
+              className="flex items-center gap-1.5 font-semibold text-slate-900 hover:text-brand-700 hover:underline"
             >
               <UserRound size={14} className="text-slate-400" aria-hidden="true" />
               {r.user.username || r.user.email}

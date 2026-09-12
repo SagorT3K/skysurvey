@@ -68,7 +68,7 @@ export default async function AdminDashboard() {
                 <td className="px-5 py-3 font-medium text-slate-700">{a.event}</td>
                 <td className="px-5 py-3">
                   {a.user ? (
-                    <Link href={`/admin/users/${a.userId}`} className="text-sky-600 hover:underline">
+                    <Link href={`/admin/users/${a.userId}`} className="text-brand-600 hover:underline">
                       {a.user.email}
                     </Link>
                   ) : (

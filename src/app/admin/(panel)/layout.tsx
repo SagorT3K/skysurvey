@@ -18,8 +18,8 @@ export default async function AdminPanelLayout({ children }: { children: React.R
   if (!admin) redirect("/admin/login");
 
   return (
-    <div className="flex min-h-screen bg-slate-100">
-      <aside className="hidden w-60 shrink-0 flex-col bg-slate-900 p-5 text-slate-300 md:flex">
+    <div className="flex min-h-screen bg-brand-50">
+      <aside className="hidden w-60 shrink-0 flex-col bg-brand-950 p-5 text-brand-200 md:flex">
         <Link href="/admin" className="mb-8 flex items-center gap-2.5 font-bold text-white">
           <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600 text-white">
             <ShieldCheck size={17} strokeWidth={2.25} aria-hidden="true" />
@@ -31,7 +31,7 @@ export default async function AdminPanelLayout({ children }: { children: React.R
             <Link
               key={n.href}
               href={n.href}
-              className="flex items-center gap-2.5 rounded-lg px-3 py-2 hover:bg-slate-800 hover:text-white"
+              className="flex items-center gap-2.5 rounded-lg px-3 py-2 hover:bg-brand-900 hover:text-white"
             >
               <Icon size={16} aria-hidden="true" />
               {n.label}
