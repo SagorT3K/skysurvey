@@ -7,7 +7,7 @@ import { BadgeCheck, LoaderCircle, TriangleAlert } from "lucide-react";
 
 const COUNTRIES = ["US", "UK", "CA", "FR", "DE", "AU", "Other"];
 
-export default function SignupForm() {
+export default function SignupForm({ signupBonus }: { signupBonus: number }) {
   const router = useRouter();
   const params = useSearchParams();
   const [form, setForm] = useState({
@@ -45,11 +45,17 @@ export default function SignupForm() {
 
   return (
     <main className="flex flex-1 items-center justify-center px-4 py-16">
-      <div className="w-full max-w-md rounded-2xl border border-coffee-200 bg-white p-8 shadow-sm">
-        <h1 className="text-2xl font-bold text-coffee-900">Create your account</h1>
-        <p className="mt-1 text-sm text-stone-500">
-          Get <b>100 bonus coins</b> when you sign up.
-        </p>
+      <div className="w-full max-w-md rounded-2xl border border-brand-200 bg-white p-8 shadow-sm">
+        <h1 className="text-2xl font-bold text-brand-900">Create your account</h1>
+        {signupBonus > 0 ? (
+          <p className="mt-1 text-sm text-stone-500">
+            Get <b>{signupBonus.toLocaleString("en-US")} bonus coins</b> when you sign up.
+          </p>
+        ) : (
+          <p className="mt-1 text-sm text-stone-500">
+            Free to join — start earning with your first survey.
+          </p>
+        )}
         {params.get("ref") && (
           <p className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-emerald-50 px-3 py-1.5 text-sm font-medium text-emerald-700">
             <BadgeCheck size={16} aria-hidden="true" />
@@ -64,7 +70,7 @@ export default function SignupForm() {
               required
               value={form.username}
               onChange={(e) => set("username", e.target.value)}
-              className="w-full rounded-lg border border-stone-300 px-3 py-2 outline-none focus:border-coffee-500 focus:ring-2 focus:ring-coffee-100"
+              className="w-full rounded-lg border border-stone-300 px-3 py-2 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
               placeholder="John D."
             />
           </div>
@@ -75,7 +81,7 @@ export default function SignupForm() {
               required
               value={form.email}
               onChange={(e) => set("email", e.target.value)}
-              className="w-full rounded-lg border border-stone-300 px-3 py-2 outline-none focus:border-coffee-500 focus:ring-2 focus:ring-coffee-100"
+              className="w-full rounded-lg border border-stone-300 px-3 py-2 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
               placeholder="you@example.com"
             />
           </div>
@@ -87,7 +93,7 @@ export default function SignupForm() {
               minLength={6}
               value={form.password}
               onChange={(e) => set("password", e.target.value)}
-              className="w-full rounded-lg border border-stone-300 px-3 py-2 outline-none focus:border-coffee-500 focus:ring-2 focus:ring-coffee-100"
+              className="w-full rounded-lg border border-stone-300 px-3 py-2 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
               placeholder="At least 6 characters"
             />
           </div>
@@ -99,7 +105,7 @@ export default function SignupForm() {
               required
               value={form.country}
               onChange={(e) => set("country", e.target.value)}
-              className="w-full rounded-lg border border-stone-300 px-3 py-2 outline-none focus:border-coffee-500 focus:ring-2 focus:ring-coffee-100"
+              className="w-full rounded-lg border border-stone-300 px-3 py-2 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
             >
               {COUNTRIES.map((c) => (
                 <option key={c} value={c}>
@@ -120,7 +126,7 @@ export default function SignupForm() {
           <button
             type="submit"
             disabled={loading}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-coffee-700 py-2.5 font-semibold text-white hover:bg-coffee-800 disabled:opacity-60"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-brand-700 py-2.5 font-semibold text-white hover:bg-brand-800 disabled:opacity-60"
           >
             {loading ? (
               <>
@@ -135,7 +141,7 @@ export default function SignupForm() {
 
         <p className="mt-6 text-center text-sm text-stone-600">
           Already have an account?{" "}
-          <Link href="/login" className="font-semibold text-coffee-600 hover:underline">
+          <Link href="/login" className="font-semibold text-brand-600 hover:underline">
             Sign in
           </Link>
         </p>

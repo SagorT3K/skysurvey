@@ -62,7 +62,7 @@ export default function PrivacyPage() {
           your personal data, object to or restrict certain processing, and withdraw consent. UK/EU
           users may complain to their data protection authority; California residents may exercise
           know/delete/opt-out rights without discrimination. To exercise any right, email{" "}
-          <a href="mailto:privacy@skysurvey.com" className="font-semibold text-coffee-700 underline">
+          <a href="mailto:privacy@skysurvey.com" className="font-semibold text-brand-700 underline">
             privacy@skysurvey.com
           </a>
           . We respond within 30 days.
@@ -80,7 +80,7 @@ export default function PrivacyPage() {
       <Section heading="7. Contact">
         <p>
           Privacy questions? Contact our privacy team at{" "}
-          <a href="mailto:privacy@skysurvey.com" className="font-semibold text-coffee-700 underline">
+          <a href="mailto:privacy@skysurvey.com" className="font-semibold text-brand-700 underline">
             privacy@skysurvey.com
           </a>
           .

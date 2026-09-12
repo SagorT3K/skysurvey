@@ -98,7 +98,7 @@ export default function AdminProvidersPage() {
                     href={known.signup}
                     target="_blank"
                     rel="noreferrer"
-                    className="mt-3 inline-block text-xs font-semibold text-coffee-700 hover:underline"
+                    className="mt-3 inline-block text-xs font-semibold text-brand-700 hover:underline"
                   >
                     Publisher dashboard →
                   </a>
@@ -115,7 +115,7 @@ export default function AdminProvidersPage() {
       </p>
       <Link
         href="/admin/postbacks"
-        className="mt-2 inline-block text-xs font-semibold text-coffee-700 hover:underline"
+        className="mt-2 inline-block text-xs font-semibold text-brand-700 hover:underline"
       >
         View router postbacks →
       </Link>

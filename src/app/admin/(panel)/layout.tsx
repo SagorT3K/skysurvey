@@ -21,7 +21,7 @@ export default async function AdminPanelLayout({ children }: { children: React.R
     <div className="flex min-h-screen bg-slate-100">
       <aside className="hidden w-60 shrink-0 flex-col bg-slate-900 p-5 text-slate-300 md:flex">
         <Link href="/admin" className="mb-8 flex items-center gap-2.5 font-bold text-white">
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-coffee-600 text-white">
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand-600 text-white">
             <ShieldCheck size={17} strokeWidth={2.25} aria-hidden="true" />
           </span>
           SkySurvey Admin

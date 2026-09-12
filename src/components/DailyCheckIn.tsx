@@ -24,19 +24,19 @@ export default function DailyCheckIn({ available, coins }: { available: boolean;
   }
 
   return (
-    <div className="flex h-full flex-col justify-between rounded-2xl border border-coffee-300 bg-gradient-to-br from-coffee-800 to-coffee-950 p-6 text-white shadow-md">
+    <div className="flex h-full flex-col justify-between rounded-2xl border border-brand-300 bg-gradient-to-br from-brand-800 to-brand-950 p-6 text-white shadow-md">
       <div>
         <div className="flex items-center gap-3">
           <span
             className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${
-              available ? "bg-coffee-400/20 text-coffee-300" : "bg-white/5 text-coffee-500"
+              available ? "bg-brand-400/20 text-brand-300" : "bg-white/5 text-brand-500"
             }`}
           >
             <Flame size={22} strokeWidth={2.1} className={available ? "animate-pulse" : ""} aria-hidden="true" />
           </span>
           <div>
             <h3 className="font-bold">Daily check-in</h3>
-            <p className="flex items-center gap-1.5 text-sm text-coffee-200">
+            <p className="flex items-center gap-1.5 text-sm text-brand-200">
               <Coins size={14} aria-hidden="true" />
               {coins} coins every 24 hours
             </p>
@@ -51,7 +51,7 @@ export default function DailyCheckIn({ available, coins }: { available: boolean;
       <button
         onClick={checkIn}
         disabled={!available || loading}
-        className="mt-5 inline-flex items-center justify-center gap-2 rounded-xl bg-coffee-300 py-2.5 text-sm font-bold text-coffee-950 transition hover:bg-coffee-200 disabled:cursor-not-allowed disabled:opacity-50"
+        className="mt-5 inline-flex items-center justify-center gap-2 rounded-xl bg-brand-300 py-2.5 text-sm font-bold text-brand-950 transition hover:bg-brand-200 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {!available ? (
           <>

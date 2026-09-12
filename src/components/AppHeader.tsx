@@ -36,12 +36,12 @@ export default function AppHeader({
   const linkCls = (key: string) =>
     `flex items-center gap-2 rounded-lg px-3 py-2 font-medium transition ${
       active === key
-        ? "bg-coffee-100 font-semibold text-coffee-900"
-        : "text-stone-600 hover:bg-coffee-100 hover:text-coffee-900"
+        ? "bg-brand-100 font-semibold text-brand-900"
+        : "text-stone-600 hover:bg-brand-100 hover:text-brand-900"
     }`;
 
   return (
-    <header className="sticky top-0 z-40 border-b border-coffee-200 bg-white/95 backdrop-blur">
+    <header className="sticky top-0 z-40 border-b border-brand-200 bg-white/95 backdrop-blur">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
         <Logo href="/dashboard" size="sm" />
 
@@ -57,7 +57,7 @@ export default function AppHeader({
           <Link
             href="/rewards"
             title="View your full coin history"
-            className="mx-2 flex items-center gap-1.5 rounded-lg bg-coffee-100 px-3 py-1.5 font-semibold text-coffee-800 transition hover:bg-coffee-200"
+            className="mx-2 flex items-center gap-1.5 rounded-lg bg-brand-100 px-3 py-1.5 font-semibold text-brand-800 transition hover:bg-brand-200"
           >
             <Coins size={16} aria-hidden="true" />
             {balance}
@@ -71,7 +71,7 @@ export default function AppHeader({
           <Link
             href="/rewards"
             title="View your full coin history"
-            className="flex items-center gap-1.5 rounded-lg bg-coffee-100 px-3 py-1.5 font-semibold text-coffee-800"
+            className="flex items-center gap-1.5 rounded-lg bg-brand-100 px-3 py-1.5 font-semibold text-brand-800"
           >
             <Coins size={16} aria-hidden="true" />
             {balance}
@@ -80,7 +80,7 @@ export default function AppHeader({
             onClick={() => setOpen((v) => !v)}
             aria-expanded={open}
             aria-label={open ? "Close menu" : "Open menu"}
-            className="rounded-lg p-2 text-coffee-800 transition hover:bg-coffee-100"
+            className="rounded-lg p-2 text-brand-800 transition hover:bg-brand-100"
           >
             {open ? <X size={22} aria-hidden="true" /> : <Menu size={22} aria-hidden="true" />}
           </button>
@@ -89,7 +89,7 @@ export default function AppHeader({
 
       {/* Mobile menu */}
       {open && (
-        <nav className="border-t border-coffee-200 bg-white px-4 pb-4 pt-2 lg:hidden">
+        <nav className="border-t border-brand-200 bg-white px-4 pb-4 pt-2 lg:hidden">
           {LINKS.map(({ href, label, icon: Icon, key }) => (
             <Link
               key={key}
@@ -102,11 +102,11 @@ export default function AppHeader({
               {label}
             </Link>
           ))}
-          <div className="mt-2 border-t border-coffee-100 pt-2">
+          <div className="mt-2 border-t border-brand-100 pt-2">
             <div className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-stone-600">
               <Wallet size={16} aria-hidden="true" />
-              Balance: <b className="text-coffee-800">{balance} coins</b>
-              <Link href="/rewards" onClick={() => setOpen(false)} className="ml-auto text-xs font-semibold text-coffee-700 underline underline-offset-2">
+              Balance: <b className="text-brand-800">{balance} coins</b>
+              <Link href="/rewards" onClick={() => setOpen(false)} className="ml-auto text-xs font-semibold text-brand-700 underline underline-offset-2">
                 history
               </Link>
             </div>

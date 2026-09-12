@@ -34,11 +34,11 @@ export default async function ProfilePage() {
   const filled = demo.filter((d) => d.value).length;
 
   return (
-    <main className="flex min-h-screen flex-1 flex-col bg-cream">
+    <main className="flex min-h-screen flex-1 flex-col bg-surface">
       <AppHeader active="profile" balance={wallet.balance} />
 
       <div className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">
-        <h1 className="text-2xl font-bold text-coffee-900">Your profile</h1>
+        <h1 className="text-2xl font-bold text-brand-900">Your profile</h1>
         <p className="mt-1 text-stone-600">
           Keep your details accurate — survey answers are checked against them when research
           partners question a response.
@@ -58,38 +58,38 @@ export default async function ProfilePage() {
 
         {/* Account snapshot */}
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <div className="rounded-2xl border border-coffee-200 bg-white p-5">
+          <div className="rounded-2xl border border-brand-200 bg-white p-5">
             <p className="flex items-center gap-2 text-sm font-medium text-stone-500">
               <Mail size={15} aria-hidden="true" />
               Email
             </p>
-            <p className="mt-1 truncate font-semibold text-coffee-900">{user.email}</p>
+            <p className="mt-1 truncate font-semibold text-brand-900">{user.email}</p>
           </div>
-          <div className="rounded-2xl border border-coffee-200 bg-white p-5">
+          <div className="rounded-2xl border border-brand-200 bg-white p-5">
             <p className="flex items-center gap-2 text-sm font-medium text-stone-500">
               <Globe2 size={15} aria-hidden="true" />
               Country
             </p>
-            <p className="mt-1 font-semibold text-coffee-900">{user.country || "—"}</p>
+            <p className="mt-1 font-semibold text-brand-900">{user.country || "—"}</p>
           </div>
-          <div className="rounded-2xl border border-coffee-200 bg-white p-5">
+          <div className="rounded-2xl border border-brand-200 bg-white p-5">
             <p className="flex items-center gap-2 text-sm font-medium text-stone-500">
               <CalendarDays size={15} aria-hidden="true" />
               Member since
             </p>
-            <p className="mt-1 font-semibold text-coffee-900">
+            <p className="mt-1 font-semibold text-brand-900">
               {new Date(user.createdAt).toLocaleDateString()}
             </p>
           </div>
-          <div className="rounded-2xl border border-coffee-300 bg-coffee-50 p-5">
+          <div className="rounded-2xl border border-brand-300 bg-brand-50 p-5">
             <p className="text-sm font-medium text-stone-500">Trust level</p>
-            <p className="mt-1 font-bold text-coffee-900">
+            <p className="mt-1 font-bold text-brand-900">
               Lv {levelFromScore(user.score)}{" "}
               <span className="text-sm font-medium text-stone-500">({user.score} pts)</span>
             </p>
-            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-coffee-200">
+            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-brand-200">
               <div
-                className="h-full rounded-full bg-coffee-600"
+                className="h-full rounded-full bg-brand-600"
                 style={{ width: `${levelProgress(user.score).pct}%` }}
               />
             </div>
@@ -121,8 +121,8 @@ export default async function ProfilePage() {
         </div>
 
         {/* Edit form */}
-        <div className="mt-6 rounded-2xl border border-coffee-200 bg-white p-6 shadow-sm">
-          <h2 className="text-lg font-bold text-coffee-900">Personal details</h2>
+        <div className="mt-6 rounded-2xl border border-brand-200 bg-white p-6 shadow-sm">
+          <h2 className="text-lg font-bold text-brand-900">Personal details</h2>
           <p className="mt-1 text-sm text-stone-500">
             Only you and the review team can see this. It is never shared with survey partners
             directly.
@@ -153,9 +153,9 @@ export default async function ProfilePage() {
         </div>
 
         {/* Invite friends */}
-        <div className="mt-6 rounded-2xl border border-coffee-200 bg-white p-6 shadow-sm">
-          <h2 className="flex items-center gap-2 text-lg font-bold text-coffee-900">
-            <Users size={20} className="text-coffee-600" aria-hidden="true" />
+        <div className="mt-6 rounded-2xl border border-brand-200 bg-white p-6 shadow-sm">
+          <h2 className="flex items-center gap-2 text-lg font-bold text-brand-900">
+            <Users size={20} className="text-brand-600" aria-hidden="true" />
             Invite friends
           </h2>
           <p className="mt-1 text-sm text-stone-600">

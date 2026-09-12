@@ -43,28 +43,28 @@ export default async function MyLevelPage() {
   const share = effectiveSharePercent(config.reward_share_percent, user.score);
 
   return (
-    <main className="flex min-h-screen flex-1 flex-col bg-cream">
+    <main className="flex min-h-screen flex-1 flex-col bg-surface">
       <AppHeader active="mylevel" balance={wallet.balance} />
 
       <div className="mx-auto w-full max-w-3xl flex-1 px-4 py-8">
         {/* Level and score */}
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-coffee-900">My level</h1>
+          <h1 className="text-3xl font-bold text-brand-900">My level</h1>
           <p className="mt-1 text-stone-600">
             Your trust score decides your level — and your level decides your survey rate.
           </p>
         </div>
 
-        <div className="mt-6 rounded-3xl bg-gradient-to-r from-coffee-900 via-coffee-800 to-coffee-700 p-8 text-center text-white">
-          <p className="text-sm font-medium text-coffee-200">Current level</p>
+        <div className="mt-6 rounded-3xl bg-gradient-to-r from-brand-900 via-brand-800 to-brand-700 p-8 text-center text-white">
+          <p className="text-sm font-medium text-brand-200">Current level</p>
           <p className="mt-1 text-6xl font-bold">
             Lv {level}
-            <span className="ml-3 align-middle text-xl font-medium text-coffee-200">
+            <span className="ml-3 align-middle text-xl font-medium text-brand-200">
               {user.score} pts
             </span>
           </p>
           <div className="mx-auto mt-5 max-w-sm">
-            <div className="flex justify-between text-xs font-medium text-coffee-200">
+            <div className="flex justify-between text-xs font-medium text-brand-200">
               <span>Level {prog.level}</span>
               <span>
                 {held
@@ -74,13 +74,13 @@ export default async function MyLevelPage() {
                     : `${prog.needed - prog.into} pts to Level ${prog.level + 1}`}
               </span>
             </div>
-            <div className="mt-1.5 h-2.5 overflow-hidden rounded-full bg-coffee-950/40">
-              <div className="h-full rounded-full bg-coffee-300" style={{ width: `${prog.pct}%` }} />
+            <div className="mt-1.5 h-2.5 overflow-hidden rounded-full bg-brand-950/40">
+              <div className="h-full rounded-full bg-brand-300" style={{ width: `${prog.pct}%` }} />
             </div>
-            <p className="mt-3 text-sm text-coffee-100">
+            <p className="mt-3 text-sm text-brand-100">
               Your survey share:{" "}
               <b className="text-white">{share}%</b>{" "}
-              <span className="text-coffee-300">
+              <span className="text-brand-300">
                 (base {config.reward_share_percent}% + {(level - 1) * 2}% level bonus)
               </span>
             </p>
@@ -89,9 +89,9 @@ export default async function MyLevelPage() {
 
         {/* Score activity */}
         <section className="mt-8">
-          <h2 className="text-lg font-bold text-coffee-900">Score activity</h2>
+          <h2 className="text-lg font-bold text-brand-900">Score activity</h2>
           <p className="mt-1 text-sm text-stone-500">Every point you have earned or lost, and why.</p>
-          <div className="mt-4 overflow-hidden rounded-2xl border border-coffee-200 bg-white">
+          <div className="mt-4 overflow-hidden rounded-2xl border border-brand-200 bg-white">
             {events.length === 0 ? (
               <p className="p-8 text-center text-stone-500">
                 No score events yet — check in daily and complete surveys to build your score.
@@ -101,7 +101,7 @@ export default async function MyLevelPage() {
                 {events.map((e) => (
                   <li
                     key={e.id}
-                    className="flex items-center justify-between gap-3 border-b border-coffee-100 px-5 py-3 last:border-0"
+                    className="flex items-center justify-between gap-3 border-b border-brand-100 px-5 py-3 last:border-0"
                   >
                     <span>
                       <span className="font-medium capitalize text-stone-800">
@@ -137,8 +137,8 @@ export default async function MyLevelPage() {
         </section>
 
         {/* How levels work */}
-        <section className="mt-8 rounded-2xl border border-coffee-200 bg-white p-6 shadow-sm">
-          <h2 className="text-lg font-bold text-coffee-900">How levels work</h2>
+        <section className="mt-8 rounded-2xl border border-brand-200 bg-white p-6 shadow-sm">
+          <h2 className="text-lg font-bold text-brand-900">How levels work</h2>
           <div className="mt-4">
             <LevelsExplainer score={user.score} />
           </div>

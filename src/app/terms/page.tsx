@@ -112,7 +112,7 @@ export default function TermsPage() {
       <Section heading="11. Contact">
         <p>
           Questions about these Terms? Contact us at{" "}
-          <a href="mailto:support@skysurvey.com" className="font-semibold text-coffee-700 underline">
+          <a href="mailto:support@skysurvey.com" className="font-semibold text-brand-700 underline">
             support@skysurvey.com
           </a>
           .

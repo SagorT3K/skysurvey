@@ -34,17 +34,17 @@ export default function LoginPage() {
 
   return (
     <main className="flex flex-1 items-center justify-center px-4 py-16">
-      <div className="w-full max-w-md rounded-2xl border border-coffee-200 bg-white p-8 shadow-sm">
+      <div className="w-full max-w-md rounded-2xl border border-brand-200 bg-white p-8 shadow-sm">
         <div className="flex justify-center">
           <Logo />
         </div>
-        <h1 className="mt-6 text-2xl font-bold text-coffee-900">Welcome back</h1>
+        <h1 className="mt-6 text-2xl font-bold text-brand-900">Welcome back</h1>
         <p className="mt-1 text-sm text-stone-500">Sign in to your SkySurvey account</p>
 
         <form onSubmit={submit} className="mt-6 space-y-4">
           <div>
             <label className="mb-1 flex items-center gap-1.5 text-sm font-medium text-stone-700">
-              <Mail size={14} className="text-coffee-500" aria-hidden="true" />
+              <Mail size={14} className="text-brand-500" aria-hidden="true" />
               Email
             </label>
             <input
@@ -52,13 +52,13 @@ export default function LoginPage() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-lg border border-coffee-200 px-3 py-2 outline-none focus:border-coffee-500 focus:ring-2 focus:ring-coffee-100"
+              className="w-full rounded-lg border border-brand-200 px-3 py-2 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
               placeholder="you@example.com"
             />
           </div>
           <div>
             <label className="mb-1 flex items-center gap-1.5 text-sm font-medium text-stone-700">
-              <Lock size={14} className="text-coffee-500" aria-hidden="true" />
+              <Lock size={14} className="text-brand-500" aria-hidden="true" />
               Password
             </label>
             <input
@@ -66,7 +66,7 @@ export default function LoginPage() {
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-lg border border-coffee-200 px-3 py-2 outline-none focus:border-coffee-500 focus:ring-2 focus:ring-coffee-100"
+              className="w-full rounded-lg border border-brand-200 px-3 py-2 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
               placeholder="••••••••"
             />
           </div>
@@ -79,7 +79,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-coffee-700 py-2.5 font-semibold text-white hover:bg-coffee-800 disabled:opacity-60"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-brand-700 py-2.5 font-semibold text-white hover:bg-brand-800 disabled:opacity-60"
           >
             {loading ? (
               <>
@@ -94,7 +94,7 @@ export default function LoginPage() {
 
         <p className="mt-6 text-center text-sm text-stone-600">
           New to SkySurvey?{" "}
-          <Link href="/signup" className="font-semibold text-coffee-700 hover:underline">
+          <Link href="/signup" className="font-semibold text-brand-700 hover:underline">
             Create an account
           </Link>
         </p>

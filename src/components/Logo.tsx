@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Coffee } from "lucide-react";
+import { Coins } from "lucide-react";
 
 type LogoProps = {
   href?: string;
@@ -23,14 +23,14 @@ export default function Logo({
     <span className="flex items-center gap-2.5">
       <span
         className={`flex ${box} items-center justify-center ${
-          tone === "dark" ? "bg-coffee-400 text-coffee-950" : "bg-coffee-700 text-white"
+          tone === "dark" ? "bg-brand-400 text-brand-950" : "bg-gradient-to-br from-brand-600 to-brand-800 text-white"
         }`}
       >
-        <Coffee size={glyph} strokeWidth={2.25} aria-hidden="true" />
+        <Coins size={glyph} strokeWidth={2.25} aria-hidden="true" />
       </span>
       <span
         className={`${text} font-bold tracking-tight ${
-          tone === "dark" ? "text-white" : "text-coffee-800"
+          tone === "dark" ? "text-white" : "text-brand-800"
         }`}
       >
         {label}

@@ -40,10 +40,10 @@ export default function CoinLedger({ initial }: { initial: Entry[] }) {
   }, [cursor]);
 
   return (
-    <div className="mt-3 max-h-[26rem] overflow-y-auto rounded-xl border border-coffee-200 bg-white">
+    <div className="mt-3 max-h-[26rem] overflow-y-auto rounded-xl border border-brand-200 bg-white">
       <table className="w-full text-sm">
-        <thead className="sticky top-0 z-10 bg-white shadow-[0_1px_0_0_var(--color-coffee-100)]">
-          <tr className="text-xs uppercase tracking-wide text-coffee-500">
+        <thead className="sticky top-0 z-10 bg-white shadow-[0_1px_0_0_var(--color-brand-100)]">
+          <tr className="text-xs uppercase tracking-wide text-brand-500">
             <th className="px-5 py-2.5 text-left font-semibold">Type</th>
             <th className="px-5 py-2.5 text-left font-semibold">Details</th>
             <th className="px-5 py-2.5 text-right font-semibold">Coins</th>
@@ -51,7 +51,7 @@ export default function CoinLedger({ initial }: { initial: Entry[] }) {
         </thead>
         <tbody>
           {entries.map((t) => (
-            <tr key={t.id} className="border-b border-coffee-100 last:border-0">
+            <tr key={t.id} className="border-b border-brand-100 last:border-0">
               <td className="px-5 py-3 capitalize text-stone-700">{t.category || t.type}</td>
               <td className="px-5 py-3 text-stone-500">{t.description || "—"}</td>
               <td className="px-5 py-3 text-right font-semibold">
@@ -69,7 +69,7 @@ export default function CoinLedger({ initial }: { initial: Entry[] }) {
           <button
             onClick={loadMore}
             disabled={loading}
-            className="rounded-lg border border-coffee-200 px-4 py-1.5 text-sm font-medium text-coffee-700 hover:bg-coffee-50 disabled:opacity-50"
+            className="rounded-lg border border-brand-200 px-4 py-1.5 text-sm font-medium text-brand-700 hover:bg-brand-50 disabled:opacity-50"
           >
             {loading ? "Loading…" : "Load more"}
           </button>

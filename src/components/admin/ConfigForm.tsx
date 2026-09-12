@@ -8,7 +8,7 @@ const FIELDS: { key: string; label: string; hint: string }[] = [
   { key: "coin_rate_cents", label: "1 coin value (US cents)", hint: "1 = 1 coin equals $0.01" },
   { key: "reward_share_percent", label: "Reward share (%)", hint: "% of router CPI credited to users as coins (your margin is the rest)" },
   { key: "min_cashout_coins", label: "Minimum cashout (coins)", hint: "500 coins = $5 at default rate" },
-  { key: "signup_bonus_coins", label: "Signup bonus (coins)", hint: "Granted on account creation" },
+  { key: "signup_bonus_coins", label: "Signup bonus (coins)", hint: "Granted on account creation. Set 0 to hide the signup offer from the landing page." },
   { key: "referral_bonus_coins", label: "Referral bonus (coins)", hint: "Granted to the inviter per signup" },
   { key: "daily_bonus_coins", label: "Daily bonus (coins)", hint: "Claimed once every 24 hours from the dashboard" },
   { key: "max_attempts_per_hour", label: "Max survey starts / hour", hint: "Per user. Above this the entry is blocked and the account is flagged" },

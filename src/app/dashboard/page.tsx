@@ -141,7 +141,7 @@ export default async function DashboardPage() {
   const cards: SurveyCardData[] = [...liveCards, ...dbCards].slice(0, 12);
 
   return (
-    <main className="flex min-h-screen flex-1 flex-col bg-cream">
+    <main className="flex min-h-screen flex-1 flex-col bg-surface">
       <AppHeader active="surveys" balance={wallet.balance} />
 
       <div className="mx-auto max-w-6xl px-4 py-8">
@@ -162,39 +162,39 @@ export default async function DashboardPage() {
         )}
 
         {/* Welcome banner */}
-        <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-coffee-900 via-coffee-800 to-coffee-700 p-8 text-white">
-          <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-coffee-500/30 blur-2xl" />
+        <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-brand-900 via-brand-800 to-brand-700 p-8 text-white">
+          <div className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-brand-500/30 blur-2xl" />
           <div className="relative flex flex-wrap items-center justify-between gap-6">
             <div>
-              <p className="flex items-center gap-2 text-sm font-medium text-coffee-200">
+              <p className="flex items-center gap-2 text-sm font-medium text-brand-200">
                 <Radio size={15} aria-hidden="true" />
                 Live · {totalEarners.toLocaleString()} members earning
               </p>
               <h1 className="mt-1 flex items-center gap-3 text-3xl font-bold">
                 Welcome back, {user.username || "friend"}
                 <span
-                  className="rounded-full bg-coffee-300 px-3 py-1 text-sm font-bold text-coffee-950"
+                  className="rounded-full bg-brand-300 px-3 py-1 text-sm font-bold text-brand-950"
                   title={`Trust score ${user.score}`}
                 >
                   Lv {levelFromScore(user.score)}
                 </span>
               </h1>
-              <p className="mt-2 max-w-lg text-coffee-100/85">
+              <p className="mt-2 max-w-lg text-brand-100/85">
                 Complete surveys, keep your streak alive, and invite friends — every coin adds up to
                 your next payout.
               </p>
               {/* Level progress — higher level means a bigger survey share */}
               <Link href="/my-level" className="mt-4 block max-w-xs group/prog">
-                <div className="flex justify-between text-xs font-medium text-coffee-200">
+                <div className="flex justify-between text-xs font-medium text-brand-200">
                   <span>Level {levelProgress(user.score).level}</span>
-                  <span className="underline decoration-coffee-400 underline-offset-2 group-hover/prog:text-white">
+                  <span className="underline decoration-brand-400 underline-offset-2 group-hover/prog:text-white">
                     {levelProgress(user.score).needed - levelProgress(user.score).into} pts to
                     Level {levelProgress(user.score).level + 1} · my level
                   </span>
                 </div>
-                <div className="mt-1 h-2 overflow-hidden rounded-full bg-coffee-950/40">
+                <div className="mt-1 h-2 overflow-hidden rounded-full bg-brand-950/40">
                   <div
-                    className="h-full rounded-full bg-coffee-300"
+                    className="h-full rounded-full bg-brand-300"
                     style={{ width: `${levelProgress(user.score).pct}%` }}
                   />
                 </div>
@@ -202,7 +202,7 @@ export default async function DashboardPage() {
             </div>
             <Link
               href="/rewards"
-              className="group inline-flex items-center gap-2 rounded-xl bg-coffee-300 px-6 py-3 font-bold text-coffee-950 shadow hover:bg-coffee-200"
+              className="group inline-flex items-center gap-2 rounded-xl bg-brand-300 px-6 py-3 font-bold text-brand-950 shadow hover:bg-brand-200"
             >
               Redeem coins
               <ArrowRight size={18} className="transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
@@ -213,9 +213,9 @@ export default async function DashboardPage() {
         {/* Wallet cards + daily check-in */}
         <section className="mt-6 grid gap-4 md:grid-cols-4">
           {[
-            { icon: Coins, label: "Balance", value: `${wallet.balance}`, sub: `$${((wallet.balance * config.coin_rate_cents) / 100).toFixed(2)} value`, cls: "bg-white border-coffee-200 text-coffee-900" },
+            { icon: Coins, label: "Balance", value: `${wallet.balance}`, sub: `$${((wallet.balance * config.coin_rate_cents) / 100).toFixed(2)} value`, cls: "bg-white border-brand-200 text-brand-900" },
             { icon: Wallet, label: "Withdrawable", value: `${wallet.withdrawable}`, sub: wallet.withdrawable >= config.min_cashout_coins ? "Cash out now" : `${config.min_cashout_coins - wallet.withdrawable} to $5`, cls: "bg-emerald-50 border-emerald-200 text-emerald-900" },
-            { icon: CircleCheckBig, label: "Redeemed", value: `${redeemedCoins}`, sub: subRequests, cls: "bg-coffee-100 border-coffee-200 text-coffee-800" },
+            { icon: CircleCheckBig, label: "Redeemed", value: `${redeemedCoins}`, sub: subRequests, cls: "bg-brand-100 border-brand-200 text-brand-800" },
           ].map(({ icon: Icon, ...c }) => (
             <div key={c.label} className={`rounded-2xl border p-5 ${c.cls}`}>
               <p className="flex items-center gap-2 text-sm font-medium opacity-75">
@@ -239,10 +239,10 @@ export default async function DashboardPage() {
             <>
               <div className="flex items-end justify-between">
                 <div>
-                  <h2 className="text-2xl font-bold text-coffee-900">Available surveys</h2>
+                  <h2 className="text-2xl font-bold text-brand-900">Available surveys</h2>
                   <p className="mt-1 text-sm text-stone-600">Matched to your country ({user.country}) — coin reward shown up front.</p>
                 </div>
-                <span className="rounded-full bg-coffee-100 px-3 py-1 text-xs font-semibold text-coffee-800">
+                <span className="rounded-full bg-brand-100 px-3 py-1 text-xs font-semibold text-brand-800">
                   {cards.length} new
                 </span>
               </div>

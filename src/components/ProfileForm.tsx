@@ -51,7 +51,7 @@ export default function ProfileForm({
   }
 
   const input =
-    "w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm outline-none focus:border-coffee-500 focus:ring-2 focus:ring-coffee-100";
+    "w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100";
 
   return (
     <form onSubmit={submit} className="space-y-5">
@@ -123,7 +123,7 @@ export default function ProfileForm({
       <button
         type="submit"
         disabled={loading}
-        className="inline-flex items-center gap-2 rounded-lg bg-coffee-700 px-5 py-2.5 text-sm font-semibold text-white hover:bg-coffee-800 disabled:opacity-50"
+        className="inline-flex items-center gap-2 rounded-lg bg-brand-700 px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-800 disabled:opacity-50"
       >
         {loading ? (
           <LoaderCircle size={16} className="animate-spin" aria-hidden="true" />

@@ -29,7 +29,7 @@ export default async function FeedbackPage({ params }: { params: Promise<{ id: s
   const wallet = await getWalletSummary(user.id);
 
   return (
-    <main className="flex min-h-screen flex-1 flex-col bg-cream">
+    <main className="flex min-h-screen flex-1 flex-col bg-surface">
       <AppHeader active="surveys" balance={wallet.balance} />
       <div className="flex-1">
         <SurveyFeedback

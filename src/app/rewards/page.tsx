@@ -31,7 +31,7 @@ export default async function RewardsPage() {
   const redeems = allRedeems.slice(0, 5);
 
   return (
-    <main className="flex min-h-screen flex-1 flex-col bg-cream">
+    <main className="flex min-h-screen flex-1 flex-col bg-surface">
       <AppHeader active="rewards" balance={wallet.balance} />
 
       <div className="mx-auto grid w-full max-w-6xl flex-1 gap-8 px-4 py-8 lg:grid-cols-[1fr_380px]">
@@ -48,25 +48,25 @@ export default async function RewardsPage() {
               </div>
             </div>
           )}
-          <h1 className="text-2xl font-bold text-coffee-900">Redeem coins</h1>
+          <h1 className="text-2xl font-bold text-brand-900">Redeem coins</h1>
           <p className="mt-1 text-stone-600">
             1 coin = ${(config.coin_rate_cents / 100).toFixed(2)} · minimum cashout{" "}
             {config.min_cashout_coins} coins (${((config.min_cashout_coins * config.coin_rate_cents) / 100).toFixed(2)}).
           </p>
 
-          <h2 className="mt-8 text-lg font-bold text-coffee-900">Redeem history</h2>
-          <div className="mt-3 overflow-hidden rounded-xl border border-coffee-200 bg-white">
+          <h2 className="mt-8 text-lg font-bold text-brand-900">Redeem history</h2>
+          <div className="mt-3 overflow-hidden rounded-xl border border-brand-200 bg-white">
             {redeems.length === 0 ? (
               <p className="p-6 text-center text-stone-500">No redemption requests yet.</p>
             ) : (
               <table className="w-full text-sm">
                 <tbody>
                   {redeems.map((r) => (
-                    <tr key={r.id} className="border-b border-coffee-100 last:border-0">
+                    <tr key={r.id} className="border-b border-brand-100 last:border-0">
                       <td className="px-5 py-3 font-medium text-stone-700">
                         <span className="inline-flex items-center gap-2">
                           #{seqOf.get(r.id)} · {r.coins} coins
-                          <ArrowRight size={14} className="text-coffee-400" aria-hidden="true" />
+                          <ArrowRight size={14} className="text-brand-400" aria-hidden="true" />
                           ${(r.amountCents / 100).toFixed(2)}
                         </span>
                         <span className="block text-xs font-normal text-stone-400">
@@ -86,7 +86,7 @@ export default async function RewardsPage() {
                               : r.status === "rejected"
                                 ? "bg-red-100 text-red-600"
                                 : r.status === "approved"
-                                  ? "bg-coffee-100 text-coffee-700"
+                                  ? "bg-brand-100 text-brand-700"
                                   : "bg-amber-100 text-amber-700"
                           }`}
                         >
@@ -100,9 +100,9 @@ export default async function RewardsPage() {
             )}
           </div>
 
-          <h2 className="mt-8 text-lg font-bold text-coffee-900">Coin ledger</h2>
+          <h2 className="mt-8 text-lg font-bold text-brand-900">Coin ledger</h2>
           {ledger.length === 0 ? (
-            <div className="mt-3 rounded-xl border border-coffee-200 bg-white">
+            <div className="mt-3 rounded-xl border border-brand-200 bg-white">
               <p className="p-6 text-center text-stone-500">Nothing here yet.</p>
             </div>
           ) : (
@@ -110,7 +110,7 @@ export default async function RewardsPage() {
           )}
         </div>
 
-        <aside className="h-fit rounded-2xl border border-coffee-200 bg-white p-6 shadow-sm">
+        <aside className="h-fit rounded-2xl border border-brand-200 bg-white p-6 shadow-sm">
           <div className="rounded-xl bg-emerald-50 p-4 text-emerald-800">
             <p className="flex items-center gap-2 text-sm font-medium">
               <Wallet size={15} aria-hidden="true" />

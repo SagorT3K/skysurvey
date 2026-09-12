@@ -8,7 +8,7 @@ export default function CookiesPage() {
       <p>
         This policy explains how SkySurvey uses cookies and similar technologies, and how you can
         control them. For details on how we handle personal data generally, see our{" "}
-        <a href="/privacy" className="font-semibold text-coffee-700 underline">Privacy Policy</a>.
+        <a href="/privacy" className="font-semibold text-brand-700 underline">Privacy Policy</a>.
       </p>
 
       <Section heading="1. What are cookies?">
@@ -23,7 +23,7 @@ export default function CookiesPage() {
         <ul className="list-disc space-y-3 pl-5">
           <li>
             <b>Strictly necessary (always active).</b> Required for the site to function: your login
-            session cookie (<code className="rounded bg-coffee-100 px-1.5 py-0.5 text-xs">ss_token</code>),
+            session cookie (<code className="rounded bg-brand-100 px-1.5 py-0.5 text-xs">ss_token</code>),
             security and fraud-prevention signals, and your cookie-consent choice. These cannot be
             switched off.
           </li>
@@ -57,7 +57,7 @@ export default function CookiesPage() {
       <Section heading="5. Contact">
         <p>
           Questions? Email{" "}
-          <a href="mailto:privacy@skysurvey.com" className="font-semibold text-coffee-700 underline">
+          <a href="mailto:privacy@skysurvey.com" className="font-semibold text-brand-700 underline">
             privacy@skysurvey.com
           </a>
           .

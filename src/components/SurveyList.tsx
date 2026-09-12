@@ -278,7 +278,7 @@ export default function SurveyList({ surveys }: { surveys: SurveyCardData[] }) {
 
   if (surveys.length === 0 && !waiting) {
     return (
-      <div className="rounded-xl border border-dashed border-coffee-300 bg-white p-10 text-center text-stone-500">
+      <div className="rounded-xl border border-dashed border-brand-300 bg-white p-10 text-center text-stone-500">
         No surveys available for your country right now — check back soon.
       </div>
     );
@@ -294,7 +294,7 @@ export default function SurveyList({ surveys }: { surveys: SurveyCardData[] }) {
             disabled={s.done}
             title={`${s.title} · ${s.category}`}
             aria-label={s.done ? `${s.title} (completed)` : `View ${s.title} details`}
-            className="flex flex-col gap-1.5 rounded-xl border border-stone-200 bg-white p-4 text-left transition hover:border-coffee-300 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
+            className="flex flex-col gap-1.5 rounded-xl border border-stone-200 bg-white p-4 text-left transition hover:border-brand-300 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
           >
             <span className="inline-flex items-center gap-1.5 text-xs font-medium text-stone-500">
               <Clock size={13} aria-hidden="true" />~{s.loiMinutes} min
@@ -348,7 +348,7 @@ export default function SurveyList({ surveys }: { surveys: SurveyCardData[] }) {
           >
             <div className="flex items-start justify-between gap-4">
               <div>
-                <span className="rounded-md bg-coffee-50 px-2 py-0.5 text-xs font-medium text-coffee-700">
+                <span className="rounded-md bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-700">
                   {selected.category}
                 </span>
                 <h3 className="mt-2 text-lg font-bold leading-snug text-stone-900">
@@ -364,7 +364,7 @@ export default function SurveyList({ surveys }: { surveys: SurveyCardData[] }) {
               </button>
             </div>
 
-            <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 rounded-xl bg-cream p-4">
+            <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 rounded-xl bg-surface p-4">
               <span className="inline-flex items-center gap-1.5 text-sm font-medium text-stone-600">
                 <Clock size={15} className="text-stone-400" aria-hidden="true" />
                 ~{selected.loiMinutes} min
@@ -415,7 +415,7 @@ export default function SurveyList({ surveys }: { surveys: SurveyCardData[] }) {
               <button
                 onClick={() => start(selected)}
                 disabled={startingId === selected.id}
-                className="inline-flex flex-[2] items-center justify-center gap-2 rounded-xl bg-coffee-700 px-4 py-3 text-sm font-bold text-white hover:bg-coffee-800 disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex flex-[2] items-center justify-center gap-2 rounded-xl bg-brand-700 px-4 py-3 text-sm font-bold text-white hover:bg-brand-800 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {startingId === selected.id ? (
                   <>
@@ -435,7 +435,7 @@ export default function SurveyList({ surveys }: { surveys: SurveyCardData[] }) {
       {waiting && waiting.hidden && !waiting.result && !waiting.timedOut && (
         <button
           onClick={() => updateWaiting((w) => ({ ...w, hidden: false }))}
-          className="fixed bottom-4 right-4 z-40 inline-flex items-center gap-2 rounded-full bg-coffee-800 px-4 py-2.5 text-sm font-semibold text-white shadow-lg hover:bg-coffee-900"
+          className="fixed bottom-4 right-4 z-40 inline-flex items-center gap-2 rounded-full bg-brand-800 px-4 py-2.5 text-sm font-semibold text-white shadow-lg hover:bg-brand-900"
         >
           <LoaderCircle size={15} className="animate-spin" aria-hidden="true" />
           Checking survey…
@@ -457,8 +457,8 @@ export default function SurveyList({ surveys }: { surveys: SurveyCardData[] }) {
             className="w-full max-w-md rounded-t-2xl bg-white p-6 text-center shadow-xl sm:rounded-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-coffee-100">
-              <ExternalLink size={30} className="text-coffee-700" aria-hidden="true" />
+            <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-brand-100">
+              <ExternalLink size={30} className="text-brand-700" aria-hidden="true" />
             </span>
             <h3 className="mt-4 text-xl font-bold text-stone-900">Survey opened</h3>
             <p className="mt-1 text-sm font-medium text-stone-500">{waiting.title}</p>
@@ -480,7 +480,7 @@ export default function SurveyList({ surveys }: { surveys: SurveyCardData[] }) {
               {(waiting.url || waiting.embedUrl) && (
                 <button
                   onClick={reopenSurvey}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-coffee-700 px-4 py-3 text-sm font-bold text-white hover:bg-coffee-800"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-brand-700 px-4 py-3 text-sm font-bold text-white hover:bg-brand-800"
                 >
                   <ExternalLink size={15} aria-hidden="true" />
                   Open survey
@@ -589,7 +589,7 @@ export default function SurveyList({ surveys }: { surveys: SurveyCardData[] }) {
             <div className="mt-6 flex gap-3">
               <button
                 onClick={clearWaiting}
-                className="w-full rounded-xl bg-coffee-700 px-4 py-3 text-sm font-bold text-white hover:bg-coffee-800"
+                className="w-full rounded-xl bg-brand-700 px-4 py-3 text-sm font-bold text-white hover:bg-brand-800"
               >
                 {waiting.result ? "Back to surveys" : "Close"}
               </button>

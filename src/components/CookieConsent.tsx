@@ -18,15 +18,15 @@ export default function CookieConsent() {
   if (!visible) return null;
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-50 border-t border-coffee-300 bg-white p-4 shadow-[0_-4px_24px_rgba(0,0,0,0.12)]">
+    <div className="fixed inset-x-0 bottom-0 z-50 border-t border-brand-300 bg-white p-4 shadow-[0_-4px_24px_rgba(0,0,0,0.12)]">
       <div className="mx-auto flex max-w-6xl flex-col items-start gap-3 sm:flex-row sm:items-center">
         <p className="flex-1 text-sm text-stone-700">
           We use cookies to keep SkySurvey working, measure traffic, and prevent fraud. See our{" "}
-          <Link href="/cookies" className="font-semibold text-coffee-700 underline">
+          <Link href="/cookies" className="font-semibold text-brand-700 underline">
             Cookie Policy
           </Link>{" "}
           and{" "}
-          <Link href="/privacy" className="font-semibold text-coffee-700 underline">
+          <Link href="/privacy" className="font-semibold text-brand-700 underline">
             Privacy Policy
           </Link>
           .
@@ -34,13 +34,13 @@ export default function CookieConsent() {
         <div className="flex gap-2">
           <button
             onClick={() => decide("essential")}
-            className="rounded-lg border border-coffee-300 px-4 py-2 text-sm font-medium text-coffee-800 hover:bg-coffee-50"
+            className="rounded-lg border border-brand-300 px-4 py-2 text-sm font-medium text-brand-800 hover:bg-brand-50"
           >
             Essential only
           </button>
           <button
             onClick={() => decide("all")}
-            className="rounded-lg bg-coffee-700 px-4 py-2 text-sm font-semibold text-white hover:bg-coffee-800"
+            className="rounded-lg bg-brand-700 px-4 py-2 text-sm font-semibold text-white hover:bg-brand-800"
           >
             Accept all
           </button>

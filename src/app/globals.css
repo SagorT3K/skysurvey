@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #faf7f2;
-  --foreground: #3a2d22;
+  --background: #f8f5ff;
+  --foreground: #211d3a;
 }
 
 @theme inline {
@@ -12,20 +12,20 @@
   --font-mono: var(--font-geist-mono);
 }
 
-/* Coffee palette (Tailwind v4 theme extension) */
+/* Brand palette — violet (Tailwind v4 theme extension) */
 @theme {
-  --color-coffee-50: #faf7f2;
-  --color-coffee-100: #f2ebdf;
-  --color-coffee-200: #e5d3bd;
-  --color-coffee-300: #d3b694;
-  --color-coffee-400: #bf966d;
-  --color-coffee-500: #a87c52;
-  --color-coffee-600: #8a6240;
-  --color-coffee-700: #6f4e37;
-  --color-coffee-800: #5a3f2d;
-  --color-coffee-900: #463024;
-  --color-coffee-950: #2e2016;
-  --color-cream: #faf7f2;
+  --color-brand-50: #f8f5ff;
+  --color-brand-100: #ede9fe;
+  --color-brand-200: #ddd0ff;
+  --color-brand-300: #c4b5fd;
+  --color-brand-400: #a78bfa;
+  --color-brand-500: #8b5cf6;
+  --color-brand-600: #7c3aed;
+  --color-brand-700: #6938ef;
+  --color-brand-800: #5b2be0;
+  --color-brand-900: #312e81;
+  --color-brand-950: #17152b;
+  --color-surface: #f8f5ff;
 }
 
 body {
@@ -49,4 +49,109 @@ body {
 
 .marquee-paused:hover .animate-marquee {
   animation-play-state: paused;
+}
+
+/* Entrance animation for above-the-fold hero content */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.8s ease-out both;
+}
+
+/* Floating decorative coins (hero) */
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-6deg);
+  }
+  50% {
+    transform: translateY(-16px) rotate(8deg);
+  }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+/* Slow drifting glow orbs (dark hero / banners) */
+@keyframes drift {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(28px, -22px) scale(1.12);
+  }
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+}
+
+.animate-drift {
+  animation: drift 12s ease-in-out infinite;
+}
+
+.animate-drift-slow {
+  animation: drift 18s ease-in-out infinite reverse;
+}
+
+/* Soft pulsing glow — used on the signup-bonus pill */
+@keyframes pulse-glow {
+  0% {
+    box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.45);
+  }
+  70% {
+    box-shadow: 0 0 0 12px rgba(139, 92, 246, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(139, 92, 246, 0);
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2.6s ease-out infinite;
+}
+
+/* Light sweep across primary buttons on hover */
+.btn-shine {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-shine::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 35%,
+    rgba(255, 255, 255, 0.35) 50%,
+    transparent 65%
+  );
+  transform: translateX(-120%);
+  transition: transform 0.7s ease;
+  pointer-events: none;
+}
+
+.btn-shine:hover::after {
+  transform: translateX(120%);
+}
+
+/* Respect users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

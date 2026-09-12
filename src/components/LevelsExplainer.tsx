@@ -77,8 +77,8 @@ export default function LevelsExplainer({ score }: { score: number }) {
       </h3>
       <div className="mt-3 grid gap-3 sm:grid-cols-3">
         {BENEFITS.map((b) => (
-          <div key={b.title} className="rounded-xl bg-cream p-4 ring-1 ring-coffee-200">
-            <p className="font-semibold text-coffee-900">{b.title}</p>
+          <div key={b.title} className="rounded-xl bg-surface p-4 ring-1 ring-brand-200">
+            <p className="font-semibold text-brand-900">{b.title}</p>
             <p className="mt-1 text-sm leading-relaxed text-stone-600">{b.text}</p>
           </div>
         ))}

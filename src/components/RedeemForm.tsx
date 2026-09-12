@@ -90,8 +90,8 @@ export default function RedeemForm({
                 }}
                 className={`flex flex-col items-center gap-1.5 rounded-xl border px-2 py-3 text-xs font-semibold transition ${
                   active
-                    ? "border-coffee-600 bg-coffee-100 text-coffee-900 ring-2 ring-coffee-200"
-                    : "border-stone-300 bg-white text-stone-600 hover:border-coffee-400"
+                    ? "border-brand-600 bg-brand-100 text-brand-900 ring-2 ring-brand-200"
+                    : "border-stone-300 bg-white text-stone-600 hover:border-brand-400"
                 }`}
               >
                 <Icon size={20} aria-hidden="true" />
@@ -114,8 +114,8 @@ export default function RedeemForm({
                 onClick={() => setMethod(m.id)}
                 className={`rounded-full border px-4 py-2 text-sm font-medium transition ${
                   method === m.id
-                    ? "border-coffee-600 bg-coffee-700 text-white"
-                    : "border-stone-300 bg-white text-stone-700 hover:border-coffee-400"
+                    ? "border-brand-600 bg-brand-700 text-white"
+                    : "border-stone-300 bg-white text-stone-700 hover:border-brand-400"
                 }`}
               >
                 {m.label}
@@ -166,7 +166,7 @@ export default function RedeemForm({
             required
             value={destination}
             onChange={(e) => setDestination(e.target.value)}
-            className="w-full rounded-lg border border-stone-300 px-3 py-2 outline-none focus:border-coffee-500 focus:ring-2 focus:ring-coffee-100"
+            className="w-full rounded-lg border border-stone-300 px-3 py-2 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
             placeholder="your-paypal@example.com"
           />
         </div>
@@ -179,13 +179,13 @@ export default function RedeemForm({
             required
             value={destination}
             onChange={(e) => setDestination(e.target.value)}
-            className="w-full rounded-lg border border-stone-300 px-3 py-2 outline-none focus:border-coffee-500 focus:ring-2 focus:ring-coffee-100"
+            className="w-full rounded-lg border border-stone-300 px-3 py-2 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
             placeholder="Your BTC / USDT wallet address"
           />
         </div>
       )}
       {method && group === "giftcard" && (
-        <p className="rounded-lg bg-coffee-50 px-3 py-2 text-sm text-stone-600">
+        <p className="rounded-lg bg-brand-50 px-3 py-2 text-sm text-stone-600">
           The gift card code will be emailed to <b>{defaultEmail}</b>.
         </p>
       )}
