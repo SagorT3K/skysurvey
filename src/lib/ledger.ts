@@ -1,6 +1,7 @@
 import { prisma } from "./prisma";
 import { effectiveSharePercent, addScore } from "./score";
 import { notify } from "./notify";
+import { partnerName } from "./providers";
 
 export type WalletSummary = {
   balance: number;
@@ -52,6 +53,14 @@ export async function completeAttempt(opts: {
   const share = effectiveSharePercent(opts.rewardSharePercent, attempter?.score ?? 0);
   const coins = coinsForPayout(payoutCents, share, opts.coinRateCents);
 
+  // Users see the ledger description and the notification — they must stay
+  // friendly and never mention internal plumbing like provider keys or postbacks.
+  const survey = await prisma.survey.findUnique({
+    where: { id: attempt.surveyId },
+    select: { provider: true },
+  });
+  const partner = partnerName(survey?.provider ?? "");
+
   await prisma.$transaction([
     prisma.surveyAttempt.update({
       where: { id: attempt.id },
@@ -63,14 +72,14 @@ export async function completeAttempt(opts: {
         type: "survey",
         category: "survey",
         coins,
-        description: `Survey #${attempt.surveyId} · ${opts.source}`,
+        description: `Earned from ${partner}`,
         // No hold window: coins are withdrawable immediately. Payout risk is
         // handled by the admin reviewing each redeem request before release.
       },
     }),
   ]);
 
-  // Trust score: +1 per completed survey.
+  // Trust score: +1 per completed survey. Internal detail — technical terms are fine here.
   await addScore({
     userId: attempt.userId,
     delta: 1,
@@ -78,12 +87,21 @@ export async function completeAttempt(opts: {
     detail: `Survey #${attempt.surveyId} · ${opts.source}`,
   });
 
-  await notify({
-    userId: attempt.userId,
-    type: "survey",
-    title: `Survey completed — +${coins} coins`,
-    body: `You earned ${coins} coins from "${opts.source}"`,
-  });
+  if (coins > 0) {
+    await notify({
+      userId: attempt.userId,
+      type: "survey",
+      title: `Congratulations — you earned ${coins} coins! 🎉`,
+      body: `You earned ${coins} coins from ${partner}. Keep going — more surveys are waiting.`,
+    });
+  } else {
+    await notify({
+      userId: attempt.userId,
+      type: "survey",
+      title: "Survey completed",
+      body: "Your survey was validated. Bigger surveys pay more — keep going!",
+    });
+  }
 
   return { ok: true, duplicate: false, coins, payoutCents };
 }
@@ -141,7 +159,7 @@ export async function reverseAttempt(opts: {
         type: "reversal",
         category: "reconciliation",
         coins: -coins,
-        description: opts.note || `Survey #${attempt.surveyId} rejected by partner · ${opts.source}`,
+        description: opts.note || "Reward reversed — the research partner rejected the response",
       },
     }),
     prisma.activityLog.create({
@@ -164,8 +182,8 @@ export async function reverseAttempt(opts: {
   await notify({
     userId: attempt.userId,
     type: "screenout",
-    title: "A survey was reversed",
-    body: `The partner rejected your response to Survey #${attempt.surveyId}. ${coins} coins were deducted.`,
+    title: "A survey reward was reversed",
+    body: `${coins} coins were deducted because the research partner rejected the response. Contact support if you think this is a mistake.`,
   });
 
   return { ok: true, duplicate: false, coins };

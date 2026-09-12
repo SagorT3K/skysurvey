@@ -139,6 +139,27 @@ export function listProviders(): ProviderDef[] {
     .filter((p): p is ProviderDef => p !== null);
 }
 
+/** Friendly partner names for user-facing surfaces (ledger, notifications). */
+const PARTNER_NAMES: Record<string, string> = {
+  cpx: "CPX Research",
+  trayistats: "TrayiStats",
+  bitlabs: "BitLabs",
+  inbrain: "inBrain",
+  adgate: "AdGate Media",
+  theoremreach: "TheoremReach",
+  torox: "Torox",
+  mock: "Practice survey",
+};
+
+/**
+ * Human-readable partner name. Technical provider keys ("cpx postback") must
+ * never reach users, so everything user-visible goes through this.
+ */
+export function partnerName(key: string): string {
+  const normalized = key.toLowerCase();
+  return PARTNER_NAMES[normalized] ?? getProvider(normalized)?.label ?? normalized;
+}
+
 type TemplateVars = Record<string, string>;
 
 function fill(template: string, vars: TemplateVars) {
