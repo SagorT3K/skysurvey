@@ -235,7 +235,7 @@ export default async function Home() {
           </p>
         </div>
         <div
-          className="marquee-paused group relative mt-8 overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)]"
+          className="marquee-paused group keep-motion relative mt-8 overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)]"
           aria-label="Redeem brands"
         >
           <div className="animate-marquee flex w-max">

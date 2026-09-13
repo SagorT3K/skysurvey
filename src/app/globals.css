@@ -51,6 +51,29 @@ body {
   animation-play-state: paused;
 }
 
+/* Train-style coupled cars: each brand card gently bumps as the chain rolls */
+.animate-marquee li {
+  animation: train-bob 1.9s ease-in-out infinite;
+}
+.animate-marquee li:nth-child(2n) {
+  animation-delay: 0.24s;
+}
+.animate-marquee li:nth-child(3n) {
+  animation-delay: 0.48s;
+}
+.animate-marquee li:nth-child(4n) {
+  animation-delay: 0.12s;
+}
+@keyframes train-bob {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-3.5px) rotate(-0.4deg);
+  }
+}
+
 /* Entrance animation for above-the-fold hero content */
 @keyframes fade-up {
   from {
@@ -145,10 +168,10 @@ body {
   transform: translateX(120%);
 }
 
-/* Respect users who prefer reduced motion — except the decorative hero scene,
-   which the landing page is built around and stays animated */
+/* Respect users who prefer reduced motion — except the decorative hero scene
+   and the brand train, which the landing page is built around and stay animated */
 @media (prefers-reduced-motion: reduce) {
-  *:not(.mp-root):not(.mp-root *),
+  *:not(.mp-root):not(.mp-root *):not(.keep-motion):not(.keep-motion *),
   ::before,
   ::after {
     animation-duration: 0.01ms !important;
