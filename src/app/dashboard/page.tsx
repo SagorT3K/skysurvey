@@ -215,10 +215,10 @@ export default async function DashboardPage() {
         {/* Wallet cards + daily check-in */}
         <section className="mt-6 grid gap-4 md:grid-cols-4">
           {[
-            { icon: Coins, img: "/icons/coins.svg", label: "Balance", value: `${wallet.balance}`, sub: `$${((wallet.balance * config.coin_rate_cents) / 100).toFixed(2)} value`, glow: "text-brand-300" },
-            { icon: Wallet, img: "/icons/wallet.svg", label: "Withdrawable", value: `${wallet.withdrawable}`, sub: wallet.withdrawable >= config.min_cashout_coins ? "Cash out now" : `${config.min_cashout_coins - wallet.withdrawable} to $5`, glow: "text-emerald-300" },
-            { icon: CircleCheckBig, img: "/icons/gift.svg", label: "Redeemed", value: `${redeemedCoins}`, sub: subRequests, glow: "text-sky-300" },
-          ].map(({ icon: Icon, img, ...c }) => (
+            { icon: Coins, img: "/icons/coins.svg", label: "Balance", value: `${wallet.balance}`, sub: `$${((wallet.balance * config.coin_rate_cents) / 100).toFixed(2)} value`, glow: "text-brand-300", valueClass: "text-emerald-200" },
+            { icon: Wallet, img: "/icons/wallet.svg", label: "Withdrawable", value: `${wallet.withdrawable}`, sub: wallet.withdrawable >= config.min_cashout_coins ? "Cash out now" : `${config.min_cashout_coins - wallet.withdrawable} to $5`, glow: "text-emerald-300", valueClass: "text-emerald-300" },
+            { icon: CircleCheckBig, img: "/icons/gift.svg", label: "Redeemed", value: `${redeemedCoins}`, sub: subRequests, glow: "text-violet-300", valueClass: "text-violet-300" },
+          ].map(({ icon: Icon, img, valueClass, ...c }) => (
             <div key={c.label} className="glass-card glass-hover relative overflow-hidden rounded-2xl p-5">
               <div className="flex items-start justify-between">
                 <div>
@@ -226,16 +226,16 @@ export default async function DashboardPage() {
                     <Icon size={15} aria-hidden="true" />
                     {c.label}
                   </p>
-                  <p className="mt-1 text-3xl font-bold text-white">{c.value}</p>
+                  <p className={`mt-1 text-3xl font-bold ${valueClass}`}>{c.value}</p>
                   <p className="mt-0.5 text-sm text-slate-400">{c.sub}</p>
                 </div>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={img}
                   alt=""
-                  width={56}
-                  height={56}
-                  className="h-14 w-14 shrink-0 drop-shadow-[0_10px_18px_rgba(0,0,0,0.45)]"
+                  width={96}
+                  height={96}
+                  className="h-24 w-24 shrink-0 drop-shadow-[0_14px_22px_rgba(0,0,0,0.5)]"
                   aria-hidden="true"
                 />
               </div>

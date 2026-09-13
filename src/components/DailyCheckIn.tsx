@@ -29,7 +29,7 @@ export default function DailyCheckIn({ available, coins }: { available: boolean;
         <div className="flex items-start gap-3">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/icons/flame.svg"
+            src="/icons/tap.svg"
             alt=""
             width={44}
             height={44}

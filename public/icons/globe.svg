@@ -1,12 +1,33 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <defs>
-    <radialGradient id="gl2" cx=".35" cy=".3" r="1">
-      <stop offset="0" stop-color="#9ad9ff"/><stop offset=".6" stop-color="#4a9df0"/><stop offset="1" stop-color="#2b5ed0"/>
-    </radialGradient>
-  </defs>
-  <ellipse cx="32" cy="57" rx="16" ry="3.4" fill="#000" opacity=".35"/>
-  <circle cx="32" cy="30" r="21" fill="url(#gl2)"/>
-  <path d="M22 12c-6 8-6 28 0 36M42 12c6 8 6 28 0 36M12 26h40M13 38h38" fill="none" stroke="#eaf6ff" stroke-width="1.8" opacity=".75"/>
-  <path d="M20 22c5-3 10 2 16-1s9 2 12 0" fill="none" stroke="#bfe6c8" stroke-width="5" stroke-linecap="round" opacity=".85"/>
-  <ellipse cx="24" cy="18" rx="7" ry="3" fill="#fff" opacity=".4"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><defs>
+  <linearGradient id="mtl" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#f0eefb"/><stop offset="0.55" stop-color="#b7b0dc"/><stop offset="1" stop-color="#7d74ab"/>
+  </linearGradient>
+  <linearGradient id="mtlD" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#9c94c6"/><stop offset="1" stop-color="#5a5384"/>
+  </linearGradient>
+  <linearGradient id="pur" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#c3a7f8"/><stop offset="1" stop-color="#7452cf"/>
+  </linearGradient>
+  <linearGradient id="purD" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#8f74d2"/><stop offset="1" stop-color="#523b96"/>
+  </linearGradient>
+  <linearGradient id="grn" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#9df3c0"/><stop offset="1" stop-color="#359e67"/>
+  </linearGradient>
+  <linearGradient id="grnD" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#57c48b"/><stop offset="1" stop-color="#1e7a4c"/>
+  </linearGradient>
+  <linearGradient id="navy" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#575f8a"/><stop offset="1" stop-color="#2c3052"/>
+  </linearGradient>
+  <filter id="sh" x="-40%" y="-40%" width="180%" height="180%">
+    <feGaussianBlur stdDeviation="1.6"/>
+  </filter>
+</defs><ellipse cx="32" cy="59" rx="17" ry="3.5" fill="#000" opacity="0.25" filter="url(#sh)"/>
+  <circle cx="32" cy="30" r="19" fill="url(#grn)"/>
+  <circle cx="32" cy="30" r="19" fill="none" stroke="#1e7a4c" stroke-width="1.2" opacity="0.5"/>
+  <ellipse cx="32" cy="30" rx="9" ry="19" fill="none" stroke="#eafff3" stroke-width="1.6" opacity="0.75"/>
+  <ellipse cx="32" cy="30" rx="19" ry="8" fill="none" stroke="#eafff3" stroke-width="1.6" opacity="0.75"/>
+  <path d="M14 24 h36 M14 36 h36" stroke="#eafff3" stroke-width="1.6" opacity="0.55"/>
+  <ellipse cx="24" cy="19" rx="6" ry="3.2" fill="#fff" opacity="0.5" transform="rotate(-24 24 19)"/>
 </svg>

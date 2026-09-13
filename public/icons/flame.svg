@@ -1,9 +1,30 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <defs>
-    <radialGradient id="fo" cx=".5" cy=".75" r=".8">
-      <stop offset="0" stop-color="#ffd66b"/><stop offset=".45" stop-color="#ff9d3c"/><stop offset="1" stop-color="#f4511e"/>
-    </radialGradient>
-  </defs>
-  <path d="M32 6c3 8 12 12 12 24 0 10-5.4 17-12 17S20 40 20 30c0-7 4-11 6-16 1.4 3 2.6 4.6 6 8-1-7-1-11 0-16z" fill="url(#fo)"/>
-  <path d="M32 30c2 4 5 5.4 5 10 0 4.4-2.2 7-5 7s-5-2.6-5-7c0-4.6 3-6 5-10z" fill="#ffe9a8" opacity=".95"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><defs>
+  <linearGradient id="mtl" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#f0eefb"/><stop offset="0.55" stop-color="#b7b0dc"/><stop offset="1" stop-color="#7d74ab"/>
+  </linearGradient>
+  <linearGradient id="mtlD" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#9c94c6"/><stop offset="1" stop-color="#5a5384"/>
+  </linearGradient>
+  <linearGradient id="pur" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#c3a7f8"/><stop offset="1" stop-color="#7452cf"/>
+  </linearGradient>
+  <linearGradient id="purD" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#8f74d2"/><stop offset="1" stop-color="#523b96"/>
+  </linearGradient>
+  <linearGradient id="grn" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#9df3c0"/><stop offset="1" stop-color="#359e67"/>
+  </linearGradient>
+  <linearGradient id="grnD" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#57c48b"/><stop offset="1" stop-color="#1e7a4c"/>
+  </linearGradient>
+  <linearGradient id="navy" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#575f8a"/><stop offset="1" stop-color="#2c3052"/>
+  </linearGradient>
+  <filter id="sh" x="-40%" y="-40%" width="180%" height="180%">
+    <feGaussianBlur stdDeviation="1.6"/>
+  </filter>
+</defs><ellipse cx="32" cy="59" rx="12" ry="3" fill="#000" opacity="0.25" filter="url(#sh)"/>
+  <path d="M32 6 C 36 14 46 18 46 32 a14 15 0 0 1 -28 0 c0 -8 5 -11 8 -17 c2 5 6 6 6 6 z" fill="url(#grn)"/>
+  <path d="M32 26 c3 4 8 6 8 12 a8 8.6 0 0 1 -16 0 c0 -5 4 -7 8 -12 z" fill="url(#grnD)"/>
+  <ellipse cx="26" cy="26" rx="3" ry="6" fill="#fff" opacity="0.5" transform="rotate(-18 26 26)"/>
 </svg>

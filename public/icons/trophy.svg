@@ -1,14 +1,35 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <defs>
-    <linearGradient id="tg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#ffe08a"/><stop offset=".5" stop-color="#f2b73c"/><stop offset="1" stop-color="#c97f16"/>
-    </linearGradient>
-  </defs>
-  <ellipse cx="32" cy="57" rx="16" ry="3.6" fill="#000" opacity=".35"/>
-  <path d="M18 12h28v10c0 9-6 15-14 15s-14-6-14-15z" fill="url(#tg)"/>
-  <path d="M18 15h-7c0 8 3 12 9 13M46 15h7c0 8-3 12-9 13" fill="none" stroke="#e0a32c" stroke-width="3.4" stroke-linecap="round"/>
-  <rect x="29" y="37" width="6" height="7" fill="#d18a1a"/>
-  <path d="M22 50h20l-2 5H24z" fill="url(#tg)"/>
-  <rect x="20" y="44" width="24" height="6" rx="2.4" fill="#e0a32c"/>
-  <ellipse cx="26" cy="18" rx="4" ry="6" fill="#fff" opacity=".45"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><defs>
+  <linearGradient id="mtl" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#f0eefb"/><stop offset="0.55" stop-color="#b7b0dc"/><stop offset="1" stop-color="#7d74ab"/>
+  </linearGradient>
+  <linearGradient id="mtlD" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#9c94c6"/><stop offset="1" stop-color="#5a5384"/>
+  </linearGradient>
+  <linearGradient id="pur" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#c3a7f8"/><stop offset="1" stop-color="#7452cf"/>
+  </linearGradient>
+  <linearGradient id="purD" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#8f74d2"/><stop offset="1" stop-color="#523b96"/>
+  </linearGradient>
+  <linearGradient id="grn" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#9df3c0"/><stop offset="1" stop-color="#359e67"/>
+  </linearGradient>
+  <linearGradient id="grnD" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#57c48b"/><stop offset="1" stop-color="#1e7a4c"/>
+  </linearGradient>
+  <linearGradient id="navy" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#575f8a"/><stop offset="1" stop-color="#2c3052"/>
+  </linearGradient>
+  <filter id="sh" x="-40%" y="-40%" width="180%" height="180%">
+    <feGaussianBlur stdDeviation="1.6"/>
+  </filter>
+</defs><ellipse cx="32" cy="59" rx="17" ry="3.5" fill="#000" opacity="0.25" filter="url(#sh)"/>
+  <path d="M20 10 h24 v14 a12 12 0 0 1 -24 0 z" fill="url(#mtl)"/>
+  <path d="M20 13 h-7 a8 8 0 0 0 8 10" fill="none" stroke="url(#mtlD)" stroke-width="3"/>
+  <path d="M44 13 h7 a8 8 0 0 1 -8 10" fill="none" stroke="url(#mtlD)" stroke-width="3"/>
+  <rect x="29" y="35" width="6" height="8" fill="url(#mtlD)"/>
+  <rect x="21" y="43" width="22" height="6" rx="2" fill="url(#pur)"/>
+  <rect x="18" y="49" width="28" height="6" rx="2.5" fill="url(#purD)"/>
+  <text x="32" y="25" text-anchor="middle" font-family="Arial, sans-serif" font-weight="bold" font-size="13" fill="#4d4676">1</text>
+  <ellipse cx="27" cy="16" rx="4" ry="2" fill="#fff" opacity="0.55"/>
 </svg>

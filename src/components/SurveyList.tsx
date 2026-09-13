@@ -334,9 +334,9 @@ export default function SurveyList({ surveys }: { surveys: SurveyCardData[] }) {
                 <img
                   src={cat.icon}
                   alt=""
-                  width={56}
-                  height={56}
-                  className="h-14 w-14 shrink-0 drop-shadow-[0_10px_18px_rgba(0,0,0,0.45)]"
+                  width={64}
+                  height={64}
+                  className="h-16 w-16 shrink-0 drop-shadow-[0_10px_18px_rgba(0,0,0,0.45)]"
                   aria-hidden="true"
                 />
               </div>
