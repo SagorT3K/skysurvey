@@ -183,36 +183,39 @@ export default function MoneyPlane() {
             </g>
             <circle cx="522" cy="310" r="4.5" fill="#f0eefb" />
 
-            {/* rider sitting on the fuselage */}
+            {/* rider sitting on the fuselage (side view: butt on the top edge, thighs forward, calves hanging down over the side) */}
             <g>
-              {/* legs dangling over the side */}
-              <path d="M318 268 Q330 286 326 306" fill="none" stroke="#2c3052" strokeWidth="11" strokeLinecap="round" />
-              <path d="M304 268 Q312 288 304 308" fill="none" stroke="#3a4068" strokeWidth="11" strokeLinecap="round" />
-              <ellipse cx="326" cy="310" rx="9" ry="5" fill="#e8e5f8" />
-              <ellipse cx="303" cy="312" rx="9" ry="5" fill="#e8e5f8" />
-              {/* torso */}
-              <path d="M296 268 Q292 232 310 226 Q330 224 334 250 L332 270 Q314 278 296 268 Z" fill="#6ee7b7" />
-              <path d="M296 268 Q292 232 310 226 L312 270 Z" fill="#34d399" opacity="0.5" />
-              {/* waving arm */}
-              <path d="M330 240 Q346 232 352 218" fill="none" stroke="#34d399" strokeWidth="9" strokeLinecap="round" />
-              <circle cx="354" cy="215" r="6" fill="#f2c99b" />
+              {/* seat shadow so the rider reads as planted on the hull */}
+              <ellipse cx="298" cy="258" rx="26" ry="6" fill="#4d4678" opacity="0.45" />
+              {/* back leg (thigh forward → calf hanging down) */}
+              <path d="M288 248 Q306 252 318 258 Q326 274 324 294" fill="none" stroke="#3a4068" strokeWidth="10" strokeLinecap="round" />
+              <ellipse cx="325" cy="298" rx="8.5" ry="4.8" fill="#e8e5f8" transform="rotate(12 325 298)" />
+              {/* front leg */}
+              <path d="M294 246 Q314 250 330 254 Q340 272 338 292" fill="none" stroke="#2c3052" strokeWidth="10" strokeLinecap="round" />
+              <ellipse cx="339" cy="296" rx="8.5" ry="4.8" fill="#f4f2ff" transform="rotate(12 339 296)" />
+              {/* torso leaning slightly back as he rides */}
+              <path d="M286 250 Q280 216 300 208 Q322 204 326 230 L324 252 Q306 260 286 250 Z" fill="#6ee7b7" />
+              <path d="M286 250 Q280 216 300 208 L302 252 Z" fill="#34d399" opacity="0.5" />
+              {/* arm raised holding the bag rope */}
+              <path d="M318 222 Q338 216 350 204" fill="none" stroke="#34d399" strokeWidth="9" strokeLinecap="round" />
+              <circle cx="352" cy="202" r="6" fill="#f2c99b" />
               {/* scarf fluttering in the wind */}
-              <path className="mp-scarf" d="M298 236 Q270 232 252 244 Q272 246 288 242 Q262 248 246 260 Q272 260 292 250 Z" fill="#f472b6" />
+              <path className="mp-scarf" d="M292 224 Q262 220 244 232 Q264 234 280 230 Q254 236 238 248 Q264 248 284 238 Z" fill="#f472b6" />
               {/* head */}
-              <circle cx="312" cy="208" r="16" fill="#f2c99b" />
-              <path d="M298 200 Q300 190 312 190 Q326 190 326 202 Q318 196 306 198 Q300 200 298 204 Z" fill="#2c3052" />
-              <circle cx="306" cy="208" r="2.2" fill="#2c3052" />
-              <circle cx="320" cy="208" r="2.2" fill="#2c3052" />
-              <path d="M306 216 Q313 222 320 216" fill="none" stroke="#2c3052" strokeWidth="2" strokeLinecap="round" />
+              <circle cx="308" cy="192" r="15" fill="#f2c99b" />
+              <path d="M295 185 Q297 175 308 175 Q321 175 321 186 Q313 180 302 182 Q296 184 295 188 Z" fill="#2c3052" />
+              <circle cx="302" cy="192" r="2.1" fill="#2c3052" />
+              <circle cx="315" cy="192" r="2.1" fill="#2c3052" />
+              <path d="M302 199.5 Q308 205 315 199.5" fill="none" stroke="#2c3052" strokeWidth="2" strokeLinecap="round" />
               {/* aviator cap */}
-              <path d="M296 200 Q298 186 312 186 Q328 186 328 202 L324 200 Q314 192 302 198 Z" fill="#7c5cd6" />
-              <path d="M328 206 Q336 208 334 216" fill="none" stroke="#7c5cd6" strokeWidth="4" strokeLinecap="round" />
+              <path d="M292 185 Q294 171 308 171 Q323 171 323 186 L319 184 Q310 176 298 182 Z" fill="#7c5cd6" />
+              <path d="M323 190 Q331 192 329 200" fill="none" stroke="#7c5cd6" strokeWidth="4" strokeLinecap="round" />
             </g>
 
             {/* money bag hanging beside the rider */}
             <g className="mp-bag">
               {/* rope from hand to bag */}
-              <path d="M354 215 L384 196" stroke="#d9c48f" strokeWidth="3.4" strokeLinecap="round" />
+              <path d="M352 202 L384 192" stroke="#d9c48f" strokeWidth="3.4" strokeLinecap="round" />
               {/* bills poking out of the mouth */}
               <rect x="372" y="168" width="30" height="14" rx="2" fill="#7ddf9f" stroke="#1e7a4c" strokeWidth="1.4" transform="rotate(-14 387 175)" />
               <rect x="380" y="172" width="30" height="14" rx="2" fill="#8fe8ae" stroke="#1e7a4c" strokeWidth="1.4" transform="rotate(6 395 179)" />
