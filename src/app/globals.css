@@ -145,9 +145,10 @@ body {
   transform: translateX(120%);
 }
 
-/* Respect users who prefer reduced motion */
+/* Respect users who prefer reduced motion — except the decorative hero scene,
+   which the landing page is built around and stays animated */
 @media (prefers-reduced-motion: reduce) {
-  *,
+  *:not(.mp-root):not(.mp-root *),
   ::before,
   ::after {
     animation-duration: 0.01ms !important;
@@ -237,4 +238,207 @@ body {
     12px 2px;
   mask-image: linear-gradient(90deg, transparent 10%, rgba(0, 0, 0, 0.55) 45%, #000 78%);
   -webkit-mask-image: linear-gradient(90deg, transparent 10%, rgba(0, 0, 0, 0.55) 45%, #000 78%);
+}
+
+/* ---------- Landing hero: money-plane scene ---------- */
+
+/* SVG child elements need fill-box transform boxes for rotation origins */
+.mp-plane,
+.mp-cloud,
+.mp-prop,
+.mp-bill,
+.mp-bill-flutter,
+.mp-scarf,
+.mp-puff,
+.mp-speed,
+.mp-twinkle {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+/* Gentle flying bob with a slight pitch */
+.mp-plane {
+  animation: mp-bob 4.6s ease-in-out infinite;
+}
+@keyframes mp-bob {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-16px) rotate(2.2deg);
+  }
+}
+
+/* Propeller spin (vertical flicker reads as rotation from the side) */
+.mp-prop {
+  animation: mp-prop 0.18s linear infinite;
+}
+@keyframes mp-prop {
+  0% {
+    transform: scaleY(1);
+    opacity: 0.9;
+  }
+  50% {
+    transform: scaleY(0.15);
+    opacity: 0.45;
+  }
+  100% {
+    transform: scaleY(1);
+    opacity: 0.9;
+  }
+}
+
+/* Clouds drifting sideways */
+.mp-cloud {
+  animation: mp-drift ease-in-out infinite alternate;
+}
+@keyframes mp-drift {
+  from {
+    transform: translateX(-26px);
+  }
+  to {
+    transform: translateX(26px);
+  }
+}
+
+/* Bills fluttering out of the bag and raining down */
+.mp-bill {
+  position: relative;
+  animation: mp-fall linear infinite;
+}
+@keyframes mp-fall {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+    opacity: 0;
+  }
+  6% {
+    opacity: 1;
+  }
+  70% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--dx, 40px), 400px) rotate(var(--rot, 400deg));
+    opacity: 0;
+  }
+}
+.mp-bill-flutter {
+  animation: mp-flutter 0.85s ease-in-out infinite alternate;
+}
+@keyframes mp-flutter {
+  from {
+    transform: rotate(-24deg) scaleX(1);
+  }
+  to {
+    transform: rotate(22deg) scaleX(0.72);
+  }
+}
+
+/* Scarf fluttering in the wind */
+.mp-scarf {
+  animation: mp-scarf 0.7s ease-in-out infinite alternate;
+}
+@keyframes mp-scarf {
+  from {
+    transform: rotate(-4deg) translateX(0);
+  }
+  to {
+    transform: rotate(7deg) translateX(-7px);
+  }
+}
+
+/* Contrail puffs fading behind the tail */
+.mp-puff {
+  animation: mp-puff 1.5s ease-out infinite;
+}
+@keyframes mp-puff {
+  0% {
+    transform: translateX(0) scale(0.5);
+    opacity: 0.55;
+  }
+  100% {
+    transform: translateX(-46px) scale(1.5);
+    opacity: 0;
+  }
+}
+
+/* Speed lines streaking past */
+.mp-speed {
+  stroke-dasharray: 26 60;
+  animation: mp-speed 1.1s linear infinite;
+  opacity: 0;
+}
+@keyframes mp-speed {
+  0% {
+    stroke-dashoffset: 90;
+    opacity: 0;
+  }
+  25% {
+    opacity: 0.7;
+  }
+  100% {
+    stroke-dashoffset: -40;
+    opacity: 0;
+  }
+}
+
+/* Twinkling stars */
+.mp-twinkle {
+  animation: mp-twinkle 2.6s ease-in-out infinite;
+}
+@keyframes mp-twinkle {
+  0%,
+  100% {
+    opacity: 0.15;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.25);
+  }
+}
+
+/* CSS-3D flipping coin */
+.coin3d {
+  position: absolute;
+  transform-style: preserve-3d;
+  animation:
+    mp-coin-flip 5s linear infinite,
+    float 5s ease-in-out infinite;
+  filter: drop-shadow(0 10px 14px rgba(0, 0, 0, 0.45));
+}
+.coin-face {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 9999px;
+  font-weight: 800;
+  color: #7a5f2c;
+  background: radial-gradient(circle at 34% 30%, #ffe9a8, #f2c14e 55%, #c68a25);
+  border: 2px solid #a8761c;
+  backface-visibility: hidden;
+}
+.coin-back {
+  transform: rotateY(180deg);
+}
+@keyframes mp-coin-flip {
+  from {
+    transform: rotateY(0deg);
+  }
+  to {
+    transform: rotateY(360deg);
+  }
+}
+
+/* Shimmering gradient headline */
+.text-shine {
+  background-size: 200% auto;
+  animation: mp-shine 5s linear infinite;
+}
+@keyframes mp-shine {
+  to {
+    background-position: 200% center;
+  }
 }

@@ -20,6 +20,7 @@ import AppFooter from "@/components/AppFooter";
 import CookieConsent from "@/components/CookieConsent";
 import CountUp from "@/components/CountUp";
 import Logo from "@/components/Logo";
+import MoneyPlane from "@/components/MoneyPlane";
 import Reveal from "@/components/Reveal";
 import { getConfig } from "@/lib/config";
 
@@ -163,59 +164,64 @@ export default async function Home() {
             aria-hidden="true"
           />
         ))}
-        <div className="relative mx-auto max-w-6xl px-4 py-24 text-center">
-          {hasBonus && (
-            <div className="animate-fade-up mb-4" style={{ animationDelay: "0s" }}>
-              <p className="animate-pulse-glow inline-flex items-center gap-2 rounded-full border border-brand-500/50 bg-brand-800/60 px-4 py-1.5 text-sm font-medium text-brand-100">
-                <Gift size={16} className="text-amber-300" aria-hidden="true" />
-                {fmtBonus} free coins when you join today
-              </p>
-            </div>
-          )}
-          <h1
-            className="animate-fade-up mx-auto max-w-3xl text-4xl font-bold tracking-tight sm:text-6xl"
-            style={{ animationDelay: "0.15s" }}
-          >
-            Get paid for your{" "}
-            <span className="bg-gradient-to-r from-violet-300 via-fuchsia-300 to-amber-200 bg-clip-text text-transparent">
-              opinions
-            </span>
-          </h1>
-          <p
-            className="animate-fade-up mx-auto mt-5 max-w-2xl text-lg text-brand-100/90"
-            style={{ animationDelay: "0.3s" }}
-          >
-            Take online surveys from world-class market research brands, earn coins for every
-            completed survey, and cash out from just $5.
-          </p>
-          <div
-            className="animate-fade-up mt-9 flex flex-wrap items-center justify-center gap-4"
-            style={{ animationDelay: "0.45s" }}
-          >
-            <Link
-              href="/signup"
-              className="btn-shine group inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-brand-600 to-brand-500 px-8 py-3.5 text-lg font-bold text-white shadow-lg shadow-brand-900/50 transition hover:shadow-xl hover:shadow-brand-700/40"
+        <div className="relative mx-auto grid max-w-6xl items-center gap-12 px-4 py-16 lg:grid-cols-2 lg:gap-6 lg:py-24">
+          <div className="text-center lg:text-left">
+            {hasBonus && (
+              <div className="animate-fade-up mb-4" style={{ animationDelay: "0s" }}>
+                <p className="animate-pulse-glow inline-flex items-center gap-2 rounded-full border border-brand-500/50 bg-brand-800/60 px-4 py-1.5 text-sm font-medium text-brand-100">
+                  <Gift size={16} className="text-amber-300" aria-hidden="true" />
+                  {fmtBonus} free coins when you join today
+                </p>
+              </div>
+            )}
+            <h1
+              className="animate-fade-up mx-auto max-w-3xl text-4xl font-bold tracking-tight sm:text-6xl lg:mx-0"
+              style={{ animationDelay: "0.15s" }}
             >
-              Start earning — it&apos;s free
-              <ArrowRight size={20} className="transition-transform group-hover:translate-x-1" aria-hidden="true" />
-            </Link>
-            <Link href="/login" className="rounded-xl border border-brand-400/60 px-8 py-3.5 text-lg font-medium text-brand-100 transition hover:bg-brand-800/60">
-              Sign in
-            </Link>
-          </div>
-          <div
-            className="animate-fade-up mx-auto mt-10 flex max-w-3xl flex-wrap items-center justify-center gap-x-10 gap-y-3 text-sm text-brand-100/85"
-            style={{ animationDelay: "0.6s" }}
-          >
-            {STATS.map(({ icon: Icon, label, end, prefix, suffix, decimals }) => (
-              <span key={label} className="flex items-center gap-2">
-                <Icon size={16} className="text-brand-300" aria-hidden="true" />
-                <b className="text-white">{label}</b>{" "}
-                <b className="text-white">
-                  <CountUp end={end} prefix={prefix} suffix={suffix} decimals={decimals} />
-                </b>
+              Get paid for your{" "}
+              <span className="text-shine bg-gradient-to-r from-violet-300 via-fuchsia-300 to-amber-200 bg-clip-text text-transparent">
+                opinions
               </span>
-            ))}
+            </h1>
+            <p
+              className="animate-fade-up mx-auto mt-5 max-w-2xl text-lg text-brand-100/90 lg:mx-0"
+              style={{ animationDelay: "0.3s" }}
+            >
+              Take online surveys from world-class market research brands, earn coins for every
+              completed survey, and cash out from just $5.
+            </p>
+            <div
+              className="animate-fade-up mt-9 flex flex-wrap items-center justify-center gap-4 lg:justify-start"
+              style={{ animationDelay: "0.45s" }}
+            >
+              <Link
+                href="/signup"
+                className="btn-shine group inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-brand-600 to-brand-500 px-8 py-3.5 text-lg font-bold text-white shadow-lg shadow-brand-900/50 transition hover:shadow-xl hover:shadow-brand-700/40"
+              >
+                Start earning — it&apos;s free
+                <ArrowRight size={20} className="transition-transform group-hover:translate-x-1" aria-hidden="true" />
+              </Link>
+              <Link href="/login" className="rounded-xl border border-brand-400/60 px-8 py-3.5 text-lg font-medium text-brand-100 transition hover:bg-brand-800/60">
+                Sign in
+              </Link>
+            </div>
+            <div
+              className="animate-fade-up mx-auto mt-10 flex max-w-3xl flex-wrap items-center justify-center gap-x-10 gap-y-3 text-sm text-brand-100/85 lg:mx-0 lg:justify-start"
+              style={{ animationDelay: "0.6s" }}
+            >
+              {STATS.map(({ icon: Icon, label, end, prefix, suffix, decimals }) => (
+                <span key={label} className="flex items-center gap-2">
+                  <Icon size={16} className="text-brand-300" aria-hidden="true" />
+                  <b className="text-white">{label}</b>{" "}
+                  <b className="text-white">
+                    <CountUp end={end} prefix={prefix} suffix={suffix} decimals={decimals} />
+                  </b>
+                </span>
+              ))}
+            </div>
+          </div>
+          <div className="animate-fade-up" style={{ animationDelay: "0.35s" }}>
+            <MoneyPlane />
           </div>
         </div>
       </section>
