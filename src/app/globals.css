@@ -158,24 +158,23 @@ body {
 
 /* ---------- Dark glassmorphism app shell (user side) ---------- */
 
-/* Deep navy-teal page with glass clouds, a constellation mesh and violet/teal glows */
+/* Deep navy-teal page with real 3D-render clouds, a constellation mesh and violet/teal glows */
 .app-dark {
   background-color: #0b0a18;
   background-image:
+    url("/bg/clouds-real.png"),
     url("/bg/plexus.svg"),
-    url("/bg/cloud-right.svg"),
-    url("/bg/cloud-left.svg"),
-    radial-gradient(58rem 42rem at 10% -12%, rgba(124, 58, 237, 0.4), transparent 62%),
-    radial-gradient(54rem 42rem at 98% 18%, rgba(20, 184, 166, 0.24), transparent 62%),
-    radial-gradient(46rem 32rem at 55% 118%, rgba(139, 92, 246, 0.18), transparent 60%),
-    linear-gradient(165deg, #131c2e 0%, #0b0a18 48%, #10202c 100%);
+    radial-gradient(58rem 42rem at 10% -12%, rgba(124, 58, 237, 0.38), transparent 62%),
+    radial-gradient(54rem 42rem at 98% 18%, rgba(20, 184, 166, 0.22), transparent 62%),
+    radial-gradient(46rem 32rem at 55% 118%, rgba(139, 92, 246, 0.16), transparent 60%),
+    linear-gradient(165deg, #121a2b 0%, #0b0a18 48%, #0f1e2a 100%);
   background-size:
+    cover,
     760px 760px,
-    820px 820px,
-    820px 820px,
     auto, auto, auto, auto;
   background-position:
-    -40px 22%, right -60px center, left -80px top 6%,
+    center top,
+    -40px 22%,
     0 0, 0 0, 0 0, 0 0;
   background-repeat: no-repeat;
   background-attachment: fixed;
