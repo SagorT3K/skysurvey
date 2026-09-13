@@ -74,7 +74,7 @@ export default function RedeemForm({
     <form onSubmit={submit} className="space-y-5">
       {/* Step 1 — payout method group */}
       <div>
-        <p className="mb-2 text-sm font-semibold text-stone-700">1 · How do you want to get paid?</p>
+        <p className="mb-2 text-sm font-semibold text-slate-200">1 · How do you want to get paid?</p>
         <div className="grid grid-cols-3 gap-2">
           {GROUPS.map((g) => {
             const Icon = g.icon;
@@ -90,8 +90,8 @@ export default function RedeemForm({
                 }}
                 className={`flex flex-col items-center gap-1.5 rounded-xl border px-2 py-3 text-xs font-semibold transition ${
                   active
-                    ? "border-brand-600 bg-brand-100 text-brand-900 ring-2 ring-brand-200"
-                    : "border-stone-300 bg-white text-stone-600 hover:border-brand-400"
+                    ? "border-brand-400/70 bg-brand-600/25 text-white ring-2 ring-brand-400/30"
+                    : "border-white/15 bg-white/5 text-slate-300 hover:border-brand-400/60"
                 }`}
               >
                 <Icon size={20} aria-hidden="true" />
@@ -105,7 +105,7 @@ export default function RedeemForm({
       {/* Step 2 — specific method inside the chosen group */}
       {group && (
         <div>
-          <p className="mb-2 text-sm font-semibold text-stone-700">2 · Choose one</p>
+          <p className="mb-2 text-sm font-semibold text-slate-200">2 · Choose one</p>
           <div className="flex flex-wrap gap-2">
             {groupMethods.map((m) => (
               <button
@@ -114,8 +114,8 @@ export default function RedeemForm({
                 onClick={() => setMethod(m.id)}
                 className={`rounded-full border px-4 py-2 text-sm font-medium transition ${
                   method === m.id
-                    ? "border-brand-600 bg-brand-700 text-white"
-                    : "border-stone-300 bg-white text-stone-700 hover:border-brand-400"
+                    ? "border-brand-500 bg-brand-600 text-white"
+                    : "border-white/15 bg-white/5 text-slate-300 hover:border-brand-400/60"
                 }`}
               >
                 {m.label}
@@ -128,7 +128,7 @@ export default function RedeemForm({
       {/* Step 3 — fixed amount */}
       {method && (
         <div>
-          <p className="mb-2 text-sm font-semibold text-stone-700">3 · Amount</p>
+          <p className="mb-2 text-sm font-semibold text-slate-200">3 · Amount</p>
           <div className="grid grid-cols-3 gap-2">
             {REDEEM_AMOUNT_CENTS.map((cents) => {
               const coins = Math.round(cents / coinRateCents);
@@ -140,8 +140,8 @@ export default function RedeemForm({
                   disabled={coins > withdrawable}
                   className={`rounded-xl border px-3 py-2.5 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-40 ${
                     amountCents === cents
-                      ? "border-emerald-600 bg-emerald-600 text-white"
-                      : "border-stone-300 bg-white text-stone-700 hover:border-emerald-400"
+                      ? "border-emerald-400 bg-emerald-500 text-white"
+                      : "border-white/15 bg-white/5 text-slate-200 hover:border-emerald-400/60"
                   }`}
                 >
                   ${(cents / 100).toFixed(0)}
@@ -149,7 +149,7 @@ export default function RedeemForm({
               );
             })}
           </div>
-          <p className="mt-1.5 text-xs text-stone-500">
+          <p className="mt-1.5 text-xs text-slate-500">
             {amountCents
               ? `Costs ${amountCoins.toLocaleString()} coins (1 coin = $${(coinRateCents / 100).toFixed(2)}).`
               : "Higher options unlock as you collect more withdrawable coins."}
@@ -160,32 +160,32 @@ export default function RedeemForm({
       {/* Step 4 — where the payout goes */}
       {method && needsEmail && (
         <div>
-          <label className="mb-1 block text-sm font-medium text-stone-700">PayPal email</label>
+          <label className="mb-1 block text-sm font-medium text-slate-200">PayPal email</label>
           <input
             type="email"
             required
             value={destination}
             onChange={(e) => setDestination(e.target.value)}
-            className="w-full rounded-lg border border-stone-300 px-3 py-2 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+            className="w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-white outline-none placeholder:text-slate-500 focus:border-brand-400 focus:ring-2 focus:ring-brand-400/20"
             placeholder="your-paypal@example.com"
           />
         </div>
       )}
       {method && needsWallet && (
         <div>
-          <label className="mb-1 block text-sm font-medium text-stone-700">Wallet address</label>
+          <label className="mb-1 block text-sm font-medium text-slate-200">Wallet address</label>
           <input
             type="text"
             required
             value={destination}
             onChange={(e) => setDestination(e.target.value)}
-            className="w-full rounded-lg border border-stone-300 px-3 py-2 outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+            className="w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-white outline-none placeholder:text-slate-500 focus:border-brand-400 focus:ring-2 focus:ring-brand-400/20"
             placeholder="Your BTC / USDT wallet address"
           />
         </div>
       )}
       {method && group === "giftcard" && (
-        <p className="rounded-lg bg-brand-50 px-3 py-2 text-sm text-stone-600">
+        <p className="rounded-lg bg-brand-500/10 px-3 py-2 text-sm text-slate-300">
           The gift card code will be emailed to <b>{defaultEmail}</b>.
         </p>
       )}
@@ -193,7 +193,7 @@ export default function RedeemForm({
       {msg && (
         <p
           className={`rounded-lg px-3 py-2 text-sm ${
-            msg.ok ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-600"
+            msg.ok ? "bg-emerald-500/15 text-emerald-300" : "bg-red-500/15 text-red-300"
           }`}
         >
           {msg.text}
@@ -203,7 +203,7 @@ export default function RedeemForm({
       <button
         type="submit"
         disabled={loading || !enough || !methodReady}
-        className="w-full rounded-lg bg-emerald-600 py-2.5 font-semibold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+        className="w-full rounded-lg bg-emerald-500 py-2.5 font-semibold text-white hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50"
       >
         {!enough
           ? `Need ${(minCoins - withdrawable).toLocaleString()} more withdrawable coins`

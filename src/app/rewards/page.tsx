@@ -31,13 +31,13 @@ export default async function RewardsPage() {
   const redeems = allRedeems.slice(0, 5);
 
   return (
-    <main className="flex min-h-screen flex-1 flex-col bg-surface">
+    <main className="app-dark flex min-h-screen flex-1 flex-col">
       <AppHeader active="rewards" balance={wallet.balance} />
 
       <div className="mx-auto grid w-full max-w-6xl flex-1 gap-8 px-4 py-8 lg:grid-cols-[1fr_380px]">
         <div>
           {held && (
-            <div className="mb-6 flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 p-5 text-red-800">
+            <div className="mb-6 flex items-start gap-3 rounded-2xl border border-red-500/30 bg-red-500/10 p-5 text-red-300 backdrop-blur">
               <ShieldAlert size={22} className="mt-0.5 shrink-0" aria-hidden="true" />
               <div>
                 <p className="font-bold">Sorry, you can&apos;t earn right now.</p>
@@ -48,31 +48,31 @@ export default async function RewardsPage() {
               </div>
             </div>
           )}
-          <h1 className="text-2xl font-bold text-brand-900">Redeem coins</h1>
-          <p className="mt-1 text-stone-600">
+          <h1 className="text-2xl font-bold text-white">Redeem coins</h1>
+          <p className="mt-1 text-slate-400">
             1 coin = ${(config.coin_rate_cents / 100).toFixed(2)} · minimum cashout{" "}
             {config.min_cashout_coins} coins (${((config.min_cashout_coins * config.coin_rate_cents) / 100).toFixed(2)}).
           </p>
 
-          <h2 className="mt-8 text-lg font-bold text-brand-900">Redeem history</h2>
-          <div className="mt-3 overflow-hidden rounded-xl border border-brand-200 bg-white">
+          <h2 className="mt-8 text-lg font-bold text-white">Redeem history</h2>
+          <div className="glass mt-3 overflow-hidden rounded-xl">
             {redeems.length === 0 ? (
-              <p className="p-6 text-center text-stone-500">No redemption requests yet.</p>
+              <p className="p-6 text-center text-slate-500">No redemption requests yet.</p>
             ) : (
               <table className="w-full text-sm">
                 <tbody>
                   {redeems.map((r) => (
-                    <tr key={r.id} className="border-b border-brand-100 last:border-0">
-                      <td className="px-5 py-3 font-medium text-stone-700">
+                    <tr key={r.id} className="border-b border-white/10 last:border-0">
+                      <td className="px-5 py-3 font-medium text-slate-200">
                         <span className="inline-flex items-center gap-2">
                           #{seqOf.get(r.id)} · {r.coins} coins
-                          <ArrowRight size={14} className="text-brand-400" aria-hidden="true" />
+                          <ArrowRight size={14} className="text-brand-300" aria-hidden="true" />
                           ${(r.amountCents / 100).toFixed(2)}
                         </span>
-                        <span className="block text-xs font-normal text-stone-400">
+                        <span className="block text-xs font-normal text-slate-500">
                           {methodLabel(r.method)} → {r.destination}
                         </span>
-                        <span className="block text-xs font-normal text-stone-400">
+                        <span className="block text-xs font-normal text-slate-500">
                           Requested {r.createdAt.toLocaleString("en-US")}
                           {r.status === "paid" && r.processedAt &&
                             ` · Released ${r.processedAt.toLocaleString("en-US")}`}
@@ -82,12 +82,12 @@ export default async function RewardsPage() {
                         <span
                           className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
                             r.status === "paid"
-                              ? "bg-emerald-100 text-emerald-700"
+                              ? "bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-400/30"
                               : r.status === "rejected"
-                                ? "bg-red-100 text-red-600"
+                                ? "bg-red-500/15 text-red-300 ring-1 ring-red-400/30"
                                 : r.status === "approved"
-                                  ? "bg-brand-100 text-brand-700"
-                                  : "bg-amber-100 text-amber-700"
+                                  ? "bg-brand-500/15 text-brand-300 ring-1 ring-brand-400/30"
+                                  : "bg-amber-500/15 text-amber-300 ring-1 ring-amber-400/30"
                           }`}
                         >
                           {r.status === "paid" ? "Success" : r.status === "pending" ? "Pending" : r.status}
@@ -100,23 +100,23 @@ export default async function RewardsPage() {
             )}
           </div>
 
-          <h2 className="mt-8 text-lg font-bold text-brand-900">Coin ledger</h2>
+          <h2 className="mt-8 text-lg font-bold text-white">Coin ledger</h2>
           {ledger.length === 0 ? (
-            <div className="mt-3 rounded-xl border border-brand-200 bg-white">
-              <p className="p-6 text-center text-stone-500">Nothing here yet.</p>
+            <div className="glass mt-3 rounded-xl">
+              <p className="p-6 text-center text-slate-500">Nothing here yet.</p>
             </div>
           ) : (
             <CoinLedger initial={ledger} />
           )}
         </div>
 
-        <aside className="h-fit rounded-2xl border border-brand-200 bg-white p-6 shadow-sm">
-          <div className="rounded-xl bg-emerald-50 p-4 text-emerald-800">
+        <aside className="glass h-fit rounded-2xl p-6">
+          <div className="rounded-xl border border-emerald-400/25 bg-emerald-500/10 p-4 text-emerald-300">
             <p className="flex items-center gap-2 text-sm font-medium">
               <Wallet size={15} aria-hidden="true" />
               Withdrawable now
             </p>
-            <p className="mt-1 text-2xl font-bold">{wallet.withdrawable}</p>
+            <p className="mt-1 text-2xl font-bold text-white">{wallet.withdrawable}</p>
             <p className="text-sm">${((wallet.withdrawable * config.coin_rate_cents) / 100).toFixed(2)}</p>
             {held ? (
               <p className="mt-2 text-xs font-semibold opacity-90">
@@ -130,7 +130,7 @@ export default async function RewardsPage() {
           </div>
           <div className="mt-6">
             {held ? (
-              <div className="rounded-xl border border-dashed border-red-300 bg-white p-5 text-center text-sm text-red-700">
+              <div className="rounded-xl border border-dashed border-red-400/40 p-5 text-center text-sm text-red-300">
                 Redeeming is paused while your account is on hold. Your history below stays
                 available.
               </div>

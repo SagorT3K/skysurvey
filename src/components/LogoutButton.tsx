@@ -12,7 +12,7 @@ export default function LogoutButton() {
         router.push("/");
         router.refresh();
       }}
-      className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-stone-600 hover:bg-brand-100 hover:text-brand-900"
+      className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium text-slate-300 hover:bg-white/10 hover:text-white"
     >
       <LogOut size={15} aria-hidden="true" />
       Log out

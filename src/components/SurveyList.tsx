@@ -2,15 +2,24 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import type { LucideIcon } from "lucide-react";
 import {
   Check,
   CircleAlert,
   Clock,
   Coins,
+  Coffee,
   ExternalLink,
+  Gamepad2,
+  Globe2,
+  HeartPulse,
+  Laptop,
   LoaderCircle,
   Minimize2,
   ShieldCheck,
+  ShoppingBag,
+  Smartphone,
+  Sprout,
   Star,
   TriangleAlert,
   X,
@@ -64,6 +73,26 @@ type Waiting = {
   result?: { status: "completed" | "screenout" | "reversed"; coins: number } | null;
 };
 
+// Decorative category tiles — each card gets a deterministic gradient icon
+// so the board looks varied and lively, matching the category mood.
+const CATEGORIES: { icon: LucideIcon; grad: string }[] = [
+  { icon: ShoppingBag, grad: "from-violet-400 to-brand-700" },
+  { icon: Smartphone, grad: "from-sky-300 to-indigo-600" },
+  { icon: HeartPulse, grad: "from-rose-300 to-fuchsia-600" },
+  { icon: Coffee, grad: "from-amber-300 to-orange-600" },
+  { icon: Gamepad2, grad: "from-teal-300 to-emerald-600" },
+  { icon: Globe2, grad: "from-cyan-300 to-blue-700" },
+  { icon: Laptop, grad: "from-fuchsia-300 to-purple-700" },
+  { icon: Sprout, grad: "from-lime-300 to-green-600" },
+];
+
+function categoryTile(id: string | number): { icon: LucideIcon; grad: string } {
+  const key = String(id);
+  let h = 0;
+  for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) % 997;
+  return CATEGORIES[h % CATEGORIES.length];
+}
+
 function Stars({ avg }: { avg?: number | null }) {
   const filled = Math.round(avg ?? 0);
   return (
@@ -72,7 +101,7 @@ function Stars({ avg }: { avg?: number | null }) {
         <Star
           key={i}
           size={13}
-          className={i <= filled ? "fill-amber-400 text-amber-400" : "fill-stone-200 text-stone-200"}
+          className={i <= filled ? "fill-amber-400 text-amber-400" : "fill-white/15 text-white/15"}
         />
       ))}
     </span>
@@ -278,7 +307,7 @@ export default function SurveyList({ surveys }: { surveys: SurveyCardData[] }) {
 
   if (surveys.length === 0 && !waiting) {
     return (
-      <div className="rounded-xl border border-dashed border-brand-300 bg-white p-10 text-center text-stone-500">
+      <div className="glass rounded-2xl border-dashed p-10 text-center text-slate-400">
         No surveys available for your country right now — check back soon.
       </div>
     );
@@ -286,47 +315,92 @@ export default function SurveyList({ surveys }: { surveys: SurveyCardData[] }) {
 
   return (
     <>
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {surveys.map((s) => (
-          <button
-            key={s.id}
-            onClick={() => setSelected(s)}
-            disabled={s.done}
-            title={`${s.title} · ${s.category}`}
-            aria-label={s.done ? `${s.title} (completed)` : `View ${s.title} details`}
-            className="flex flex-col gap-1.5 rounded-xl border border-stone-200 bg-white p-4 text-left transition hover:border-brand-300 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            <span className="inline-flex items-center gap-1.5 text-xs font-medium text-stone-500">
-              <Clock size={13} aria-hidden="true" />~{s.loiMinutes} min
-            </span>
-            {s.done ? (
-              <span className="inline-flex items-center gap-1.5 text-lg font-bold text-stone-400">
-                <Check size={18} aria-hidden="true" />
-                Completed
-              </span>
-            ) : s.usd != null ? (
-              <span className="text-xl font-bold text-emerald-700">
-                ${s.usd.toFixed(2)}{" "}
-                <span className="text-xs font-semibold text-stone-400">USD</span>
-              </span>
-            ) : (
-              <span className="text-xl font-bold text-emerald-700">
-                {s.coins}{" "}
-                <span className="text-xs font-semibold text-stone-400">coins</span>
-              </span>
-            )}
-            <span className="inline-flex items-center gap-1.5">
-              <Stars avg={s.avgStars} />
-              {s.ratingCount ? (
-                <span className="text-xs text-stone-400">({s.ratingCount})</span>
-              ) : null}
-            </span>
-            <span className="text-xs font-medium text-emerald-600">≈ {s.coins} coins</span>
-          </button>
-        ))}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {surveys.map((s) => {
+          const { icon: CatIcon, grad } = categoryTile(s.id);
+          const starting = startingId === s.id;
+          return (
+            <div
+              key={s.id}
+              role="button"
+              tabIndex={0}
+              onClick={() => !s.done && setSelected(s)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  setSelected(s);
+                }
+              }}
+              title={`${s.title} · ${s.category}`}
+              aria-label={s.done ? `${s.title} (completed)` : `View ${s.title} details`}
+              className="glass glass-hover flex cursor-pointer flex-col rounded-2xl p-4 text-left outline-none focus-visible:ring-2 focus-visible:ring-brand-400/60 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <span className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-medium text-slate-300">
+                  <Clock size={12} aria-hidden="true" />~{s.loiMinutes} min
+                </span>
+                <span
+                  className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br text-white shadow-[inset_0_1px_1px_rgba(255,255,255,0.5),0_10px_24px_rgba(0,0,0,0.35)] ${grad}`}
+                  aria-hidden="true"
+                >
+                  <CatIcon size={22} />
+                </span>
+              </div>
+
+              {s.done ? (
+                <span className="mt-2 inline-flex items-center gap-1.5 text-lg font-bold text-slate-400">
+                  <Check size={18} aria-hidden="true" />
+                  Completed
+                </span>
+              ) : s.usd != null ? (
+                <p className="mt-2 text-2xl font-extrabold tracking-tight text-white">
+                  ${s.usd.toFixed(2)}{" "}
+                  <span className="text-xs font-semibold text-slate-400">USD</span>
+                </p>
+              ) : (
+                <p className="mt-2 text-2xl font-extrabold tracking-tight text-white">
+                  {s.coins}{" "}
+                  <span className="text-xs font-semibold text-slate-400">coins</span>
+                </p>
+              )}
+              <p className="mt-0.5 truncate text-sm font-medium text-slate-200" title={s.title}>
+                {s.title}
+              </p>
+              <div className="mt-1 flex items-center gap-1.5">
+                <Stars avg={s.avgStars} />
+                {s.ratingCount ? (
+                  <span className="text-xs text-slate-500">({s.ratingCount})</span>
+                ) : null}
+              </div>
+
+              <div className="mt-3 flex items-center justify-between border-t border-white/10 pt-3">
+                <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-400">
+                  <Coins size={13} aria-hidden="true" />≈ {s.coins} coins
+                </span>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (!s.done && !starting) start(s);
+                  }}
+                  disabled={s.done || starting}
+                  className="rounded-lg border border-white/20 bg-white/10 px-3.5 py-1.5 text-xs font-bold text-white transition hover:border-brand-400/60 hover:bg-brand-600/50 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {starting ? (
+                    <>
+                      <LoaderCircle size={13} className="mr-1 inline animate-spin" aria-hidden="true" />
+                      Starting…
+                    </>
+                  ) : (
+                    "Start Survey"
+                  )}
+                </button>
+              </div>
+            </div>
+          );
+        })}
       </div>
       {error && (
-        <p className="mt-3 inline-flex items-center gap-2 text-sm text-red-600">
+        <p className="mt-3 inline-flex items-center gap-2 text-sm text-red-400">
           <TriangleAlert size={15} aria-hidden="true" />
           {error}
         </p>
@@ -336,69 +410,69 @@ export default function SurveyList({ surveys }: { surveys: SurveyCardData[] }) {
           opens this preview. */}
       {selected && (
         <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-stone-900/50 p-0 backdrop-blur-sm sm:items-center sm:p-4"
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-0 backdrop-blur-sm sm:items-center sm:p-4"
           onClick={() => setSelected(null)}
           role="dialog"
           aria-modal="true"
           aria-label={`${selected.title} details`}
         >
           <div
-            className="w-full max-w-md rounded-t-2xl bg-white p-6 shadow-xl sm:rounded-2xl"
+            className="glass w-full max-w-md rounded-t-2xl bg-[#14112b]/90 p-6 shadow-xl sm:rounded-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start justify-between gap-4">
               <div>
-                <span className="rounded-md bg-brand-50 px-2 py-0.5 text-xs font-medium text-brand-700">
+                <span className="rounded-md border border-white/10 bg-white/5 px-2 py-0.5 text-xs font-medium text-brand-200">
                   {selected.category}
                 </span>
-                <h3 className="mt-2 text-lg font-bold leading-snug text-stone-900">
+                <h3 className="mt-2 text-lg font-bold leading-snug text-white">
                   {selected.title}
                 </h3>
               </div>
               <button
                 onClick={() => setSelected(null)}
                 aria-label="Close"
-                className="rounded-lg p-1.5 text-stone-400 hover:bg-stone-100 hover:text-stone-600"
+                className="rounded-lg p-1.5 text-slate-400 hover:bg-white/10 hover:text-white"
               >
                 <X size={18} aria-hidden="true" />
               </button>
             </div>
 
-            <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 rounded-xl bg-surface p-4">
-              <span className="inline-flex items-center gap-1.5 text-sm font-medium text-stone-600">
-                <Clock size={15} className="text-stone-400" aria-hidden="true" />
+            <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2 rounded-xl border border-white/10 bg-white/5 p-4">
+              <span className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-300">
+                <Clock size={15} className="text-slate-500" aria-hidden="true" />
                 ~{selected.loiMinutes} min
               </span>
-              <span className="inline-flex items-center gap-1.5 text-sm font-bold text-emerald-700">
+              <span className="inline-flex items-center gap-1.5 text-sm font-bold text-emerald-400">
                 <Coins size={15} aria-hidden="true" />
                 {selected.coins} coins
                 {selected.usd != null && (
-                  <span className="font-medium text-stone-400">(${selected.usd.toFixed(2)})</span>
+                  <span className="font-medium text-slate-500">(${selected.usd.toFixed(2)})</span>
                 )}
               </span>
               <span className="inline-flex items-center gap-1.5">
                 <Stars avg={selected.avgStars} />
                 {selected.ratingCount ? (
-                  <span className="text-xs text-stone-400">({selected.ratingCount})</span>
+                  <span className="text-xs text-slate-400">({selected.ratingCount})</span>
                 ) : (
-                  <span className="text-xs text-stone-400">No ratings yet</span>
+                  <span className="text-xs text-slate-400">No ratings yet</span>
                 )}
               </span>
             </div>
 
-            <p className="mt-4 text-sm leading-relaxed text-stone-600">
+            <p className="mt-4 text-sm leading-relaxed text-slate-300">
               Answer a set of questions about your opinions and habits. Finish the survey to the
               end and the coins above are credited to your balance automatically — no need to
               claim anything.
             </p>
-            <p className="mt-2 inline-flex items-start gap-1.5 text-xs text-stone-500">
-              <ShieldCheck size={14} className="mt-0.5 shrink-0 text-emerald-600" aria-hidden="true" />
+            <p className="mt-2 inline-flex items-start gap-1.5 text-xs text-slate-400">
+              <ShieldCheck size={14} className="mt-0.5 shrink-0 text-emerald-400" aria-hidden="true" />
               Stay honest and consistent — low-quality or contradictory answers may not be
               credited by the research partner.
             </p>
 
             {error && (
-              <p className="mt-3 inline-flex items-center gap-2 text-sm text-red-600">
+              <p className="mt-3 inline-flex items-center gap-2 text-sm text-red-400">
                 <TriangleAlert size={15} aria-hidden="true" />
                 {error}
               </p>
@@ -408,14 +482,14 @@ export default function SurveyList({ surveys }: { surveys: SurveyCardData[] }) {
               <button
                 onClick={() => setSelected(null)}
                 disabled={startingId === selected.id}
-                className="flex-1 rounded-xl border border-stone-200 px-4 py-3 text-sm font-semibold text-stone-600 hover:bg-stone-50 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex-1 rounded-xl border border-white/15 px-4 py-3 text-sm font-semibold text-slate-300 hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Maybe later
               </button>
               <button
                 onClick={() => start(selected)}
                 disabled={startingId === selected.id}
-                className="inline-flex flex-[2] items-center justify-center gap-2 rounded-xl bg-brand-700 px-4 py-3 text-sm font-bold text-white hover:bg-brand-800 disabled:cursor-not-allowed disabled:opacity-60"
+                className="btn-shine inline-flex flex-[2] items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand-600 to-brand-500 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-brand-900/50 transition hover:shadow-brand-700/50 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {startingId === selected.id ? (
                   <>
@@ -435,7 +509,7 @@ export default function SurveyList({ surveys }: { surveys: SurveyCardData[] }) {
       {waiting && waiting.hidden && !waiting.result && !waiting.timedOut && (
         <button
           onClick={() => updateWaiting((w) => ({ ...w, hidden: false }))}
-          className="fixed bottom-4 right-4 z-40 inline-flex items-center gap-2 rounded-full bg-brand-800 px-4 py-2.5 text-sm font-semibold text-white shadow-lg hover:bg-brand-900"
+          className="glass fixed bottom-4 right-4 z-40 inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold text-white hover:bg-white/10"
         >
           <LoaderCircle size={15} className="animate-spin" aria-hidden="true" />
           Checking survey…
@@ -448,31 +522,31 @@ export default function SurveyList({ surveys }: { surveys: SurveyCardData[] }) {
           covers popup-blocked first attempts and page reloads. */}
       {waiting && !waiting.hidden && !waiting.result && !waiting.timedOut && (
         <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-stone-900/50 p-0 backdrop-blur-sm sm:items-center sm:p-4"
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-0 backdrop-blur-sm sm:items-center sm:p-4"
           onClick={() => updateWaiting((w) => ({ ...w, hidden: true }))}
           role="dialog"
           aria-modal="true"
         >
           <div
-            className="w-full max-w-md rounded-t-2xl bg-white p-6 text-center shadow-xl sm:rounded-2xl"
+            className="glass w-full max-w-md rounded-t-2xl bg-[#14112b]/90 p-6 text-center shadow-xl sm:rounded-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-brand-100">
-              <ExternalLink size={30} className="text-brand-700" aria-hidden="true" />
+            <span className="icon-tile mx-auto flex h-16 w-16 items-center justify-center rounded-full">
+              <ExternalLink size={30} className="text-white" aria-hidden="true" />
             </span>
-            <h3 className="mt-4 text-xl font-bold text-stone-900">Survey opened</h3>
-            <p className="mt-1 text-sm font-medium text-stone-500">{waiting.title}</p>
-            <p className="mt-3 text-sm leading-relaxed text-stone-600">
+            <h3 className="mt-4 text-xl font-bold text-white">Survey opened</h3>
+            <p className="mt-1 text-sm font-medium text-slate-400">{waiting.title}</p>
+            <p className="mt-3 text-sm leading-relaxed text-slate-300">
               Finish the survey in the window that just opened. When it ends, the research partner
               shows a short confirmation page — just leave it be. Within a few minutes we detect
               your result automatically, close that window and bring you back here with your
               reward.
             </p>
-            <p className="mt-2 inline-flex items-center gap-1.5 text-xs text-stone-400">
+            <p className="mt-2 inline-flex items-center gap-1.5 text-xs text-slate-400">
               <Clock size={13} aria-hidden="true" />~{waiting.loiMinutes} min · keep this page open
               while you answer
             </p>
-            <p className="mt-3 text-xs leading-relaxed text-stone-400">
+            <p className="mt-3 text-xs leading-relaxed text-slate-500">
               Want another survey? Come back here and pick a fresh card — surveys started from the
               partner&apos;s own list can&apos;t be tracked for rewards.
             </p>
@@ -480,7 +554,7 @@ export default function SurveyList({ surveys }: { surveys: SurveyCardData[] }) {
               {(waiting.url || waiting.embedUrl) && (
                 <button
                   onClick={reopenSurvey}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-brand-700 px-4 py-3 text-sm font-bold text-white hover:bg-brand-800"
+                  className="btn-shine inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand-600 to-brand-500 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-brand-900/50 hover:shadow-brand-700/50"
                 >
                   <ExternalLink size={15} aria-hidden="true" />
                   Open survey
@@ -489,14 +563,14 @@ export default function SurveyList({ surveys }: { surveys: SurveyCardData[] }) {
               <div className="flex gap-3">
                 <button
                   onClick={() => updateWaiting((w) => ({ ...w, hidden: true }))}
-                  className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-stone-200 px-4 py-3 text-sm font-semibold text-stone-600 hover:bg-stone-50"
+                  className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-white/15 px-4 py-3 text-sm font-semibold text-slate-300 hover:bg-white/5"
                 >
                   <Minimize2 size={15} aria-hidden="true" />
                   Minimize
                 </button>
                 <button
                   onClick={clearWaiting}
-                  className="flex-1 rounded-xl px-4 py-3 text-sm font-semibold text-stone-400 hover:text-stone-600"
+                  className="flex-1 rounded-xl px-4 py-3 text-sm font-semibold text-slate-500 hover:text-slate-300"
                 >
                   Stop checking
                 </button>
@@ -507,7 +581,7 @@ export default function SurveyList({ surveys }: { surveys: SurveyCardData[] }) {
       )}
 
       {waiting && waiting.hidden && !waiting.result && !waiting.timedOut && (
-        <p className="mt-3 text-xs leading-relaxed text-stone-400">
+        <p className="mt-3 text-xs leading-relaxed text-slate-500">
           Survey window closed — we&apos;re still checking for the partner&apos;s confirmation.
           Completions usually confirm within a few minutes and the coins land automatically; if
           you didn&apos;t qualify, nothing is charged — just pick another survey.
@@ -516,42 +590,42 @@ export default function SurveyList({ surveys }: { surveys: SurveyCardData[] }) {
 
       {waiting && !waiting.hidden && (!!waiting.result || waiting.timedOut) && (
         <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-stone-900/50 p-0 backdrop-blur-sm sm:items-center sm:p-4"
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 p-0 backdrop-blur-sm sm:items-center sm:p-4"
           role="dialog"
           aria-modal="true"
         >
           <div
-            className="w-full max-w-md rounded-t-2xl bg-white p-6 text-center shadow-xl sm:rounded-2xl"
+            className="glass w-full max-w-md rounded-t-2xl bg-[#14112b]/90 p-6 text-center shadow-xl sm:rounded-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             {waiting.result?.status === "completed" ? (
               <>
-                <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100">
-                  <Check size={32} className="text-emerald-600" aria-hidden="true" />
+                <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/15 ring-1 ring-emerald-400/40">
+                  <Check size={32} className="text-emerald-400" aria-hidden="true" />
                 </span>
-                <h3 className="mt-4 text-xl font-bold text-stone-900">Survey completed!</h3>
-                <p className="mt-2 text-sm text-stone-600">
-                  <span className="text-lg font-bold text-emerald-700">
+                <h3 className="mt-4 text-xl font-bold text-white">Survey completed!</h3>
+                <p className="mt-2 text-sm text-slate-300">
+                  <span className="text-lg font-bold text-emerald-400">
                     +{waiting.result.coins} coins
                   </span>{" "}
                   added to your balance
                   {waiting.usd != null && (
-                    <span className="text-stone-400"> (${waiting.usd.toFixed(2)})</span>
+                    <span className="text-slate-500"> (${waiting.usd.toFixed(2)})</span>
                   )}
                   .
                 </p>
               </>
             ) : waiting.result?.status === "screenout" ? (
               <>
-                <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-amber-100">
-                  <CircleAlert size={32} className="text-amber-600" aria-hidden="true" />
+                <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-amber-500/15 ring-1 ring-amber-400/40">
+                  <CircleAlert size={32} className="text-amber-400" aria-hidden="true" />
                 </span>
-                <h3 className="mt-4 text-xl font-bold text-stone-900">Screened out this time</h3>
-                <p className="mt-2 text-sm text-stone-600">
+                <h3 className="mt-4 text-xl font-bold text-white">Screened out this time</h3>
+                <p className="mt-2 text-sm text-slate-300">
                   {waiting.result.coins > 0 ? (
                     <>
                       You still earned{" "}
-                      <span className="font-bold text-emerald-700">
+                      <span className="font-bold text-emerald-400">
                         +{waiting.result.coins} bonus coin
                         {waiting.result.coins > 1 ? "s" : ""}
                       </span>{" "}
@@ -564,22 +638,22 @@ export default function SurveyList({ surveys }: { surveys: SurveyCardData[] }) {
               </>
             ) : waiting.result?.status === "reversed" ? (
               <>
-                <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
-                  <TriangleAlert size={32} className="text-red-600" aria-hidden="true" />
+                <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-red-500/15 ring-1 ring-red-400/40">
+                  <TriangleAlert size={32} className="text-red-400" aria-hidden="true" />
                 </span>
-                <h3 className="mt-4 text-xl font-bold text-stone-900">Completion reversed</h3>
-                <p className="mt-2 text-sm text-stone-600">
+                <h3 className="mt-4 text-xl font-bold text-white">Completion reversed</h3>
+                <p className="mt-2 text-sm text-slate-300">
                   The research partner reversed this survey, so its coins were withdrawn. Contact
                   support if you think this is a mistake.
                 </p>
               </>
             ) : waiting.timedOut ? (
               <>
-                <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-stone-100">
-                  <Clock size={32} className="text-stone-500" aria-hidden="true" />
+                <span className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-white/10">
+                  <Clock size={32} className="text-slate-400" aria-hidden="true" />
                 </span>
-                <h3 className="mt-4 text-xl font-bold text-stone-900">Still processing</h3>
-                <p className="mt-2 text-sm text-stone-600">
+                <h3 className="mt-4 text-xl font-bold text-white">Still processing</h3>
+                <p className="mt-2 text-sm text-slate-300">
                   The research partner hasn&apos;t confirmed yet. Coins land automatically the
                   moment it does — check your Rewards page in a few minutes.
                 </p>
@@ -589,7 +663,7 @@ export default function SurveyList({ surveys }: { surveys: SurveyCardData[] }) {
             <div className="mt-6 flex gap-3">
               <button
                 onClick={clearWaiting}
-                className="w-full rounded-xl bg-brand-700 px-4 py-3 text-sm font-bold text-white hover:bg-brand-800"
+                className="btn-shine w-full rounded-xl bg-gradient-to-r from-brand-600 to-brand-500 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-brand-900/50 hover:shadow-brand-700/50"
               >
                 {waiting.result ? "Back to surveys" : "Close"}
               </button>

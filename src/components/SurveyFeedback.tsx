@@ -40,7 +40,7 @@ export default function SurveyFeedback({
 
   return (
     <div className="flex-1 px-4 py-10">
-      <div className="mx-auto max-w-md overflow-hidden rounded-3xl border border-brand-200 bg-white shadow-xl">
+      <div className="mx-auto max-w-md overflow-hidden glass rounded-3xl bg-[#14112b]/90 shadow-xl">
         {/* status strip */}
         <div className={`h-1.5 w-full ${completed ? "bg-emerald-500" : "bg-amber-400"}`} />
 
@@ -58,18 +58,18 @@ export default function SurveyFeedback({
             )}
           </div>
 
-          <h1 className="mt-5 text-2xl font-bold text-brand-900">
+          <h1 className="mt-5 text-2xl font-bold text-white">
             {completed ? "Survey completed!" : "Screened out"}
           </h1>
 
           {completed ? (
-            <p className="mt-2 text-stone-600">
-              Nice work — <b className="text-brand-900">{surveyTitle}</b> is done and your reward
+            <p className="mt-2 text-slate-400">
+              Nice work — <b className="text-white">{surveyTitle}</b> is done and your reward
               is already in your balance.
             </p>
           ) : (
-            <p className="mt-2 text-stone-600">
-              <b className="text-brand-900">{surveyTitle}</b> ended early. No coins this time —
+            <p className="mt-2 text-slate-400">
+              <b className="text-white">{surveyTitle}</b> ended early. No coins this time —
               here is why that happens:
             </p>
           )}
@@ -81,7 +81,7 @@ export default function SurveyFeedback({
               <span className="text-lg font-bold text-emerald-800">+{coins} coins</span>
             </div>
           ) : (
-            <ul className="mx-auto mt-4 max-w-xs space-y-1.5 rounded-xl bg-surface p-4 text-left text-sm text-stone-600 ring-1 ring-brand-200">
+            <ul className="mx-auto mt-4 max-w-xs space-y-1.5 rounded-xl bg-white/5 p-4 text-left text-sm text-slate-400 ring-1 ring-white/10">
               {REASONS.map((r) => (
                 <li key={r} className="flex gap-2">
                   <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400" aria-hidden="true" />
@@ -91,11 +91,11 @@ export default function SurveyFeedback({
             </ul>
           )}
 
-          <div className="my-6 border-t border-dashed border-brand-200" />
+          <div className="my-6 border-t border-dashed border-white/10" />
 
           {/* rating */}
-          <p className="font-semibold text-brand-900">Rate this survey</p>
-          <p className="mt-1 text-xs text-stone-500">
+          <p className="font-semibold text-white">Rate this survey</p>
+          <p className="mt-1 text-xs text-slate-500">
             {completed
               ? "How was the experience? Help other members pick good surveys."
               : "Tell us how it felt — it helps other members spot the good ones."}
@@ -110,7 +110,7 @@ export default function SurveyFeedback({
                 aria-label={`${n} star${n > 1 ? "s" : ""}`}
                 onClick={() => setStars(stars === n ? 0 : n)}
                 className={`text-4xl leading-none transition-transform hover:scale-110 ${
-                  n <= stars ? "scale-110 text-amber-400" : "text-stone-300"
+                  n <= stars ? "scale-110 text-amber-400" : "text-slate-600"
                 }`}
               >
                 ★

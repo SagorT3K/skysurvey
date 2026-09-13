@@ -161,7 +161,7 @@ export default function NotificationBell() {
       rendered.push(
         <p
           key={`sep-${label}-${n.id}`}
-          className="sticky top-0 z-10 border-b border-brand-100 bg-white/95 px-4 py-2 text-xs font-bold uppercase tracking-wide text-brand-500 backdrop-blur"
+          className="sticky top-0 z-10 border-b border-white/10 bg-[#14112b]/95 px-4 py-2 text-xs font-bold uppercase tracking-wide text-brand-300 backdrop-blur"
         >
           {label}
         </p>
@@ -173,19 +173,19 @@ export default function NotificationBell() {
     rendered.push(
       <div
         key={n.id}
-        className={`flex items-start gap-3 px-4 py-3 ${!n.read ? "bg-brand-50/70" : "bg-white"}`}
+        className={`flex items-start gap-3 px-4 py-3 ${!n.read ? "bg-brand-600/15" : "bg-transparent"}`}
       >
         <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${meta.cls}`}>
           <Icon size={16} aria-hidden="true" />
         </span>
         <div className="min-w-0 flex-1">
-          <p className={`text-sm leading-snug ${!n.read ? "font-semibold text-brand-900" : "text-stone-700"}`}>
+          <p className={`text-sm leading-snug ${!n.read ? "font-semibold text-white" : "text-slate-300"}`}>
             {n.title}
           </p>
-          {n.body && <p className="mt-0.5 line-clamp-2 text-xs text-stone-500">{n.body}</p>}
+          {n.body && <p className="mt-0.5 line-clamp-2 text-xs text-slate-500">{n.body}</p>}
         </div>
         <span className="ml-1 flex shrink-0 items-center gap-1.5 pt-0.5">
-          <span className="text-[11px] text-stone-400">{relTime(n.createdAt)}</span>
+          <span className="text-[11px] text-slate-500">{relTime(n.createdAt)}</span>
           {!n.read && <span className="h-2 w-2 rounded-full bg-red-500" aria-label="new" />}
         </span>
       </div>
@@ -200,7 +200,7 @@ export default function NotificationBell() {
         title="Notifications"
         aria-label={`Notifications${unread ? ` — ${unread} unread` : ""}`}
         aria-expanded={open}
-        className="relative rounded-lg p-2 text-brand-800 transition hover:bg-brand-100"
+        className="relative rounded-lg p-2 text-slate-300 transition hover:bg-white/10 hover:text-white"
       >
         <Bell size={18} aria-hidden="true" />
         {unread > 0 && (
@@ -213,20 +213,20 @@ export default function NotificationBell() {
       {open && (
         <>
           <div className="fixed inset-0 z-40" onClick={closePanel} aria-hidden="true" />
-          <div className="fixed right-2 top-14 z-50 flex h-[70vh] max-h-[32rem] w-[calc(100vw-1rem)] max-w-sm flex-col overflow-hidden rounded-2xl border border-brand-200 bg-white shadow-2xl sm:right-4">
-            <div className="flex items-center justify-between border-b border-brand-100 px-4 py-3">
-              <p className="font-bold text-brand-900">Notifications</p>
+          <div className="fixed right-2 top-14 z-50 flex h-[70vh] max-h-[32rem] w-[calc(100vw-1rem)] max-w-sm flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#12101f] shadow-2xl shadow-black/50 sm:right-4">
+            <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+              <p className="font-bold text-white">Notifications</p>
               {unread > 0 && (
                 <button
                   type="button"
                   onClick={markAllRead}
-                  className="text-xs font-semibold text-brand-600 hover:text-brand-900 hover:underline"
+                  className="text-xs font-semibold text-brand-300 hover:text-brand-200 hover:underline"
                 >
                   Mark all as read
                 </button>
               )}
             </div>
-            <div className="flex gap-1 border-b border-brand-100 px-3 py-2">
+            <div className="flex gap-1 border-b border-white/10 px-3 py-2">
               {(["all", "unread"] as const).map((t) => (
                 <button
                   key={t}
@@ -234,8 +234,8 @@ export default function NotificationBell() {
                   onClick={() => switchTab(t)}
                   className={`rounded-full px-3.5 py-1 text-sm font-semibold capitalize transition ${
                     tab === t
-                      ? "bg-brand-100 text-brand-900"
-                      : "text-stone-500 hover:bg-brand-50"
+                      ? "bg-white/10 text-white"
+                      : "text-slate-400 hover:bg-white/5"
                   }`}
                 >
                   {t}
@@ -244,7 +244,7 @@ export default function NotificationBell() {
             </div>
             <div ref={listRef} onScroll={onScroll} className="flex-1 overflow-y-auto">
               {entries.length === 0 && !loading ? (
-                <div className="flex h-full items-center justify-center p-6 text-center text-sm text-stone-400">
+                <div className="flex h-full items-center justify-center p-6 text-center text-sm text-slate-500">
                   {tab === "unread"
                     ? "You're all caught up — no unread notifications."
                     : "Nothing here yet. Complete your first survey and notifications will show up here."}
@@ -253,10 +253,10 @@ export default function NotificationBell() {
                 rendered
               )}
               {loading && (
-                <p className="p-3 text-center text-xs text-stone-400">Loading…</p>
+                <p className="p-3 text-center text-xs text-slate-500">Loading…</p>
               )}
               {!loading && cursor === null && entries.length > 0 && (
-                <p className="p-3 text-center text-xs text-stone-400">You&apos;re all caught up</p>
+                <p className="p-3 text-center text-xs text-slate-500">You&apos;re all caught up</p>
               )}
             </div>
           </div>

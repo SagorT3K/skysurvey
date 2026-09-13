@@ -22,7 +22,7 @@ export default async function MockSurveyPage({ params }: { params: Promise<{ id:
 
   return (
     <main className="flex flex-1 items-center justify-center px-4 py-16">
-      <div className="w-full max-w-lg rounded-2xl border border-brand-200 bg-white p-8 shadow-sm">
+      <div className="w-full max-w-lg glass rounded-2xl p-8">
         <p className="text-xs font-semibold uppercase tracking-wide text-stone-400">
           Demo provider · {attempt.survey.provider}
         </p>
@@ -39,7 +39,7 @@ export default async function MockSurveyPage({ params }: { params: Promise<{ id:
 
         <div className="mt-6 space-y-4">
           {[1, 2, 3].map((q) => (
-            <div key={q} className="rounded-xl border border-brand-200 p-4">
+            <div key={q} className="rounded-xl border border-white/10 bg-white/5 p-4">
               <p className="font-medium text-stone-800">
                 {q}. Sample question {q} — please select an option
               </p>

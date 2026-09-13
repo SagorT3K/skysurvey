@@ -51,13 +51,13 @@ export default function ProfileForm({
   }
 
   const input =
-    "w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100";
+    "w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-white outline-none placeholder:text-slate-500 focus:border-brand-400 focus:ring-2 focus:ring-brand-400/20";
 
   return (
     <form onSubmit={submit} className="space-y-5">
       <div className="grid gap-5 sm:grid-cols-2">
         <label className="block">
-          <span className="mb-1 block text-sm font-medium text-stone-700">Display name</span>
+          <span className="mb-1 block text-sm font-medium text-slate-200">Display name</span>
           <input
             type="text"
             value={values.username ?? ""}
@@ -68,7 +68,7 @@ export default function ProfileForm({
           />
         </label>
         <label className="block">
-          <span className="mb-1 block text-sm font-medium text-stone-700">State / region</span>
+          <span className="mb-1 block text-sm font-medium text-slate-200">State / region</span>
           <input
             type="text"
             value={values.state ?? ""}
@@ -80,7 +80,7 @@ export default function ProfileForm({
         </label>
         {FIELDS.map(({ key, label, hint }) => (
           <label key={key} className="block">
-            <span className="mb-1 block text-sm font-medium text-stone-700">{label}</span>
+            <span className="mb-1 block text-sm font-medium text-slate-200">{label}</span>
             <select
               value={values[key] ?? ""}
               onChange={(e) => set(key, e.target.value)}
@@ -92,11 +92,11 @@ export default function ProfileForm({
                 </option>
               ))}
             </select>
-            <span className="mt-1 block text-xs text-stone-400">{hint}</span>
+            <span className="mt-1 block text-xs text-slate-500">{hint}</span>
           </label>
         ))}
         <label className="block">
-          <span className="mb-1 block text-sm font-medium text-stone-700">PayPal email (payouts)</span>
+          <span className="mb-1 block text-sm font-medium text-slate-200">PayPal email (payouts)</span>
           <input
             type="email"
             value={values.paypalEmail ?? ""}
@@ -104,7 +104,7 @@ export default function ProfileForm({
             className={input}
             placeholder="your-paypal@example.com"
           />
-          <span className="mt-1 block text-xs text-stone-400">
+          <span className="mt-1 block text-xs text-slate-500">
             Pre-fills the cashout form. Gift cards go to your account email.
           </span>
         </label>
@@ -113,7 +113,7 @@ export default function ProfileForm({
       {msg && (
         <p
           className={`rounded-lg px-3 py-2 text-sm ${
-            msg.ok ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-600"
+            msg.ok ? "bg-emerald-500/15 text-emerald-300" : "bg-red-500/15 text-red-300"
           }`}
         >
           {msg.text}
@@ -123,7 +123,7 @@ export default function ProfileForm({
       <button
         type="submit"
         disabled={loading}
-        className="inline-flex items-center gap-2 rounded-lg bg-brand-700 px-5 py-2.5 text-sm font-semibold text-white hover:bg-brand-800 disabled:opacity-50"
+        className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-brand-600 to-brand-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-brand-900/40 hover:shadow-brand-700/40 disabled:opacity-50"
       >
         {loading ? (
           <LoaderCircle size={16} className="animate-spin" aria-hidden="true" />

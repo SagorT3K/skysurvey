@@ -23,12 +23,12 @@ export default function CopyReferralLink({ link }: { link: string }) {
 
   return (
     <div className="mt-3 flex items-center gap-2">
-      <code className="flex-1 overflow-x-auto rounded-lg bg-brand-50 px-3 py-2 text-sm font-semibold text-brand-800 ring-1 ring-brand-200">
+      <code className="flex-1 overflow-x-auto rounded-lg bg-white/5 px-3 py-2 text-sm font-semibold text-brand-200 ring-1 ring-white/10">
         {link}
       </code>
       <button
         onClick={copy}
-        className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-brand-700 px-3 py-2 text-sm font-semibold text-white hover:bg-brand-800"
+        className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-gradient-to-r from-brand-600 to-brand-500 px-3 py-2 text-sm font-semibold text-white shadow-lg shadow-brand-900/40 hover:shadow-brand-700/40"
       >
         {copied ? (
           <>

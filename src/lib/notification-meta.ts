@@ -3,14 +3,14 @@ import { Bell, Coins, Gift, TrendingDown, TrendingUp, Trophy, UserPlus, Wallet }
 // Shared notification type → icon/color mapping, used by the bell popup and
 // the full notifications page.
 export const TYPE_META: Record<string, { icon: typeof Bell; cls: string }> = {
-  survey: { icon: Coins, cls: "bg-emerald-100 text-emerald-700" },
-  screenout: { icon: TrendingDown, cls: "bg-red-100 text-red-600" },
-  coins: { icon: TrendingUp, cls: "bg-emerald-100 text-emerald-700" },
-  referral: { icon: UserPlus, cls: "bg-brand-100 text-brand-700" },
-  payout: { icon: Wallet, cls: "bg-brand-100 text-brand-800" },
-  voucher: { icon: Gift, cls: "bg-brand-100 text-brand-700" },
-  crypto: { icon: Coins, cls: "bg-orange-100 text-orange-700" },
-  level: { icon: Trophy, cls: "bg-amber-100 text-amber-700" },
-  hold: { icon: TrendingDown, cls: "bg-red-100 text-red-600" },
-  system: { icon: Bell, cls: "bg-slate-100 text-slate-600" },
+  survey: { icon: Coins, cls: "bg-emerald-500/15 text-emerald-300" },
+  screenout: { icon: TrendingDown, cls: "bg-red-500/15 text-red-300" },
+  coins: { icon: TrendingUp, cls: "bg-emerald-500/15 text-emerald-300" },
+  referral: { icon: UserPlus, cls: "bg-brand-500/15 text-brand-300" },
+  payout: { icon: Wallet, cls: "bg-brand-500/15 text-brand-300" },
+  voucher: { icon: Gift, cls: "bg-fuchsia-500/15 text-fuchsia-300" },
+  crypto: { icon: Coins, cls: "bg-amber-500/15 text-amber-300" },
+  level: { icon: Trophy, cls: "bg-amber-500/15 text-amber-300" },
+  hold: { icon: TrendingDown, cls: "bg-red-500/15 text-red-300" },
+  system: { icon: Bell, cls: "bg-white/10 text-slate-300" },
 };

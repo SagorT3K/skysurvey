@@ -28,21 +28,21 @@ export default async function NotificationsPage() {
   }
 
   return (
-    <main className="flex min-h-screen flex-1 flex-col bg-surface">
+    <main className="app-dark flex min-h-screen flex-1 flex-col">
       <AppHeader active="surveys" balance={wallet.balance} />
 
       <div className="mx-auto w-full max-w-2xl flex-1 px-4 py-8">
-        <h1 className="flex items-center gap-2 text-2xl font-bold text-brand-900">
-          <Bell size={24} className="text-brand-600" aria-hidden="true" />
+        <h1 className="flex items-center gap-2 text-2xl font-bold text-white">
+          <Bell size={24} className="text-brand-300" aria-hidden="true" />
           Notifications
         </h1>
-        <p className="mt-1 text-stone-600">
+        <p className="mt-1 text-slate-400">
           Earnings, referrals, payouts and account updates — all in one place.
         </p>
 
         <div className="mt-6 space-y-2.5">
           {items.length === 0 && (
-            <div className="rounded-2xl border border-dashed border-brand-300 bg-white p-10 text-center text-stone-500">
+            <div className="glass rounded-2xl border-dashed p-10 text-center text-slate-400">
               Nothing here yet. Complete your first survey and your notifications will show up
               here.
             </div>
@@ -53,20 +53,20 @@ export default async function NotificationsPage() {
             return (
               <div
                 key={n.id}
-                className={`flex items-start gap-3 rounded-2xl border bg-white p-4 ${
-                  !n.read ? "border-brand-300 shadow-sm" : "border-brand-100"
+                className={`glass flex items-start gap-3 rounded-2xl p-4 ${
+                  !n.read ? "!border-brand-400/40 shadow-lg shadow-brand-950/40" : "!border-white/5"
                 }`}
               >
                 <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${meta.cls}`}>
                   <Icon size={17} aria-hidden="true" />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="flex items-center gap-2 font-semibold text-brand-900">
+                  <p className="flex items-center gap-2 font-semibold text-white">
                     {n.title}
                     {!n.read && <span className="h-2 w-2 shrink-0 rounded-full bg-red-500" aria-label="new" />}
                   </p>
-                  {n.body && <p className="mt-0.5 text-sm text-stone-600">{n.body}</p>}
-                  <p className="mt-1 text-xs text-stone-400">{new Date(n.createdAt).toLocaleString()}</p>
+                  {n.body && <p className="mt-0.5 text-sm text-slate-400">{n.body}</p>}
+                  <p className="mt-1 text-xs text-slate-500">{new Date(n.createdAt).toLocaleString()}</p>
                 </div>
               </div>
             );

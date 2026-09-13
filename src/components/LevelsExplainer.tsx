@@ -34,7 +34,7 @@ export default function LevelsExplainer({ score }: { score: number }) {
   const level = Math.max(1, Math.floor(score / 100));
   return (
     <div>
-      <p className="leading-relaxed text-stone-600">
+      <p className="leading-relaxed text-slate-300">
         Your trust score starts at <b>100</b>. Every <b>100 points</b> is one level — reach{" "}
         <b>200</b> for Level 2, <b>300</b> for Level 3, and so on. You are currently{" "}
         <b>Level {level}</b> with <b>{score} points</b>. Levels are not permanent: good activity
@@ -42,44 +42,44 @@ export default function LevelsExplainer({ score }: { score: number }) {
       </p>
 
       <div className="mt-5 grid gap-4 sm:grid-cols-2">
-        <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
-          <p className="flex items-center gap-2 text-sm font-bold text-emerald-800">
+        <div className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 p-4">
+          <p className="flex items-center gap-2 text-sm font-bold text-emerald-300">
             <TrendingUp size={16} aria-hidden="true" />
             How you earn points
           </p>
-          <ul className="mt-3 space-y-2 text-sm text-emerald-900">
+          <ul className="mt-3 space-y-2 text-sm text-emerald-200/90">
             {EARN.map((e) => (
               <li key={e.what} className="flex items-start justify-between gap-3">
                 <span>{e.what}</span>
-                <span className="shrink-0 font-bold text-emerald-700">{e.pts}</span>
+                <span className="shrink-0 font-bold text-emerald-300">{e.pts}</span>
               </li>
             ))}
           </ul>
         </div>
-        <div className="rounded-xl border border-red-200 bg-red-50 p-4">
-          <p className="flex items-center gap-2 text-sm font-bold text-red-800">
+        <div className="rounded-xl border border-red-400/30 bg-red-500/10 p-4">
+          <p className="flex items-center gap-2 text-sm font-bold text-red-300">
             <TrendingDown size={16} aria-hidden="true" />
             How you lose points
           </p>
-          <ul className="mt-3 space-y-2 text-sm text-red-900">
+          <ul className="mt-3 space-y-2 text-sm text-red-200/90">
             {LOSE.map((e) => (
               <li key={e.what} className="flex items-start justify-between gap-3">
                 <span>{e.what}</span>
-                <span className="shrink-0 font-bold text-red-600">{e.pts}</span>
+                <span className="shrink-0 font-bold text-red-300">{e.pts}</span>
               </li>
             ))}
           </ul>
         </div>
       </div>
 
-      <h3 className="mt-6 text-sm font-bold uppercase tracking-wide text-stone-500">
+      <h3 className="mt-6 text-sm font-bold uppercase tracking-wide text-slate-500">
         What your level does for you
       </h3>
       <div className="mt-3 grid gap-3 sm:grid-cols-3">
         {BENEFITS.map((b) => (
-          <div key={b.title} className="rounded-xl bg-surface p-4 ring-1 ring-brand-200">
-            <p className="font-semibold text-brand-900">{b.title}</p>
-            <p className="mt-1 text-sm leading-relaxed text-stone-600">{b.text}</p>
+          <div key={b.title} className="rounded-xl bg-white/5 p-4 ring-1 ring-white/10">
+            <p className="font-semibold text-white">{b.title}</p>
+            <p className="mt-1 text-sm leading-relaxed text-slate-400">{b.text}</p>
           </div>
         ))}
       </div>
