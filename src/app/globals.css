@@ -165,17 +165,17 @@ body {
     url("/bg/plexus.svg"),
     url("/bg/cloud-right.svg"),
     url("/bg/cloud-left.svg"),
-    radial-gradient(56rem 40rem at 12% -12%, rgba(124, 58, 237, 0.34), transparent 62%),
-    radial-gradient(52rem 40rem at 96% 16%, rgba(20, 184, 166, 0.2), transparent 62%),
-    radial-gradient(46rem 32rem at 60% 115%, rgba(139, 92, 246, 0.18), transparent 60%),
-    linear-gradient(165deg, #101a2b 0%, #0b0a18 48%, #0e1a26 100%);
+    radial-gradient(58rem 42rem at 10% -12%, rgba(124, 58, 237, 0.4), transparent 62%),
+    radial-gradient(54rem 42rem at 98% 18%, rgba(20, 184, 166, 0.24), transparent 62%),
+    radial-gradient(46rem 32rem at 55% 118%, rgba(139, 92, 246, 0.18), transparent 60%),
+    linear-gradient(165deg, #131c2e 0%, #0b0a18 48%, #10202c 100%);
   background-size:
-    720px 720px,
-    520px auto,
-    620px auto,
+    760px 760px,
+    820px 820px,
+    820px 820px,
     auto, auto, auto, auto;
   background-position:
-    -60px 15%, right 30px, left 40px,
+    -40px 22%, right -60px center, left -80px top 6%,
     0 0, 0 0, 0 0, 0 0;
   background-repeat: no-repeat;
   background-attachment: fixed;
