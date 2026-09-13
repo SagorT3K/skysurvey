@@ -158,18 +158,18 @@ body {
 
 /* ---------- Dark glassmorphism app shell (user side) ---------- */
 
-/* Deep navy-teal page with real 3D-render clouds, a constellation mesh and violet/teal glows */
+/* Purple-to-teal dusk sky with soft cumulus clouds, a constellation mesh and matching glows */
 .app-dark {
-  background-color: #0b0a18;
+  background-color: #262b33;
   background-image:
-    url("/bg/clouds-real.png"),
+    url("/bg/clouds.png?v=7"),
     url("/bg/plexus.svg"),
-    radial-gradient(58rem 42rem at 10% -12%, rgba(124, 58, 237, 0.38), transparent 62%),
-    radial-gradient(54rem 42rem at 98% 18%, rgba(20, 184, 166, 0.22), transparent 62%),
-    radial-gradient(46rem 32rem at 55% 118%, rgba(139, 92, 246, 0.16), transparent 60%),
-    linear-gradient(165deg, #121a2b 0%, #0b0a18 48%, #0f1e2a 100%);
+    radial-gradient(58rem 42rem at 6% -8%, rgba(122, 104, 168, 0.5), transparent 62%),
+    radial-gradient(56rem 44rem at 100% 10%, rgba(42, 138, 156, 0.42), transparent 62%),
+    radial-gradient(46rem 32rem at 55% 118%, rgba(139, 92, 246, 0.14), transparent 60%),
+    linear-gradient(165deg, #3a3552 0%, #2c313c 42%, #2e3940 70%, #31474f 100%);
   background-size:
-    cover,
+    100% auto,
     760px 760px,
     auto, auto, auto, auto;
   background-position:
@@ -178,7 +178,7 @@ body {
     0 0, 0 0, 0 0, 0 0;
   background-repeat: no-repeat;
   background-attachment: fixed;
-  color: #e9e6ff;
+  color: #eef0f6;
 }
 
 /* Frosted glass card */
