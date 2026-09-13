@@ -2,24 +2,15 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { LucideIcon } from "lucide-react";
 import {
   Check,
   CircleAlert,
   Clock,
   Coins,
-  Coffee,
   ExternalLink,
-  Gamepad2,
-  Globe2,
-  HeartPulse,
-  Laptop,
   LoaderCircle,
   Minimize2,
   ShieldCheck,
-  ShoppingBag,
-  Smartphone,
-  Sprout,
   Star,
   TriangleAlert,
   X,
@@ -73,20 +64,20 @@ type Waiting = {
   result?: { status: "completed" | "screenout" | "reversed"; coins: number } | null;
 };
 
-// Decorative category tiles — each card gets a deterministic gradient icon
-// so the board looks varied and lively, matching the category mood.
-const CATEGORIES: { icon: LucideIcon; grad: string }[] = [
-  { icon: ShoppingBag, grad: "from-violet-400 to-brand-700" },
-  { icon: Smartphone, grad: "from-sky-300 to-indigo-600" },
-  { icon: HeartPulse, grad: "from-rose-300 to-fuchsia-600" },
-  { icon: Coffee, grad: "from-amber-300 to-orange-600" },
-  { icon: Gamepad2, grad: "from-teal-300 to-emerald-600" },
-  { icon: Globe2, grad: "from-cyan-300 to-blue-700" },
-  { icon: Laptop, grad: "from-fuchsia-300 to-purple-700" },
-  { icon: Sprout, grad: "from-lime-300 to-green-600" },
+// Decorative categories shown on the cards (like the reference design) — each
+// survey gets a deterministic 3D icon + label so the board looks varied.
+const CATEGORIES: { label: string; icon: string }[] = [
+  { label: "Consumer Goods", icon: "/icons/bag.svg" },
+  { label: "Technology", icon: "/icons/laptop.svg" },
+  { label: "Lifestyle", icon: "/icons/plant.svg" },
+  { label: "Sports", icon: "/icons/trophy.svg" },
+  { label: "Finance", icon: "/icons/cash.svg" },
+  { label: "Entertainment", icon: "/icons/gamepad.svg" },
+  { label: "Travel", icon: "/icons/globe.svg" },
+  { label: "Education", icon: "/icons/docs.svg" },
 ];
 
-function categoryTile(id: string | number): { icon: LucideIcon; grad: string } {
+function categoryTile(id: string | number): { label: string; icon: string } {
   const key = String(id);
   let h = 0;
   for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) % 997;
@@ -317,7 +308,7 @@ export default function SurveyList({ surveys }: { surveys: SurveyCardData[] }) {
     <>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {surveys.map((s) => {
-          const { icon: CatIcon, grad } = categoryTile(s.id);
+          const cat = categoryTile(s.id);
           const starting = startingId === s.id;
           return (
             <div
@@ -333,40 +324,41 @@ export default function SurveyList({ surveys }: { surveys: SurveyCardData[] }) {
               }}
               title={`${s.title} · ${s.category}`}
               aria-label={s.done ? `${s.title} (completed)` : `View ${s.title} details`}
-              className="glass glass-hover flex cursor-pointer flex-col rounded-2xl p-4 text-left outline-none focus-visible:ring-2 focus-visible:ring-brand-400/60 disabled:cursor-not-allowed disabled:opacity-60"
+              className="glass-card glass-hover flex cursor-pointer flex-col rounded-2xl p-4 text-left outline-none focus-visible:ring-2 focus-visible:ring-brand-400/60"
             >
               <div className="flex items-start justify-between gap-2">
                 <span className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs font-medium text-slate-300">
                   <Clock size={12} aria-hidden="true" />~{s.loiMinutes} min
                 </span>
-                <span
-                  className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br text-white shadow-[inset_0_1px_1px_rgba(255,255,255,0.5),0_10px_24px_rgba(0,0,0,0.35)] ${grad}`}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={cat.icon}
+                  alt=""
+                  width={56}
+                  height={56}
+                  className="h-14 w-14 shrink-0 drop-shadow-[0_10px_18px_rgba(0,0,0,0.45)]"
                   aria-hidden="true"
-                >
-                  <CatIcon size={22} />
-                </span>
+                />
               </div>
 
+              <p className="mt-0.5 text-[15px] font-semibold text-slate-200">{cat.label}</p>
               {s.done ? (
-                <span className="mt-2 inline-flex items-center gap-1.5 text-lg font-bold text-slate-400">
+                <span className="inline-flex items-center gap-1.5 text-lg font-bold text-slate-400">
                   <Check size={18} aria-hidden="true" />
                   Completed
                 </span>
               ) : s.usd != null ? (
-                <p className="mt-2 text-2xl font-extrabold tracking-tight text-white">
+                <p className="text-2xl font-extrabold tracking-tight text-white">
                   ${s.usd.toFixed(2)}{" "}
                   <span className="text-xs font-semibold text-slate-400">USD</span>
                 </p>
               ) : (
-                <p className="mt-2 text-2xl font-extrabold tracking-tight text-white">
+                <p className="text-2xl font-extrabold tracking-tight text-white">
                   {s.coins}{" "}
                   <span className="text-xs font-semibold text-slate-400">coins</span>
                 </p>
               )}
-              <p className="mt-0.5 truncate text-sm font-medium text-slate-200" title={s.title}>
-                {s.title}
-              </p>
-              <div className="mt-1 flex items-center gap-1.5">
+              <div className="mt-0.5 flex items-center gap-1.5">
                 <Stars avg={s.avgStars} />
                 {s.ratingCount ? (
                   <span className="text-xs text-slate-500">({s.ratingCount})</span>
@@ -374,16 +366,27 @@ export default function SurveyList({ surveys }: { surveys: SurveyCardData[] }) {
               </div>
 
               <div className="mt-3 flex items-center justify-between border-t border-white/10 pt-3">
-                <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-400">
-                  <Coins size={13} aria-hidden="true" />≈ {s.coins} coins
-                </span>
+                <div className="flex gap-5">
+                  <span>
+                    <span className="block text-[11px] font-medium text-slate-500">Time</span>
+                    <span className="block text-sm font-semibold text-slate-200">
+                      ~{s.loiMinutes} min
+                    </span>
+                  </span>
+                  <span>
+                    <span className="block text-[11px] font-medium text-slate-500">Value</span>
+                    <span className="block text-sm font-semibold text-emerald-400">
+                      {s.usd != null ? `$${s.usd.toFixed(2)}` : `${s.coins} coins`}
+                    </span>
+                  </span>
+                </div>
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     if (!s.done && !starting) start(s);
                   }}
                   disabled={s.done || starting}
-                  className="rounded-lg border border-white/20 bg-white/10 px-3.5 py-1.5 text-xs font-bold text-white transition hover:border-brand-400/60 hover:bg-brand-600/50 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="rounded-lg bg-brand-300/90 px-3.5 py-2 text-xs font-bold text-brand-950 shadow-[0_6px_20px_rgba(196,181,253,0.35)] transition hover:bg-brand-200 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {starting ? (
                     <>

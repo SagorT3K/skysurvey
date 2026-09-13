@@ -215,23 +215,29 @@ export default async function DashboardPage() {
         {/* Wallet cards + daily check-in */}
         <section className="mt-6 grid gap-4 md:grid-cols-4">
           {[
-            { icon: Coins, label: "Balance", value: `${wallet.balance}`, sub: `$${((wallet.balance * config.coin_rate_cents) / 100).toFixed(2)} value`, tile: "icon-tile text-white", glow: "text-white" },
-            { icon: Wallet, label: "Withdrawable", value: `${wallet.withdrawable}`, sub: wallet.withdrawable >= config.min_cashout_coins ? "Cash out now" : `${config.min_cashout_coins - wallet.withdrawable} to $5`, tile: "bg-gradient-to-br from-emerald-300 to-emerald-600 text-white shadow-[inset_0_1px_1px_rgba(255,255,255,0.5),0_10px_24px_rgba(5,150,105,0.45)]", glow: "text-emerald-300" },
-            { icon: CircleCheckBig, label: "Redeemed", value: `${redeemedCoins}`, sub: subRequests, tile: "bg-gradient-to-br from-sky-300 to-violet-600 text-white shadow-[inset_0_1px_1px_rgba(255,255,255,0.5),0_10px_24px_rgba(124,58,237,0.45)]", glow: "text-sky-300" },
-          ].map(({ icon: Icon, ...c }) => (
-            <div key={c.label} className="glass glass-hover relative overflow-hidden rounded-2xl p-5">
+            { icon: Coins, img: "/icons/coins.svg", label: "Balance", value: `${wallet.balance}`, sub: `$${((wallet.balance * config.coin_rate_cents) / 100).toFixed(2)} value`, glow: "text-brand-300" },
+            { icon: Wallet, img: "/icons/wallet.svg", label: "Withdrawable", value: `${wallet.withdrawable}`, sub: wallet.withdrawable >= config.min_cashout_coins ? "Cash out now" : `${config.min_cashout_coins - wallet.withdrawable} to $5`, glow: "text-emerald-300" },
+            { icon: CircleCheckBig, img: "/icons/gift.svg", label: "Redeemed", value: `${redeemedCoins}`, sub: subRequests, glow: "text-sky-300" },
+          ].map(({ icon: Icon, img, ...c }) => (
+            <div key={c.label} className="glass-card glass-hover relative overflow-hidden rounded-2xl p-5">
               <div className="flex items-start justify-between">
                 <div>
-                  <p className={`flex items-center gap-2 text-sm font-medium ${c.glow} opacity-90`}>
+                  <p className={`flex items-center gap-2 text-sm font-semibold ${c.glow}`}>
                     <Icon size={15} aria-hidden="true" />
                     {c.label}
                   </p>
                   <p className="mt-1 text-3xl font-bold text-white">{c.value}</p>
                   <p className="mt-0.5 text-sm text-slate-400">{c.sub}</p>
                 </div>
-                <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${c.tile}`}>
-                  <Icon size={24} aria-hidden="true" />
-                </span>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={img}
+                  alt=""
+                  width={56}
+                  height={56}
+                  className="h-14 w-14 shrink-0 drop-shadow-[0_10px_18px_rgba(0,0,0,0.45)]"
+                  aria-hidden="true"
+                />
               </div>
             </div>
           ))}

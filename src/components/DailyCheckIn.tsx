@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, Coins, Flame, LoaderCircle } from "lucide-react";
+import { Check, Coins, LoaderCircle } from "lucide-react";
 
 export default function DailyCheckIn({ available, coins }: { available: boolean; coins: number }) {
   const router = useRouter();
@@ -24,16 +24,18 @@ export default function DailyCheckIn({ available, coins }: { available: boolean;
   }
 
   return (
-    <div className="glass flex h-full flex-col justify-between rounded-2xl bg-gradient-to-br from-brand-800/70 to-brand-950/90 p-6 text-white">
+    <div className="glass-card glass-hover flex h-full flex-col justify-between rounded-2xl p-6 text-white">
       <div>
-        <div className="flex items-center gap-3">
-          <span
-            className={`icon-tile flex h-11 w-11 shrink-0 items-center justify-center rounded-xl ${
-              available ? "text-amber-200" : "text-slate-400"
-            }`}
-          >
-            <Flame size={22} strokeWidth={2.1} className={available ? "animate-pulse" : ""} aria-hidden="true" />
-          </span>
+        <div className="flex items-start gap-3">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/icons/flame.svg"
+            alt=""
+            width={44}
+            height={44}
+            className={`h-11 w-11 shrink-0 drop-shadow-[0_8px_16px_rgba(0,0,0,0.4)] ${available ? "" : "opacity-40 grayscale"}`}
+            aria-hidden="true"
+          />
           <div>
             <h3 className="font-bold">Daily check-in</h3>
             <p className="flex items-center gap-1.5 text-sm text-amber-200/90">

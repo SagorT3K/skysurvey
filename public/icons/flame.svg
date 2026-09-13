@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <radialGradient id="fo" cx=".5" cy=".75" r=".8">
+      <stop offset="0" stop-color="#ffd66b"/><stop offset=".45" stop-color="#ff9d3c"/><stop offset="1" stop-color="#f4511e"/>
+    </radialGradient>
+  </defs>
+  <path d="M32 6c3 8 12 12 12 24 0 10-5.4 17-12 17S20 40 20 30c0-7 4-11 6-16 1.4 3 2.6 4.6 6 8-1-7-1-11 0-16z" fill="url(#fo)"/>
+  <path d="M32 30c2 4 5 5.4 5 10 0 4.4-2.2 7-5 7s-5-2.6-5-7c0-4.6 3-6 5-10z" fill="#ffe9a8" opacity=".95"/>
+</svg>

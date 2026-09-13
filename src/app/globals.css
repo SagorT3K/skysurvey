@@ -158,13 +158,27 @@ body {
 
 /* ---------- Dark glassmorphism app shell (user side) ---------- */
 
-/* Deep navy-violet page with ambient violet/teal glows */
+/* Deep navy-teal page with glass clouds, a constellation mesh and violet/teal glows */
 .app-dark {
   background-color: #0b0a18;
   background-image:
-    radial-gradient(60rem 40rem at 85% -10%, rgba(124, 58, 237, 0.22), transparent 60%),
-    radial-gradient(50rem 36rem at 0% 30%, rgba(20, 184, 166, 0.1), transparent 60%),
-    radial-gradient(46rem 32rem at 60% 110%, rgba(139, 92, 246, 0.14), transparent 60%);
+    url("/bg/plexus.svg"),
+    url("/bg/cloud-right.svg"),
+    url("/bg/cloud-left.svg"),
+    radial-gradient(56rem 40rem at 12% -12%, rgba(124, 58, 237, 0.34), transparent 62%),
+    radial-gradient(52rem 40rem at 96% 16%, rgba(20, 184, 166, 0.2), transparent 62%),
+    radial-gradient(46rem 32rem at 60% 115%, rgba(139, 92, 246, 0.18), transparent 60%),
+    linear-gradient(165deg, #101a2b 0%, #0b0a18 48%, #0e1a26 100%);
+  background-size:
+    720px 720px,
+    520px auto,
+    620px auto,
+    auto, auto, auto, auto;
+  background-position:
+    -60px 15%, right 30px, left 40px,
+    0 0, 0 0, 0 0, 0 0;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
   color: #e9e6ff;
 }
 
@@ -172,6 +186,14 @@ body {
 .glass {
   background: rgba(255, 255, 255, 0.06);
   border: 1px solid rgba(255, 255, 255, 0.09);
+  backdrop-filter: blur(18px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
+}
+
+/* Glass card with a subtle top-lit vertical sheen (survey / wallet cards) */
+.glass-card {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.035));
+  border: 1px solid rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(18px);
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
 }
