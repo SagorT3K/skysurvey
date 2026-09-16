@@ -11,12 +11,17 @@
  * injected test bonus rows (CoinTransaction.category = "test"), along with the
  * matching demo attempts so ledger and attempts stay consistent.
  *
+ * --purge-demo-surveys removes the built-in demo (mock) catalogue itself, along
+ * with any leftover attempts, ratings and postback rows that point at it. With
+ * no demo rows left a user cannot earn demo coins again.
+ *
  * Nothing is written unless --apply is passed, and before anything is deleted a
  * JSON snapshot of every removed row is written to --backup.
  *
  * Usage:
  *   node scripts/tasks/cleanup-demo-accounts.mjs --keep=a@b.com,c@d.com            # dry run
  *   node scripts/tasks/cleanup-demo-accounts.mjs --keep=a@b.com,c@d.com --apply
+ *   node scripts/tasks/cleanup-demo-accounts.mjs --keep=a@b.com --purge-demo-ledger --purge-demo-surveys --apply
  *   node scripts/neon-run.mjs scripts/tasks/cleanup-demo-accounts.mjs --keep=... --apply
  */
 import { mkdir, writeFile } from "node:fs/promises";
@@ -34,6 +39,7 @@ const valueOf = (name, fallback = "") => {
 
 const apply = has("--apply");
 const purgeDemoLedger = has("--purge-demo-ledger");
+const purgeDemoSurveys = has("--purge-demo-surveys");
 const keepEmails = valueOf("--keep")
   .split(",")
   .map((e) => e.trim().toLowerCase())
@@ -88,6 +94,18 @@ try {
   const mockSurveys = await prisma.survey.findMany({ where: { provider: "mock" }, select: { id: true } });
   const mockIds = mockSurveys.map((s) => s.id);
 
+  // Anything at all still pointing at the demo catalogue, whoever it belongs to.
+  const mockAttempts = mockIds.length
+    ? await prisma.surveyAttempt.findMany({
+        where: { surveyId: { in: mockIds } },
+        select: { id: true, userId: true, status: true, coinsCredited: true },
+      })
+    : [];
+  const mockRatings = mockIds.length
+    ? await prisma.surveyRating.count({ where: { surveyId: { in: mockIds } } })
+    : 0;
+  const mockPostbacks = await prisma.postbackLog.count({ where: { provider: "mock" } });
+
   const demoAttempts =
     keptIds.length && mockIds.length
       ? await prisma.surveyAttempt.findMany({
@@ -121,6 +139,18 @@ try {
     if (demoLedger.length > 15) console.log(`     … ${demoLedger.length - 15} more`);
   }
 
+  if (purgeDemoSurveys) {
+    const demoCoinsLeft = mockAttempts.reduce((a, x) => a + x.coinsCredited, 0);
+    console.log("\nDEMO SURVEY CATALOGUE CLEANUP:");
+    console.log(`  demo (mock) surveys to delete : ${mockSurveys.length}`);
+    console.log(`  attempts, ratings, postbacks  : ${mockAttempts.length}, ${mockRatings}, ${mockPostbacks}`);
+    if (demoCoinsLeft > 0 && !purgeDemoLedger) {
+      console.log(
+        `  WARNING: those attempts still hold ${demoCoinsLeft} coins in the ledger — add --purge-demo-ledger too.`,
+      );
+    }
+  }
+
   if (!apply) {
     console.log("\nDry run only — nothing was changed. Re-run with --apply to execute.");
   } else {
@@ -137,6 +167,8 @@ try {
       activityLogs: await prisma.activityLog.findMany({ where: { userId: { in: doomedIds } } }),
       purgedDemoAttempts: demoAttempts,
       purgedDemoLedger: demoLedger,
+      purgedDemoSurveys: purgeDemoSurveys ? mockSurveys : [],
+      purgedDemoSurveyAttempts: purgeDemoSurveys ? mockAttempts : [],
     };
     await mkdir(backupDir, { recursive: true });
     const stamp = new Date().toISOString().replace(/[:.]/g, "-");
@@ -175,6 +207,21 @@ try {
           await tx.coinTransaction.deleteMany({ where: { id: { in: demoLedgerIds } } })
         ).count;
       }
+
+      if (purgeDemoSurveys) {
+        // Ratings and attempts point at the surveys, so they go first; the demo
+        // rows of the customers we just deleted are already gone at this point.
+        counts.demoSurveyRatings = (
+          await tx.surveyRating.deleteMany({ where: { surveyId: { in: mockIds } } })
+        ).count;
+        counts.demoSurveyAttempts = (
+          await tx.surveyAttempt.deleteMany({ where: { surveyId: { in: mockIds } } })
+        ).count;
+        counts.demoSurveys = (await tx.survey.deleteMany({ where: { provider: "mock" } })).count;
+        counts.demoSurveyPostbacks = (
+          await tx.postbackLog.deleteMany({ where: { provider: "mock" } })
+        ).count;
+      }
       return counts;
     });
 
@@ -193,8 +240,12 @@ try {
   }
   const total = await prisma.coinTransaction.aggregate({ _sum: { coins: true } });
   const demoLeft = await prisma.surveyAttempt.count({ where: { surveyId: { in: mockIds } } });
+  const demoSurveysLeft = await prisma.survey.count({ where: { provider: "mock" } });
+  const liveSurveysLeft = await prisma.survey.count({ where: { provider: { not: "mock" } } });
   console.log(`\nCoins across all users    : ${total._sum.coins ?? 0}`);
   console.log(`Demo-survey attempts left : ${demoLeft}`);
+  console.log(`Demo (mock) surveys left  : ${demoSurveysLeft}`);
+  console.log(`Live surveys in catalogue : ${liveSurveysLeft}`);
 } finally {
   await prisma.$disconnect();
 }

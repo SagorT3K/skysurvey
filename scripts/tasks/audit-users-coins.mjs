@@ -147,6 +147,22 @@ try {
   console.log(`completed live attempts   : ${liveAttempts.length}`);
   console.log(`live coins credited       : ${sumCredited(liveAttempts)}`);
 
+  // Which providers the catalogue currently holds — after the demo cleanup this
+  // should list only the live router(s).
+  const surveyProviders = await prisma.survey.groupBy({
+    by: ["provider", "isActive"],
+    _count: { _all: true },
+  });
+  console.log("\n=== SURVEYS BY PROVIDER ===");
+  for (const p of surveyProviders) {
+    const attempts = await prisma.surveyAttempt.count({
+      where: { survey: { provider: p.provider } },
+    });
+    console.log(
+      `  ${pad(p.provider, 16)}active=${pad(p.isActive, 6)}surveys=${pad(p._count._all, 5)}attempts=${attempts}`,
+    );
+  }
+
   console.log("\n=== TEST-FILLER / PRACTICE LEDGER ROWS ===");
   console.log(
     `"Test filler entry" rows  : ${filler._count._all}  coins ${filler._sum.coins ?? 0}`,
