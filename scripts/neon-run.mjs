@@ -14,13 +14,17 @@ config({ path: ".env.neon" });
 
 const task = process.argv[2];
 if (!task) {
-  console.error("Usage: node scripts/neon-run.mjs <script>");
+  console.error("Usage: node scripts/neon-run.mjs <script> [-- task arguments]");
   process.exit(1);
 }
 if (!process.env.DATABASE_URL) {
   console.error("DATABASE_URL is missing from .env.neon");
   process.exit(1);
 }
+
+// Everything after the script path is handed to it unchanged, so one-off tasks
+// can take their own flags (e.g. cleanup-demo-accounts.mjs --keep=...).
+const taskArgs = process.argv.slice(3);
 
 // execSync goes through a shell on purpose: since Node 18.20, spawning a Windows
 // .cmd shim such as npx.cmd without one fails with EINVAL.
@@ -31,7 +35,7 @@ let failed = false;
 try {
   run("node scripts/set-db-provider.mjs", { DATABASE_PROVIDER: "postgresql" });
   run("npx prisma generate");
-  run(`node ${task}`);
+  run(`node ${[task, ...taskArgs].join(" ")}`);
 } catch (error) {
   failed = true;
   console.error(`\nFAILED: ${error.message}`);
