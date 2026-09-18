@@ -2,12 +2,25 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { signToken, setSessionCookie, clientIp, userAgent } from "@/lib/auth";
+import { verifyCaptcha, captchaError } from "@/lib/captcha";
 
 export async function POST(req: Request) {
   const body = await req.json().catch(() => null);
   if (!body?.email || !body?.password) {
     return NextResponse.json({ error: "Email and password are required" }, { status: 400 });
   }
+
+  // Bot check first (when configured): cheap, and it protects even the
+  // "invalid credentials" path from credential-stuffing scripts. With no
+  // secret configured the check passes so local dev keeps working.
+  const captcha = await verifyCaptcha(
+    String(body?.captchaToken || body?.captcha_token || ""),
+    clientIp(req),
+  );
+  if (!captcha.ok) {
+    return NextResponse.json({ error: captchaError(captcha.reason) }, { status: 400 });
+  }
+
   const email = String(body.email).trim().toLowerCase();
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user || !(await bcrypt.compare(String(body.password), user.passwordHash))) {

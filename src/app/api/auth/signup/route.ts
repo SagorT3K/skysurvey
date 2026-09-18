@@ -1,108 +1,146 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
-import { signToken, setSessionCookie, clientIp, userAgent } from "@/lib/auth";
-import { getConfig } from "@/lib/config";
-import { creditCoins } from "@/lib/ledger";
-import { notify } from "@/lib/notify";
+import { clientIp, userAgent } from "@/lib/auth";
+import { verifyCaptcha, captchaError } from "@/lib/captcha";
+import { sendMail } from "@/lib/mailer";
+import {
+  newCode,
+  hashCode,
+  domainAcceptsMail,
+  verificationEmail,
+} from "@/lib/signup-verify";
 
+export const CODE_TTL_MINUTES = 15;
+const RESEND_COOLDOWN_SECONDS = 60;
+const MAX_SENDS_PER_HOUR = 5;
+
+/**
+ * Step 1 of signup: validate the details + captcha, then email a 6-digit
+ * code. No user row is created here — the account only exists after the
+ * code is confirmed at /api/auth/signup/verify, so fake addresses can
+ * never create accounts.
+ */
 export async function POST(req: Request) {
   const body = await req.json().catch(() => null);
-  if (!body?.email || !body?.password || !body?.country) {
-    return NextResponse.json({ error: "Email, password and country are required" }, { status: 400 });
+  const email = String(body?.email || "").trim().toLowerCase();
+  const password = String(body?.password || "");
+  const country = String(body?.country || "").trim();
+  const usernameRaw = String(body?.username || "").trim();
+  const ref = String(body?.ref || "").trim();
+  const captchaToken = String(body?.captchaToken || body?.captcha_token || "");
+
+  if (!email || !password || !country) {
+    return NextResponse.json(
+      { error: "Email, password and country are required" },
+      { status: 400 },
+    );
   }
-  const email = String(body.email).trim().toLowerCase();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return NextResponse.json({ error: "Invalid email address" }, { status: 400 });
   }
-  if (String(body.password).length < 6) {
-    return NextResponse.json({ error: "Password must be at least 6 characters" }, { status: 400 });
+  if (password.length < 6) {
+    return NextResponse.json(
+      { error: "Password must be at least 6 characters" },
+      { status: 400 },
+    );
+  }
+
+  const ip = clientIp(req);
+  const captcha = await verifyCaptcha(captchaToken, ip);
+  if (!captcha.ok) {
+    return NextResponse.json({ error: captchaError(captcha.reason) }, { status: 400 });
   }
 
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) {
-    return NextResponse.json({ error: "An account with this email already exists" }, { status: 409 });
+    return NextResponse.json(
+      { error: "An account with this email already exists" },
+      { status: 409 },
+    );
   }
 
-  const config = await getConfig();
-  const ip = clientIp(req);
-
-  let referrer: { id: number } | null = null;
-  if (body.ref) {
-    referrer = await prisma.user.findUnique({ where: { referralCode: String(body.ref) } });
+  if (!(await domainAcceptsMail(email))) {
+    return NextResponse.json(
+      { error: "This email address does not look deliverable. Please use a real inbox." },
+      { status: 400 },
+    );
   }
 
-  // Signups from an IP that already hosts several accounts are the single
-  // strongest fraud signal routers act on, so record it — but only flag when an
-  // admin asked for a cap. max_accounts_per_ip = 0 (the default) is unlimited,
-  // because families and mobile users legitimately share one connection.
-  const sameIpCount =
-    ip && ip !== "local" ? await prisma.user.count({ where: { signupIp: ip } }) : 0;
-  const selfReferral = referrer?.id !== undefined && sameIpCount > 0;
-  const overIpCap = config.max_accounts_per_ip > 0 && sameIpCount >= config.max_accounts_per_ip;
-
-  // Every account gets a unique, searchable username — derived from the chosen
-  // display name or the email prefix, with a numeric suffix when taken.
-  const base =
-    String(body.username || email.split("@")[0])
-      .toLowerCase()
-      .replace(/[^a-z0-9._-]/g, "")
-      .replace(/^[-._]+/, "")
-      .slice(0, 28) || "user";
-  let username = base;
-  let suffix = 2;
-  while (await prisma.user.findFirst({ where: { username } })) {
-    username = `${base}-${suffix++}`;
+  const now = new Date();
+  const pending = await prisma.pendingSignup.findUnique({ where: { email } });
+  if (pending) {
+    const sinceLastSend = (now.getTime() - pending.lastSentAt.getTime()) / 1000;
+    if (sinceLastSend < RESEND_COOLDOWN_SECONDS) {
+      return NextResponse.json(
+        {
+          error: `A code was just sent. Wait ${Math.ceil(RESEND_COOLDOWN_SECONDS - sinceLastSend)}s and try again.`,
+          step: "code",
+        },
+        { status: 429 },
+      );
+    }
+    const withinHour = now.getTime() - pending.createdAt.getTime() < 60 * 60 * 1000;
+    if (withinHour && pending.sends >= MAX_SENDS_PER_HOUR) {
+      return NextResponse.json(
+        { error: "Too many codes sent. Try again in an hour.", step: "code" },
+        { status: 429 },
+      );
+    }
   }
 
-  const user = await prisma.user.create({
-    data: {
-      email,
-      passwordHash: await bcrypt.hash(String(body.password), 10),
-      username,
-      country: String(body.country),
-      referredById: referrer?.id,
-      signupIp: ip,
-      isFlagged: overIpCap,
-      flagReason: overIpCap ? `${sameIpCount} existing account(s) share signup IP ${ip}` : "",
+  const code = newCode();
+  const expiresAt = new Date(now.getTime() + CODE_TTL_MINUTES * 60 * 1000);
+  const passwordHash = await bcrypt.hash(password, 10);
+
+  await prisma.pendingSignup.upsert({
+    where: { email },
+    update: {
+      username: usernameRaw,
+      passwordHash,
+      country,
+      referralCode: ref,
+      codeHash: hashCode(email, code),
+      attempts: 0,
+      sends: (pending?.sends ?? 0) + 1,
+      lastSentAt: now,
+      expiresAt,
+      ip,
+      userAgent: userAgent(req),
     },
-  });
-
-  if (config.signup_bonus_coins > 0) {
-    await creditCoins({
-      userId: user.id,
-      type: "bonus",
-      coins: config.signup_bonus_coins,
-      description: "Signup bonus",
-    });
-  }
-  // A referral bonus is only paid when the invite came from a different connection —
-  // otherwise the referral programme just pays people to make second accounts.
-  if (referrer && config.referral_bonus_coins > 0 && !selfReferral) {
-    await creditCoins({
-      userId: referrer.id,
-      type: "referral",
-      coins: config.referral_bonus_coins,
-      description: `Referral bonus for inviting ${email}`,
-    });
-    await notify({
-      userId: referrer.id,
-      type: "referral",
-      title: "A friend joined with your link! 🎉",
-      body: `${username} signed up using your referral — coins are on the way.`,
-    });
-  }
-
-  await prisma.activityLog.create({
-    data: {
-      userId: user.id,
-      event: "signup",
-      detail: `country=${user.country} sameIp=${sameIpCount}${selfReferral ? " self_referral_suppressed" : ""}`,
+    create: {
+      email,
+      username: usernameRaw,
+      passwordHash,
+      country,
+      referralCode: ref,
+      codeHash: hashCode(email, code),
+      sends: 1,
+      lastSentAt: now,
+      expiresAt,
       ip,
       userAgent: userAgent(req),
     },
   });
 
-  await setSessionCookie(signToken({ uid: user.id, role: user.role }));
-  return NextResponse.json({ ok: true, role: user.role });
+  const { text, html } = verificationEmail(code, CODE_TTL_MINUTES);
+  const sent = await sendMail({
+    to: email,
+    subject: `Your SkySurvey code is ${code}`,
+    text,
+    html,
+  });
+  if (!sent.ok) {
+    return NextResponse.json(
+      {
+        error:
+          sent.reason === "not-configured"
+            ? "Email service is not configured. Please contact support."
+            : "Could not send the verification email. Try again in a minute.",
+      },
+      { status: 503 },
+    );
+  }
+
+  return NextResponse.json({ ok: true, step: "code", expiresInMinutes: CODE_TTL_MINUTES });
 }

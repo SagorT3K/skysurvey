@@ -2,22 +2,34 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Eye, EyeOff } from "lucide-react";
+import CaptchaWidget from "@/components/CaptchaWidget";
+
+const captchaNeeded =
+  Boolean(process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY) ||
+  Boolean(process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY);
 
 export default function AdminLoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+    if (captchaNeeded && !captchaToken) {
+      setError("Please complete the bot check and try again.");
+      return;
+    }
     setLoading(true);
     const res = await fetch("/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email, password, captchaToken: captchaToken || "" }),
     });
     const data = await res.json();
     setLoading(false);
@@ -53,15 +65,26 @@ export default function AdminLoginPage() {
           </div>
           <div>
             <label className="mb-1 block text-sm font-medium text-brand-200">Password</label>
-            <input
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-lg border border-brand-700 bg-brand-950/60 px-3 py-2 text-white outline-none focus:border-brand-400"
-              placeholder="••••••••"
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full rounded-lg border border-brand-700 bg-brand-950/60 px-3 py-2 pr-11 text-white outline-none focus:border-brand-400"
+                placeholder="••••••••"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                className="absolute inset-y-0 right-0 flex w-11 items-center justify-center text-brand-300 hover:text-white"
+              >
+                {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
+              </button>
+            </div>
           </div>
+          <CaptchaWidget onToken={setCaptchaToken} theme="dark" />
           {error && <p className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-400">{error}</p>}
           <button
             type="submit"

@@ -33,6 +33,9 @@ model User {
   employment    String            @default("")
   state         String            @default("")
   signupIp      String            @default("")
+  /// Set when the emailed signup code was confirmed. Accounts created before
+  /// signup verification existed keep this null; login does not require it.
+  emailVerifiedAt DateTime?
   referralCode  String            @unique @default(cuid())
   referredById  Int?
   createdAt     DateTime          @default(now())
@@ -188,6 +191,27 @@ model PostbackTxn {
 
   @@unique([provider, providerTxId])
   @@index([txId])
+}
+
+/// A signup that has been started but not yet confirmed by the emailed code.
+/// The account does not exist until the code is verified, so a fake or mistyped
+/// address cannot create one, and junk rows never reach the user table.
+model PendingSignup {
+  email        String   @id
+  username     String   @default("")
+  passwordHash String
+  country      String   @default("")
+  referralCode String   @default("") // the ?ref= code carried over from the form
+  codeHash     String // sha256(secret:email:code) — the plain code is never stored
+  attempts     Int      @default(0)
+  sends        Int      @default(1)
+  lastSentAt   DateTime @default(now())
+  expiresAt    DateTime
+  ip           String   @default("")
+  userAgent    String   @default("")
+  createdAt    DateTime @default(now())
+
+  @@index([ip, createdAt])
 }
 
 model ActivityLog {
