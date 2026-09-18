@@ -24,12 +24,38 @@ export function coinsForPayout(payoutCents: number, rewardSharePercent: number, 
   // flooring would silently pay 0 on tiny completions.
   return Math.max(0, Math.round((payoutCents * rewardSharePercent) / 100 / coinRateCents));
 }
+/** The router transaction row we already settled, if any — our duplicate check. */
+async function seenProviderTxn(provider: string, providerTxId: string) {
+  if (!provider || !providerTxId) return null;
+  return prisma.postbackTxn.findUnique({
+    where: { provider_providerTxId: { provider, providerTxId } },
+  });
+}
+
+/**
+ * The attempt a router transaction was credited to. A reversal names the
+ * transaction it claws back, which after a wall session is not necessarily the
+ * attempt our sub id points at.
+ */
+export async function attemptForProviderTxn(provider: string, providerTxId: string) {
+  const seen = await seenProviderTxn(provider, providerTxId);
+  return seen?.attemptId ?? null;
+}
+
+/** Postgres/SQLite report a unique-index conflict as Prisma error P2002. */
+function isUniqueViolation(error: unknown) {
+  return typeof error === "object" && error !== null && (error as { code?: string }).code === "P2002";
+}
+
 /**
  * Settles a survey attempt: marks it completed and credits the user's share of the
- * router payout, held until the reversal window closes.
+ * router payout.
  *
- * Idempotent — routers retry postbacks, so a non-"started" attempt reports
- * `duplicate` and leaves the ledger untouched.
+ * Idempotent. The ROUTER's transaction id — not our attempt status — decides what
+ * is a duplicate: a router wall session reports every survey the user finishes
+ * with the same sub id but a fresh transaction id, so the second completion of a
+ * session has to be paid, not dismissed as a retry. Providers that send no such id
+ * fall back to the attempt-status check.
  */
 export async function completeAttempt(opts: {
   attemptId: number;
@@ -37,12 +63,30 @@ export async function completeAttempt(opts: {
   rewardSharePercent: number;
   coinRateCents: number;
   source: string;
-}): Promise<{ ok: boolean; duplicate: boolean; coins: number; payoutCents: number }> {
+  /** Router key and its own transaction id, when the postback carried one. */
+  provider?: string;
+  providerTxId?: string;
+}): Promise<{ ok: boolean; duplicate: boolean; coins: number; payoutCents: number; followOn: boolean }> {
   const attempt = await prisma.surveyAttempt.findUnique({ where: { id: opts.attemptId } });
-  if (!attempt) return { ok: false, duplicate: false, coins: 0, payoutCents: 0 };
-  if (attempt.status !== "started") {
-    return { ok: false, duplicate: true, coins: attempt.coinsCredited, payoutCents: attempt.cpiCents };
+  if (!attempt) return { ok: false, duplicate: false, coins: 0, payoutCents: 0, followOn: false };
+
+  const provider = (opts.provider || "").trim();
+  const providerTxId = (opts.providerTxId || "").trim();
+  if (provider && providerTxId) {
+    const seen = await seenProviderTxn(provider, providerTxId);
+    // A re-sent callback for a transaction we already paid: report those coins.
+    if (seen) {
+      return { ok: false, duplicate: true, coins: seen.coins, payoutCents: seen.payoutCents, followOn: false };
+    }
+  } else if (attempt.status !== "started") {
+    return { ok: false, duplicate: true, coins: attempt.coinsCredited, payoutCents: attempt.cpiCents, followOn: false };
   }
+
+  // This attempt is already settled and the router is reporting a completion we
+  // have not paid: the user kept working inside the router's own wall. It gets its
+  // own attempt row (payout = the router's figure) so the ledger stays one row per
+  // completion instead of the reward being thrown away.
+  const followOn = attempt.status !== "started";
 
   const payoutCents = opts.payoutCents && opts.payoutCents > 0 ? opts.payoutCents : attempt.cpiCents;
   // Higher trust level = a bigger slice of the router payout.
@@ -61,30 +105,77 @@ export async function completeAttempt(opts: {
   });
   const partner = partnerName(survey?.provider ?? "");
 
-  await prisma.$transaction([
-    prisma.surveyAttempt.update({
-      where: { id: attempt.id },
-      data: { status: "completed", completedAt: new Date(), coinsCredited: coins, cpiCents: payoutCents },
-    }),
-    prisma.coinTransaction.create({
-      data: {
-        userId: attempt.userId,
-        type: "survey",
-        category: "survey",
-        coins,
-        description: `Earned from ${partner}`,
-        // No hold window: coins are withdrawable immediately. Payout risk is
-        // handled by the admin reviewing each redeem request before release.
-      },
-    }),
-  ]);
+  // One transaction: the follow-on attempt row (when needed), the ledger credit and
+  // the postback-txn claim. The claim's unique index is what makes a racing retry
+  // fail instead of paying twice — it rolls the whole credit back.
+  try {
+    await prisma.$transaction(async (tx) => {
+      let settledAttemptId = attempt.id;
+      if (followOn) {
+        const created = await tx.surveyAttempt.create({
+          data: {
+            userId: attempt.userId,
+            surveyId: attempt.surveyId,
+            cpiCents: payoutCents,
+            status: "completed",
+            completedAt: new Date(),
+            coinsCredited: coins,
+            ip: attempt.ip,
+            userAgent: attempt.userAgent,
+          },
+        });
+        settledAttemptId = created.id;
+      } else {
+        await tx.surveyAttempt.update({
+          where: { id: attempt.id },
+          data: { status: "completed", completedAt: new Date(), coinsCredited: coins, cpiCents: payoutCents },
+        });
+      }
+
+      await tx.coinTransaction.create({
+        data: {
+          userId: attempt.userId,
+          type: "survey",
+          category: "survey",
+          coins,
+          description: `Earned from ${partner}`,
+          // No hold window: coins are withdrawable immediately. Payout risk is
+          // handled by the admin reviewing each redeem request before release.
+        },
+      });
+
+      if (provider && providerTxId) {
+        await tx.postbackTxn.create({
+          data: {
+            provider,
+            providerTxId,
+            txId: attempt.txId,
+            userId: attempt.userId,
+            attemptId: settledAttemptId,
+            payoutCents,
+            coins,
+          },
+        });
+      }
+    });
+  } catch (error) {
+    // A second callback for the same transaction raced us: the claim's unique
+    // index rolled this credit back, so answer with the duplicate it is.
+    if (isUniqueViolation(error)) {
+      const seen = await seenProviderTxn(provider, providerTxId);
+      if (seen) {
+        return { ok: false, duplicate: true, coins: seen.coins, payoutCents: seen.payoutCents, followOn: false };
+      }
+    }
+    throw error;
+  }
 
   // Trust score: +1 per completed survey. Internal detail — technical terms are fine here.
   await addScore({
     userId: attempt.userId,
     delta: 1,
     reason: "survey_complete",
-    detail: `Survey #${attempt.surveyId} · ${opts.source}`,
+    detail: `Survey #${attempt.surveyId} · ${opts.source}${followOn ? " · same wall session" : ""}`,
   });
 
   if (coins > 0) {
@@ -103,7 +194,7 @@ export async function completeAttempt(opts: {
     });
   }
 
-  return { ok: true, duplicate: false, coins, payoutCents };
+  return { ok: true, duplicate: false, coins, payoutCents, followOn };
 }
 export async function creditCoins(opts: {
   userId: number;

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { clientIp } from "@/lib/auth";
 import { getConfig } from "@/lib/config";
-import { completeAttempt, reverseAttempt } from "@/lib/ledger";
+import { attemptForProviderTxn, completeAttempt, reverseAttempt } from "@/lib/ledger";
 import { getProvider, ipAllowed, parsePostback, verifySignature } from "@/lib/providers";
 
 /**
@@ -91,18 +91,29 @@ async function handle(req: Request, providerKey: string) {
       rewardSharePercent: config.reward_share_percent,
       coinRateCents: config.coin_rate_cents,
       source: `${provider.key} postback`,
+      provider: provider.key,
+      providerTxId: parsed.providerTxId,
     });
     await log(result.duplicate ? "duplicate" : "credited", {
       txId: parsed.txId,
       payoutCents: result.payoutCents,
       coins: result.coins,
+      // A follow-on is another completion from the same wall session — exactly the
+      // case that used to be dropped as a duplicate because our sub id repeats.
+      note: result.followOn ? "extra completion in the same wall session" : "",
     });
     return NextResponse.json({ ok: true, duplicate: result.duplicate, coins: result.coins });
   }
 
   if (parsed.kind === "reversal") {
+    // Inside a wall session the reversal names the router's transaction, which is
+    // not necessarily the attempt our repeated sub id points at, so prefer the row
+    // we actually credited that transaction to.
+    const creditedAttemptId = parsed.providerTxId
+      ? await attemptForProviderTxn(provider.key, parsed.providerTxId)
+      : null;
     const result = await reverseAttempt({
-      attemptId: attempt.id,
+      attemptId: creditedAttemptId ?? attempt.id,
       source: `${provider.key} postback`,
     });
     await log(result.duplicate ? "duplicate" : "reversed", {

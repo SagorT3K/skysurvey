@@ -23,6 +23,14 @@ import crypto from "node:crypto";
  *   PROVIDER_KEY_SIG_PARAM      query param carrying the signature (default hash)
  *   PROVIDER_KEY_SIG_TEMPLATE   what gets hashed, e.g. {txId}{payout}{secret}
  *   PROVIDER_KEY_P_TXID         postback param holding our txId (default txId)
+ *   PROVIDER_KEY_P_PROVIDER_TXID  postback param holding the router's OWN transaction
+ *                               id (default trans_id). Used for duplicate detection:
+ *                               routers that keep a wall session open report every
+ *                               completion with our sub id but a fresh trans_id, so
+ *                               our attempt status alone cannot tell a retry from a
+ *                               new completion. Leave it unset for routers that send
+ *                               no such id — duplicate detection falls back to the
+ *                               attempt status.
  *   PROVIDER_KEY_P_PAYOUT       postback param holding the payout (default payout)
  *   PROVIDER_KEY_P_STATUS       postback param holding the status (default status)
  *   PROVIDER_KEY_PAYOUT_UNIT    usd | cents (default usd)
@@ -56,6 +64,7 @@ export type ProviderDef = {
   signatureParam: string;
   signatureTemplate: string;
   paramTxId: string;
+  paramProviderTxId: string;
   paramPayout: string;
   paramStatus: string;
   payoutUnit: "usd" | "cents";
@@ -121,6 +130,7 @@ export function getProvider(key: string): ProviderDef | null {
     signatureParam: env(`${p}_SIG_PARAM`, "hash"),
     signatureTemplate: env(`${p}_SIG_TEMPLATE`, defaultTemplate),
     paramTxId: env(`${p}_P_TXID`, "txId"),
+    paramProviderTxId: env(`${p}_P_PROVIDER_TXID`, "trans_id"),
     paramPayout: env(`${p}_P_PAYOUT`, "payout"),
     paramStatus: env(`${p}_P_STATUS`, "status"),
     payoutUnit: env(`${p}_PAYOUT_UNIT`, "usd") === "cents" ? "cents" : "usd",
@@ -218,6 +228,8 @@ export type PostbackKind = "complete" | "reversal" | "screenout" | "unknown";
 
 export type ParsedPostback = {
   txId: string;
+  /** The router's own transaction id, when its postback carries one. */
+  providerTxId: string;
   kind: PostbackKind;
   payoutCents: number;
   rawStatus: string;
@@ -241,6 +253,7 @@ export function parsePostback(provider: ProviderDef, query: URLSearchParams): Pa
 
   return {
     txId: (query.get(provider.paramTxId) || "").trim(),
+    providerTxId: (query.get(provider.paramProviderTxId) || "").trim(),
     kind,
     payoutCents: Math.round(provider.payoutUnit === "cents" ? payout : payout * 100),
     rawStatus,

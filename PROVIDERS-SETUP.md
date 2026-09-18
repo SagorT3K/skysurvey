@@ -185,12 +185,21 @@ PROVIDER_BITLABS_P_STATUS=status
 | `PROVIDER_<K>_ENTRY_URL` | Template the user's browser is sent to. Vars: `{publisherId} {apiKey} {userId} {txId} {surveyId} {externalId} {country} {ip}` | required |
 | `PROVIDER_<K>_SIG_MODE` | `none` / `md5` / `sha1` / `sha256` / `hmac-sha256` | `none` |
 | `PROVIDER_<K>_SIG_TEMPLATE` | What is hashed, e.g. `{txId}{payout}{secret}` | `{txId}{payout}{secret}` |
-| `PROVIDER_<K>_P_TXID / _P_PAYOUT / _P_STATUS` | Postback param names | `txId / payout / status` |
+| `PROVIDER_<K>_P_TXID / _P_PROVIDER_TXID` | Postback param holding **our** txId / the **router's own** transaction id | `txId` / `trans_id` |
+| `PROVIDER_<K>_P_PAYOUT / _P_STATUS` | Postback param names | `payout / status` |
 | `PROVIDER_<K>_PAYOUT_UNIT` | `usd` or `cents` | `usd` |
 | `PROVIDER_<K>_STATUS_OK` | Values meaning *completed* | `1,complete,completed` |
 | `PROVIDER_<K>_STATUS_REVERSE` | Values meaning *reversal* | `2,reversal,reversed,chargeback` |
 | `PROVIDER_<K>_STATUS_SCREEN` | Values meaning *screenout* | `3,screenout,disqualified` |
 | `PROVIDER_<K>_IP_ALLOWLIST` | Optional comma-separated postback source IPs | empty |
+
+`PROVIDER_<K>_P_PROVIDER_TXID` deserves a note: a router's wall session reports
+every survey the user finishes in one visit with our **same** sub id and a **new**
+transaction id, so it is the only value that separates "another completion" from
+"the router retrying a callback we already paid". With it, every completion in a
+session is credited as its own attempt (the postback log marks those rows as
+`extra completion in the same wall session`). CPX Research sends `trans_id`, which
+is the default, so nothing extra is needed for them.
 
 ⚠️ The exact param names, signature templates and status codes **must** be copied
 from each router's own integration docs — a wrong mapping silently drops

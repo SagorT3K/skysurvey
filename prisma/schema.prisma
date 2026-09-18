@@ -166,6 +166,30 @@ model Config {
   value String
 }
 
+/// One row per router callback we have already settled, keyed on the router's own
+/// transaction id.
+///
+/// Needed because routers reuse OUR sub id for every completion inside one wall
+/// session: CPX Research keeps the wall open and reports each survey with the
+/// same `sub_id` but a new `trans_id`. Matching on the attempt alone therefore
+/// looked like a retry and silently dropped every completion after the first in
+/// the session, so the router's id — not our attempt status — decides what is a
+/// duplicate. No relations: deleting a user must not start failing on these rows.
+model PostbackTxn {
+  id           Int      @id @default(autoincrement())
+  provider     String
+  providerTxId String
+  txId         String   @default("") // our attempt txId, echoed back by the router
+  userId       Int
+  attemptId    Int
+  payoutCents  Int      @default(0)
+  coins        Int      @default(0)
+  createdAt    DateTime @default(now())
+
+  @@unique([provider, providerTxId])
+  @@index([txId])
+}
+
 model ActivityLog {
   id        Int      @id @default(autoincrement())
   userId    Int?
