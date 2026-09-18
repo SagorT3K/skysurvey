@@ -10,6 +10,7 @@ const ALLOWED_KEYS = [
   "signup_bonus_coins",
   "referral_bonus_coins",
   "daily_bonus_coins",
+  "max_accounts_per_ip",
 ];
 
 export async function GET() {

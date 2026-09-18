@@ -12,9 +12,12 @@ const DEFAULT_CONFIG = {
   signup_bonus_coins: "100",
   referral_bonus_coins: "50",
   daily_bonus_coins: "10",
-  max_attempts_per_hour: "20", // per user, then the entry is blocked and flagged
-  max_accounts_per_ip: "2", // extra signups from one IP are flagged
+  max_accounts_per_ip: "0", // 0 = unlimited; a positive value flags extra accounts on one IP
 };
+
+// The per-user hourly survey cap was removed from the app. Older seeds wrote
+// that row and the upsert above never overwrites existing values, so drop it.
+const OBSOLETE_CONFIG_KEYS = ["max_attempts_per_hour"];
 
 const MOCK_SURVEYS = [
   { title: "Consumer Shopping Habits 2026", category: "Shopping", cpiCents: 150, loiMinutes: 12, country: "US" },
@@ -35,6 +38,7 @@ async function main() {
   for (const [key, value] of Object.entries(DEFAULT_CONFIG)) {
     await prisma.config.upsert({ where: { key }, update: {}, create: { key, value } });
   }
+  await prisma.config.deleteMany({ where: { key: { in: OBSOLETE_CONFIG_KEYS } } });
 
   const adminEmail = (process.env.ADMIN_EMAIL || "admin@skysurvey.com").toLowerCase();
   const adminPassword = process.env.ADMIN_PASSWORD || "";

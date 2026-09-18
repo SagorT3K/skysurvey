@@ -193,7 +193,8 @@ router publishes its source IPs.
 
 ## Fraud screening
 
-Survey entry is screened before an attempt is created: bot user agents, request
-velocity per user, multiple accounts per IP, and an optional proxy/VPN lookup.
-Blocked entries flag the account, and flagged accounts keep earning but cannot
-withdraw until an admin clears the review at `/admin/users/<id>`.
+Survey entry is screened before an attempt is created: bot user agents, optional
+proxy/VPN lookups, and — only when an admin sets a positive limit — multiple
+accounts per IP. Blocked entries flag the account, and flagged accounts keep
+earning but cannot withdraw until an admin clears the review at
+`/admin/users/<id>`.

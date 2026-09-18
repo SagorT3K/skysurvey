@@ -11,8 +11,7 @@ const FIELDS: { key: string; label: string; hint: string }[] = [
   { key: "signup_bonus_coins", label: "Signup bonus (coins)", hint: "Granted on account creation. Set 0 to hide the signup offer from the landing page." },
   { key: "referral_bonus_coins", label: "Referral bonus (coins)", hint: "Granted to the inviter per signup" },
   { key: "daily_bonus_coins", label: "Daily bonus (coins)", hint: "Claimed once every 24 hours from the dashboard" },
-  { key: "max_attempts_per_hour", label: "Max survey starts / hour", hint: "Per user. Above this the entry is blocked and the account is flagged" },
-  { key: "max_accounts_per_ip", label: "Max accounts / IP", hint: "Extra signups from the same IP are flagged and cannot cash out" },
+  { key: "max_accounts_per_ip", label: "Max accounts / IP", hint: "0 = unlimited (no cap). A positive value flags extra accounts created from one IP and blocks their survey entry" },
 ];
 
 export default function ConfigForm({ initial }: { initial: Record<string, string | number> }) {

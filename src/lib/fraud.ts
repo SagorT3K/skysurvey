@@ -50,10 +50,10 @@ export async function assessSurveyEntry(opts: {
   userId: number;
   ip: string;
   userAgent: string;
-  maxAttemptsPerHour: number;
+  /** Accounts allowed per IP. 0 turns the check off entirely (unlimited). */
   maxAccountsPerIp: number;
 }): Promise<RiskAssessment> {
-  const { userId, ip, userAgent, maxAttemptsPerHour, maxAccountsPerIp } = opts;
+  const { userId, ip, userAgent, maxAccountsPerIp } = opts;
   const flags: string[] = [];
   let block = false;
   let reason = "";
@@ -66,10 +66,12 @@ export async function assessSurveyEntry(opts: {
     reason = "Automated traffic is not allowed on surveys.";
   }
 
+  // There is deliberately no per-user survey-start cap any more: it throttled
+  // honest users while the routers' own postbacks already reject duplicates.
   const hourAgo = new Date(Date.now() - 60 * 60 * 1000);
-  const [recentAttempts, sharedIpUsers, openAttempts] = await Promise.all([
-    prisma.surveyAttempt.count({ where: { userId, startedAt: { gte: hourAgo } } }),
-    ip && ip !== "local"
+  const perIpCapOn = maxAccountsPerIp > 0 && ip !== "" && ip !== "local";
+  const [sharedIpUsers, openAttempts] = await Promise.all([
+    perIpCapOn
       ? prisma.surveyAttempt
           .findMany({ where: { ip }, select: { userId: true }, distinct: ["userId"], take: 25 })
           .then((rows) => rows.map((r) => r.userId))
@@ -77,17 +79,16 @@ export async function assessSurveyEntry(opts: {
     prisma.surveyAttempt.count({ where: { userId, status: "started", startedAt: { gte: hourAgo } } }),
   ]);
 
-  if (recentAttempts >= maxAttemptsPerHour) {
-    flags.push("attempt_velocity");
-    block = true;
-    reason = `Too many surveys started in the last hour (limit ${maxAttemptsPerHour}). Try again later.`;
-  }
-
-  const otherAccounts = sharedIpUsers.filter((id) => id !== userId).length + 1;
-  if (otherAccounts > maxAccountsPerIp) {
-    flags.push("shared_ip");
-    block = true;
-    reason = "Multiple accounts detected from this connection. Contact support to continue.";
+  // maxAccountsPerIp = 0 is the default and means "no cap": several people
+  // behind one household or mobile connection are legitimate users, so nothing
+  // is flagged or blocked until an admin sets a positive number.
+  if (perIpCapOn) {
+    const otherAccounts = sharedIpUsers.filter((id) => id !== userId).length + 1;
+    if (otherAccounts > maxAccountsPerIp) {
+      flags.push("shared_ip");
+      block = true;
+      reason = "Multiple accounts detected from this connection. Contact support to continue.";
+    }
   }
 
   if (openAttempts >= 5) flags.push("many_open_attempts");

@@ -9,7 +9,7 @@ export type SiteConfig = {
   signup_bonus_coins: number;
   referral_bonus_coins: number;
   daily_bonus_coins: number;
-  max_attempts_per_hour: number;
+  /** Accounts allowed on one connection. 0 means unlimited — the check is off. */
   max_accounts_per_ip: number;
 };
 
@@ -22,8 +22,7 @@ const DEFAULTS: Record<string, string> = {
   signup_bonus_coins: "100",
   referral_bonus_coins: "50",
   daily_bonus_coins: "10",
-  max_attempts_per_hour: "20",
-  max_accounts_per_ip: "2",
+  max_accounts_per_ip: "0", // 0 = unlimited; a positive value flags extra accounts on one IP
 };
 
 export async function getConfig(): Promise<SiteConfig> {
@@ -39,7 +38,6 @@ export async function getConfig(): Promise<SiteConfig> {
     signup_bonus_coins: Number(merged.signup_bonus_coins),
     referral_bonus_coins: Number(merged.referral_bonus_coins),
     daily_bonus_coins: Number(merged.daily_bonus_coins),
-    max_attempts_per_hour: Number(merged.max_attempts_per_hour),
     max_accounts_per_ip: Number(merged.max_accounts_per_ip),
   };
 }

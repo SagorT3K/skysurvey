@@ -31,7 +31,6 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     userId: user.id,
     ip,
     userAgent: ua,
-    maxAttemptsPerHour: config.max_attempts_per_hour,
     maxAccountsPerIp: config.max_accounts_per_ip,
   });
 

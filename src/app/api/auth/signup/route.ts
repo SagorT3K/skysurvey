@@ -33,10 +33,13 @@ export async function POST(req: Request) {
   }
 
   // Signups from an IP that already hosts several accounts are the single
-  // strongest fraud signal routers act on, so record it and flag on creation.
+  // strongest fraud signal routers act on, so record it — but only flag when an
+  // admin asked for a cap. max_accounts_per_ip = 0 (the default) is unlimited,
+  // because families and mobile users legitimately share one connection.
   const sameIpCount =
     ip && ip !== "local" ? await prisma.user.count({ where: { signupIp: ip } }) : 0;
   const selfReferral = referrer?.id !== undefined && sameIpCount > 0;
+  const overIpCap = config.max_accounts_per_ip > 0 && sameIpCount >= config.max_accounts_per_ip;
 
   // Every account gets a unique, searchable username — derived from the chosen
   // display name or the email prefix, with a numeric suffix when taken.
@@ -60,11 +63,8 @@ export async function POST(req: Request) {
       country: String(body.country),
       referredById: referrer?.id,
       signupIp: ip,
-      isFlagged: sameIpCount >= config.max_accounts_per_ip,
-      flagReason:
-        sameIpCount >= config.max_accounts_per_ip
-          ? `${sameIpCount} existing account(s) share signup IP ${ip}`
-          : "",
+      isFlagged: overIpCap,
+      flagReason: overIpCap ? `${sameIpCount} existing account(s) share signup IP ${ip}` : "",
     },
   });
 
