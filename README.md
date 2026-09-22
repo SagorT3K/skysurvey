@@ -4,6 +4,33 @@ A get-paid-to survey platform: users take surveys sourced from a survey router,
 earn coins, and redeem them for PayPal cash or gift cards. Built with Next.js 16
 (App Router), Prisma and Tailwind CSS.
 
+[![Next.js](https://img.shields.io/badge/Next.js-16-000000?style=flat-square&logo=next.js&logoColor=white)](https://nextjs.org)
+[![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev)
+[![Prisma](https://img.shields.io/badge/Prisma-6-2D3748?style=flat-square&logo=prisma&logoColor=white)](https://www.prisma.io)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-4-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
+[![Database](https://img.shields.io/badge/database-SQLite%20%7C%20PostgreSQL-336791?style=flat-square)](prisma/schema.prisma)
+
+Deployed: <https://skysurvey.vercel.app>
+
+## Features
+
+| Area | What it does |
+| --- | --- |
+| Accounts | Email signup with a hashed verification code by mail (Brevo), login with httpOnly JWT cookies, optional Cloudflare Turnstile / reCAPTCHA on signup |
+| Dashboard | Live surveys as individual router offers or one survey wall, attempt tracking per user |
+| Earnings | Coin ledger, daily check-in bonus, level progression, leaderboard, referral links |
+| Rewards | Redeem coins for PayPal cash or gift cards, admin approval queue, hold period before payout |
+| Routing | `SurveyAttempt.txId` is echoed back by the router so completions and reversals map to the right attempt; every callback is stored in `PostbackLog` and shown at `/admin/postbacks` |
+| Trust & safety | Bot user-agent screening, optional proxy/VPN lookup, optional accounts-per-IP limit, flagged-account review queue that blocks withdrawals until cleared |
+| Notifications | In-app notification bell (plus optional email) and post-survey feedback/ratings |
+| Admin | `/admin` panel for users, redemptions, router status, postback log and business config (coin rate, reward share, hold period, bonuses, fraud limits) |
+
+They are backed by 13 Prisma models — from `User`, `Survey`, `SurveyAttempt` and
+`RedeemRequest` through `CoinTransaction`, `PostbackTxn`, `Notification`, `Config` and
+`ActivityLog`. Survey routers (CPX Research, Torox, inBrain, BitLabs …) are configured
+entirely through environment variables; see [PROVIDERS-SETUP.md](PROVIDERS-SETUP.md) for the
+verified per-router notes.
+
 ## Hosting: this app cannot run on GitHub Pages
 
 GitHub Pages serves static files only. This project needs a Node server, because:
@@ -164,6 +191,32 @@ cp .env.example .env      # then fill in JWT_SECRET
 npx prisma db push
 node prisma/seed.js
 npm run dev
+```
+
+| Script | What it runs |
+| --- | --- |
+| `npm run dev` | `next dev` |
+| `npm run build` | patches the datasource from `DATABASE_PROVIDER`, runs `prisma generate`, then `next build` |
+| `npm start` | `next start` (production server) |
+| `npm run lint` | ESLint |
+| `npm run db:push` | `prisma db push` against whichever provider `DATABASE_PROVIDER` selects |
+| `npm run db:seed` | `prisma/seed.js` — business config, the admin account and demo surveys (idempotent) |
+
+### Project structure
+
+```
+skysurvey/
+├── src/app/                 pages (dashboard, rewards, leaderboard, profile, legal …),
+│                            the /admin panel, and the API route handlers
+├── src/components/          UI components + admin components
+├── src/lib/                 auth, captcha, config, ledger, score, fraud, mailer,
+│                            providers, redeem, notify, live-surveys
+├── prisma/schema.prisma     13 models; dev.db is the local SQLite file
+├── prisma/seed.js           config + admin + demo surveys
+├── scripts/                 Neon helpers, VPS setup, one-off maintenance tasks
+├── docker-compose.yml       app + Caddy (automatic Let's Encrypt) for VPS deploys
+├── Dockerfile / fly.toml    Fly.io deploy — SQLite on a volume
+└── PROVIDERS-SETUP.md       per-router integration notes
 ```
 
 ## Configuration
