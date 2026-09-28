@@ -5,7 +5,7 @@ import { prisma } from "./prisma";
 const COOKIE_NAME = "ss_token";
 const SECRET = process.env.JWT_SECRET || "dev-secret-change-me";
 
-export type SessionPayload = { uid: number; role: string };
+export type SessionPayload = { uid: number; role: string; tv: number };
 
 export function signToken(payload: SessionPayload) {
   return jwt.sign(payload, SECRET, { expiresIn: "7d" });
@@ -17,6 +17,15 @@ export function verifyToken(token: string): SessionPayload | null {
   } catch {
     return null;
   }
+}
+
+/**
+ * The version a token was issued under. Cookies minted before `User.tokenVersion`
+ * existed carry no `tv` claim; they count as 0, the value every existing row holds,
+ * so that addition did not sign the whole site out.
+ */
+function tokenVersionOf(session: SessionPayload) {
+  return typeof session.tv === "number" ? session.tv : 0;
 }
 
 export async function setSessionCookie(token: string) {
@@ -46,7 +55,20 @@ export async function getSessionUser() {
   if (!session) return null;
   const user = await prisma.user.findUnique({ where: { id: session.uid } });
   if (!user || !user.isActive) return null;
+  // A password change bumps tokenVersion, which retires every cookie issued before
+  // it. The device that made the change is handed a fresh token, so only the other
+  // devices are signed out.
+  if (user.tokenVersion !== tokenVersionOf(session)) return null;
   return user;
+}
+
+/**
+ * Signs `user` in on this request. The single place a session cookie is minted, so
+ * the token version can never be forgotten: pass the row that was just written, so
+ * a password change issues a token that matches the new version.
+ */
+export async function startSession(user: { id: number; role: string; tokenVersion: number }) {
+  await setSessionCookie(signToken({ uid: user.id, role: user.role, tv: user.tokenVersion }));
 }
 
 export async function requireAdmin() {

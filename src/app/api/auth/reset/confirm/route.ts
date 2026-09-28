@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
-import { signToken, setSessionCookie, clientIp, userAgent } from "@/lib/auth";
+import { startSession, clientIp, userAgent } from "@/lib/auth";
 import { sendMail } from "@/lib/mailer";
 import { notify } from "@/lib/notify";
 import { codeMatches } from "@/lib/signup-verify";
@@ -15,8 +15,10 @@ const MAX_VERIFY_ATTEMPTS = 5;
  * brute-forced (six digits is a million values, and 5 guesses makes that a
  * non-starter), and the reset row is deleted on success so the code dies with it.
  *
- * Sessions are stateless 7-day JWTs, so a reset cannot log other devices out —
- * the "your password was changed" email is what tells the owner to react.
+ * Changing the password bumps `User.tokenVersion`, which retires every session
+ * cookie minted before it, so other devices are signed out; the device that made
+ * the change is handed a fresh token below. The "your password was changed" email
+ * still goes out, so an unexpected reset is noticed rather than silently trusted.
  */
 export async function POST(req: Request) {
   const body = await req.json().catch(() => null);
@@ -79,9 +81,14 @@ export async function POST(req: Request) {
   }
 
   const ip = clientIp(req);
-  await prisma.user.update({
+  // The increment is the point of this write: it invalidates every session cookie
+  // minted before now, so a session stolen with the old password dies with it.
+  const updated = await prisma.user.update({
     where: { id: user.id },
-    data: { passwordHash: await bcrypt.hash(password, 10) },
+    data: {
+      passwordHash: await bcrypt.hash(password, 10),
+      tokenVersion: { increment: 1 },
+    },
   });
   await prisma.passwordReset.delete({ where: { email } }).catch(() => null);
 
@@ -106,8 +113,8 @@ export async function POST(req: Request) {
     html: notice.html,
   });
 
-  // The user just proved control of the inbox and chose the password, so they are
-  // signed in here rather than bounced to the login form.
-  await setSessionCookie(signToken({ uid: user.id, role: user.role }));
-  return NextResponse.json({ ok: true, role: user.role });
+  // Signed in on this device only: the increment above signed every other session
+  // out, so this token carries the new version.
+  await startSession(updated);
+  return NextResponse.json({ ok: true, role: updated.role });
 }

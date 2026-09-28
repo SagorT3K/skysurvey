@@ -278,9 +278,12 @@ Two things worth knowing:
 - Step one answers `{ ok: true, step: "code" }` for an address with no account as
   well, so the form cannot be used to ask "is this person registered?". A 429 does
   still imply the address exists, exactly as signup's "account already exists" does.
-- Other devices stay signed in after a reset: sessions are 7-day JWTs and nothing
-  revokes them server-side. The "your password was changed" email is the warning, and
-  a token version on `User` would be the fix if that ever needs to be immediate.
+- Other devices are signed out by the reset: the password write bumps
+  `User.tokenVersion`, and `getSessionUser()` rejects any cookie whose `tv` claim no
+  longer matches the row, so a session stolen with the old password dies with it.
+  Only the device that completed the reset stays signed in — it is handed a fresh
+  token. Tokens minted before the column existed carry no `tv` and count as `0`,
+  which is what every existing row holds, so deploying this signs nobody out.
 
 Support is `skysurvey.support@gmail.com` (`src/lib/support.ts`): it is shown in the
 footer, on the terms page and inside the reset emails, and it is the same inbox the

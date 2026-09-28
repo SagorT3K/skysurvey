@@ -11,6 +11,11 @@ model User {
   id            Int               @id @default(autoincrement())
   email         String            @unique
   passwordHash  String
+  /// Bumped whenever the password changes. A session cookie carries the version it
+  /// was issued under, so a password change retires every cookie minted before it.
+  /// Rows that predate this column hold 0, and a token without the claim counts as
+  /// 0 too, so adding the column never signed anybody out.
+  tokenVersion  Int               @default(0)
   username      String            @default("")
   role          String            @default("user") // user | admin
   country       String            @default("")

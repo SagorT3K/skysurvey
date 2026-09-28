@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
-import { signToken, setSessionCookie, clientIp, userAgent } from "@/lib/auth";
+import { startSession, clientIp, userAgent } from "@/lib/auth";
 import { verifyCaptcha, captchaError } from "@/lib/captcha";
 
 export async function POST(req: Request) {
@@ -34,6 +34,6 @@ export async function POST(req: Request) {
     data: { userId: user.id, event: "login", ip: clientIp(req), userAgent: userAgent(req) },
   });
 
-  await setSessionCookie(signToken({ uid: user.id, role: user.role }));
+  await startSession(user);
   return NextResponse.json({ ok: true, role: user.role });
 }

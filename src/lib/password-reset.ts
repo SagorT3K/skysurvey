@@ -30,8 +30,8 @@ export function passwordResetEmail(code: string, ttlMinutes: number) {
 
 /**
  * Sent after a successful reset. Best effort: a user who did not make the change
- * learns about it in the inbox they control, which is the only warning they get —
- * sessions are signed for 7 days and cannot be revoked server-side.
+ * learns about it in the inbox they control. The reset itself already signed every
+ * other device out, so this is the warning rather than the remedy.
  */
 export function passwordChangedEmail() {
   const text =
