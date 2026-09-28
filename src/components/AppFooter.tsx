@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Logo from "@/components/Logo";
+import { SUPPORT_EMAIL } from "@/lib/support";
 
 // Compact site footer: keeps the 4-column structure of the landing footer but
 // tighter — smaller padding, no tagline, one-line link lists.
@@ -43,7 +44,7 @@ export default function AppFooter({ variant = "public" }: { variant?: "public" |
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-brand-500">Support</p>
           <ul className="mt-2 space-y-1 text-sm">
-            <li><a href="mailto:support@skysurvey.com" className="hover:text-white">support@skysurvey.com</a></li>
+            <li><a href={`mailto:${SUPPORT_EMAIL}`} className="hover:text-white">{SUPPORT_EMAIL}</a></li>
             <li><Link href="/#faq" className="hover:text-white">FAQ</Link></li>
           </ul>
         </div>

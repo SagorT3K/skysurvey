@@ -1,4 +1,5 @@
 import LegalPage, { Section } from "@/components/LegalPage";
+import { SUPPORT_EMAIL } from "@/lib/support";
 
 export const metadata = { title: "Terms & Conditions — SkySurvey" };
 
@@ -112,8 +113,8 @@ export default function TermsPage() {
       <Section heading="11. Contact">
         <p>
           Questions about these Terms? Contact us at{" "}
-          <a href="mailto:support@skysurvey.com" className="font-semibold text-brand-700 underline">
-            support@skysurvey.com
+          <a href={`mailto:${SUPPORT_EMAIL}`} className="font-semibold text-brand-700 underline">
+            {SUPPORT_EMAIL}
           </a>
           .
         </p>

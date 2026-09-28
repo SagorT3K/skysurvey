@@ -214,6 +214,24 @@ model PendingSignup {
   @@index([ip, createdAt])
 }
 
+/// A password reset in progress: the emailed code, hashed, plus the counters that
+/// stop one inbox being sprayed with codes. Nothing here outlives a successful
+/// reset — the row is deleted the moment the password changes — and the plain
+/// code is never stored, exactly like PendingSignup.
+model PasswordReset {
+  email      String   @id
+  codeHash   String // sha256(secret:email:code) — the plain code is never stored
+  attempts   Int      @default(0)
+  sends      Int      @default(1)
+  lastSentAt DateTime @default(now())
+  expiresAt  DateTime
+  ip         String   @default("")
+  userAgent  String   @default("")
+  createdAt  DateTime @default(now())
+
+  @@index([ip, createdAt])
+}
+
 model ActivityLog {
   id        Int      @id @default(autoincrement())
   userId    Int?

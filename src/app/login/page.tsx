@@ -90,6 +90,14 @@ export default function LoginPage() {
                 {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
               </button>
             </div>
+            <div className="mt-1 text-right">
+              <Link
+                href="/forgot-password"
+                className="text-xs font-semibold text-brand-600 hover:underline"
+              >
+                Forgot password?
+              </Link>
+            </div>
           </div>
           <CaptchaWidget onToken={setCaptchaToken} />
           {error && (

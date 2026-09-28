@@ -16,7 +16,7 @@ Deployed: <https://skysurvey.vercel.app>
 
 | Area | What it does |
 | --- | --- |
-| Accounts | Email signup with a hashed verification code by mail (Brevo), login with httpOnly JWT cookies, optional Cloudflare Turnstile / reCAPTCHA on signup |
+| Accounts | Email signup with a hashed verification code by mail (Brevo), password reset by emailed code, login with httpOnly JWT cookies, optional Cloudflare Turnstile / reCAPTCHA on the forms |
 | Dashboard | Live surveys as individual router offers or one survey wall, attempt tracking per user |
 | Earnings | Coin ledger, daily check-in bonus, level progression, leaderboard, referral links |
 | Rewards | Redeem coins for PayPal cash or gift cards, admin approval queue, hold period before payout |
@@ -35,7 +35,7 @@ verified per-router notes.
 
 GitHub Pages serves static files only. This project needs a Node server, because:
 
-- 11 API routes handle signup, login, survey entry, redemptions and admin actions
+- 22 API routes handle signup, password reset, login, survey entry, redemptions and admin actions
 - the router postback endpoint (`/api/postback/[provider]`) must receive
   server-to-server callbacks — a static host has nowhere for them to land
 - the dashboard, rewards and admin pages are server-rendered per request
@@ -237,13 +237,14 @@ credentials and fraud-vendor keys are environment variables — see
 
 ## Auth email (Brevo)
 
-Sign-up emails a six-digit code through Brevo's HTTP API. `src/lib/mailer.ts` is the
-only place mail leaves the app, and `/api/auth/signup` plus its `resend` route are
-its only callers — sign-in sends nothing (it checks the password and the captcha
-only), so there is no code to receive when logging in. With no `BREVO_API_KEY` the
-code is written to the server log instead, which is what local development wants; in
-production a missing key makes sign-up answer 503 "Email service is not configured"
-rather than claim a code was sent.
+Sign-up and password reset each email a six-digit code through Brevo's HTTP API.
+`src/lib/mailer.ts` is the only place mail leaves the app, and its callers are
+`/api/auth/signup` (with its `resend` route) and `/api/auth/reset` (with `/confirm`).
+Sign-in sends nothing — it checks the password and the captcha only — so there is no
+code to receive when logging in. With no `BREVO_API_KEY` the code is written to the
+server log instead, which is what local development wants; in production a missing
+key makes signup and reset answer 503 "Email service is not configured" rather than
+claim a code was sent.
 
 | Variable | Value |
 | --- | --- |
@@ -261,6 +262,33 @@ Check what the app is configured to send from, by posting one real message:
 
 ```bash
 npm run mail:test -- you@example.com
+```
+
+### Password reset
+
+`/forgot-password`, linked from the sign-in form, emails a code and then takes that
+code together with the new password. Both steps are throttled like signup — 60
+seconds between sends, five sends an hour — wrong codes are capped at five tries, and
+the code is stored only as `sha256(secret:email:code)` in `PasswordReset`, a row that
+is deleted the moment the password changes. A verify step also signs the user in,
+since they just proved they own the inbox.
+
+Two things worth knowing:
+
+- Step one answers `{ ok: true, step: "code" }` for an address with no account as
+  well, so the form cannot be used to ask "is this person registered?". A 429 does
+  still imply the address exists, exactly as signup's "account already exists" does.
+- Other devices stay signed in after a reset: sessions are 7-day JWTs and nothing
+  revokes them server-side. The "your password was changed" email is the warning, and
+  a token version on `User` would be the fix if that ever needs to be immediate.
+
+Support is `skysurvey.support@gmail.com` (`src/lib/support.ts`): it is shown in the
+footer, on the terms page and inside the reset emails, and it is the same inbox the
+app sends from, so a reply reaches a human. The admin account can use the same page
+when `ADMIN_EMAIL` points at a real inbox; otherwise reset it from the CLI:
+
+```bash
+node scripts/neon-run.mjs scripts/tasks/reset-admin-password.mjs
 ```
 
 ## Survey router integration

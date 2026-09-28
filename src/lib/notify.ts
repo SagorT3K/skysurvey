@@ -9,7 +9,8 @@ export type NotifyType =
   | "crypto"
   | "level"
   | "hold"
-  | "coins";
+  | "coins"
+  | "system";
 
 /**
  * Creates an in-app notification for the user. Failures must never break the
