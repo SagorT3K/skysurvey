@@ -72,10 +72,14 @@ certificate automatically once `DOMAIN` points at the server.
 curl -fsSL https://raw.githubusercontent.com/SagorT3K/skysurvey/main/scripts/vps-setup.sh | bash
 
 git clone https://github.com/SagorT3K/skysurvey.git && cd skysurvey
-cp .env.example .env          # set JWT_SECRET, ADMIN_PASSWORD, DOMAIN
+cp .env.example .env          # set JWT_SECRET, ADMIN_PASSWORD, DOMAIN, BREVO_API_KEY
 docker compose up -d --build
 docker compose logs -f app
 ```
+
+`docker-compose.yml` forwards `BREVO_API_KEY`, `MAIL_FROM_EMAIL` and
+`MAIL_FROM_NAME` from that file into the container, so sign-up verification works
+without extra configuration — see [Auth email](#auth-email-brevo).
 
 `scripts/vps-setup.sh` installs Docker, opens TCP 80/443 on the host firewall and
 adds swap. On Oracle Cloud specifically, opening the ports takes **two** changes
@@ -111,7 +115,9 @@ fly volumes create skysurvey_data --size 1 --region sin --yes
 fly secrets set \
   JWT_SECRET="$(openssl rand -hex 32)" \
   ADMIN_EMAIL="you@example.com" \
-  ADMIN_PASSWORD="a-strong-password"
+  ADMIN_PASSWORD="a-strong-password" \
+  BREVO_API_KEY="<key from app.brevo.com>" \
+  MAIL_FROM_EMAIL="skysurvey.support@gmail.com"
 
 # --ha=false is required: fly deploy otherwise starts two machines for high
 # availability, and each would get its own volume with its own copy of the data.
@@ -165,6 +171,8 @@ unchanged, and no query in `src/` uses raw SQL.
    | `DATABASE_URL` | the **pooled** connection string |
    | `DATABASE_URL_UNPOOLED` | the **direct** connection string |
    | `JWT_SECRET` | a long random string, not the local one |
+   | `BREVO_API_KEY` | Brevo API key — see [Auth email](#auth-email-brevo) |
+   | `MAIL_FROM_EMAIL` | the Brevo-verified sender, `skysurvey.support@gmail.com` |
 
 Append `connect_timeout=15` to both connection strings. Neon's free compute
 scales to zero and takes a few seconds to wake, which otherwise surfaces as a
@@ -201,6 +209,7 @@ npm run dev
 | `npm run lint` | ESLint |
 | `npm run db:push` | `prisma db push` against whichever provider `DATABASE_PROVIDER` selects |
 | `npm run db:seed` | `prisma/seed.js` — business config, the admin account and demo surveys (idempotent) |
+| `npm run mail:test` | sends one real message from the configured Brevo sender — `npm run mail:test -- you@example.com` |
 
 ### Project structure
 
@@ -225,6 +234,34 @@ Business settings (coin rate, reward share, hold period, bonuses, fraud limits)
 live in the `Config` table and are editable at `/admin/config`. Router
 credentials and fraud-vendor keys are environment variables — see
 [.env.example](.env.example).
+
+## Auth email (Brevo)
+
+Sign-up emails a six-digit code through Brevo's HTTP API. `src/lib/mailer.ts` is the
+only place mail leaves the app, and `/api/auth/signup` plus its `resend` route are
+its only callers — sign-in sends nothing (it checks the password and the captcha
+only), so there is no code to receive when logging in. With no `BREVO_API_KEY` the
+code is written to the server log instead, which is what local development wants; in
+production a missing key makes sign-up answer 503 "Email service is not configured"
+rather than claim a code was sent.
+
+| Variable | Value |
+| --- | --- |
+| `BREVO_API_KEY` | Brevo -> SMTP & API -> API keys |
+| `MAIL_FROM_EMAIL` | the From address, `skysurvey.support@gmail.com` by default |
+| `MAIL_FROM_NAME` | display name, `SkySurvey` by default |
+| `VERIFY_CODE_SECRET` | optional; signs the six-digit code, defaults to `JWT_SECRET` |
+
+Brevo only accepts a sender it has verified (Senders, Domains & IPs -> Senders), so
+the address in `MAIL_FROM_EMAIL` must appear there. Moving the platform to a new
+support inbox therefore takes two steps: verify the new address in Brevo, then set
+`MAIL_FROM_EMAIL` on every deployment. Replies go to that address.
+
+Check what the app is configured to send from, by posting one real message:
+
+```bash
+npm run mail:test -- you@example.com
+```
 
 ## Survey router integration
 

@@ -26,6 +26,11 @@ services:
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:?set ADMIN_PASSWORD in .env}
       # Router credentials, if you already have them.
       PROVIDERS: ${PROVIDERS:-}
+      # Signup verification email (README -> Auth email). The API key stays in
+      # .env on the server and is never committed.
+      BREVO_API_KEY: ${BREVO_API_KEY:-}
+      MAIL_FROM_EMAIL: ${MAIL_FROM_EMAIL:-skysurvey.support@gmail.com}
+      MAIL_FROM_NAME: ${MAIL_FROM_NAME:-SkySurvey}
     healthcheck:
       test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
       interval: 30s
