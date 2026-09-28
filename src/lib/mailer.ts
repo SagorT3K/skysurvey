@@ -51,7 +51,9 @@ export async function sendMail(opts: {
       console.error("[mail] BREVO_API_KEY is not set — not sending, callers must fail loudly");
       return { ok: false, reason: "not-configured" };
     }
-    console.log(`[mail:dev] to=${opts.to} subject="${opts.subject}"\n${opts.text}`);
+    console.log(
+      `[mail:dev] from=${fromEmail} to=${opts.to} subject="${opts.subject}"\n${opts.text}`,
+    );
     return { ok: true, reason: "logged" };
   }
 
