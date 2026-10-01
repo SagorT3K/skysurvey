@@ -3,33 +3,23 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
-import CaptchaWidget from "@/components/CaptchaWidget";
-
-const captchaNeeded =
-  Boolean(process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY) ||
-  Boolean(process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY);
 
 export default function AdminLoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    if (captchaNeeded && !captchaToken) {
-      setError("Please complete the bot check and try again.");
-      return;
-    }
     setLoading(true);
     const res = await fetch("/api/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password, captchaToken: captchaToken || "" }),
+      body: JSON.stringify({ email, password }),
     });
     const data = await res.json();
     setLoading(false);
@@ -84,7 +74,6 @@ export default function AdminLoginPage() {
               </button>
             </div>
           </div>
-          <CaptchaWidget onToken={setCaptchaToken} theme="dark" />
           {error && <p className="rounded-lg bg-red-500/10 px-3 py-2 text-sm text-red-400">{error}</p>}
           <button
             type="submit"

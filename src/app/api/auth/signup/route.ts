@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { clientIp, userAgent } from "@/lib/auth";
-import { verifyCaptcha, captchaError } from "@/lib/captcha";
 import { sendMail } from "@/lib/mailer";
 import {
   newCode,
@@ -16,10 +15,9 @@ const RESEND_COOLDOWN_SECONDS = 60;
 const MAX_SENDS_PER_HOUR = 5;
 
 /**
- * Step 1 of signup: validate the details + captcha, then email a 6-digit
- * code. No user row is created here — the account only exists after the
- * code is confirmed at /api/auth/signup/verify, so fake addresses can
- * never create accounts.
+ * Step 1 of signup: validate the details, then email a 6-digit code. No user row
+ * is created here — the account only exists after the code is confirmed at
+ * /api/auth/signup/verify, so fake addresses can never create accounts.
  */
 export async function POST(req: Request) {
   const body = await req.json().catch(() => null);
@@ -28,7 +26,6 @@ export async function POST(req: Request) {
   const country = String(body?.country || "").trim();
   const usernameRaw = String(body?.username || "").trim();
   const ref = String(body?.ref || "").trim();
-  const captchaToken = String(body?.captchaToken || body?.captcha_token || "");
 
   if (!email || !password || !country) {
     return NextResponse.json(
@@ -47,10 +44,6 @@ export async function POST(req: Request) {
   }
 
   const ip = clientIp(req);
-  const captcha = await verifyCaptcha(captchaToken, ip);
-  if (!captcha.ok) {
-    return NextResponse.json({ error: captchaError(captcha.reason) }, { status: 400 });
-  }
 
   const existing = await prisma.user.findUnique({ where: { email } });
   if (existing) {

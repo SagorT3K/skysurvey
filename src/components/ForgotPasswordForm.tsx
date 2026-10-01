@@ -3,12 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff, LoaderCircle, TriangleAlert } from "lucide-react";
-import CaptchaWidget from "./CaptchaWidget";
 import { SUPPORT_EMAIL } from "@/lib/support";
-
-const captchaNeeded =
-  Boolean(process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY) ||
-  Boolean(process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY);
 
 /**
  * Two steps, mirroring the signup form: ask for the email, then take the emailed
@@ -21,8 +16,6 @@ export default function ForgotPasswordForm() {
   const [code, setCode] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
-  const [resendToken, setResendToken] = useState<string | null>(null);
   const [step, setStep] = useState<"email" | "code">("email");
   const [error, setError] = useState("");
   const [info, setInfo] = useState("");
@@ -32,15 +25,11 @@ export default function ForgotPasswordForm() {
     e.preventDefault();
     setError("");
     setInfo("");
-    if (captchaNeeded && !captchaToken) {
-      setError("Please complete the bot check and try again.");
-      return;
-    }
     setLoading(true);
     const res = await fetch("/api/auth/reset", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, captchaToken: captchaToken || "" }),
+      body: JSON.stringify({ email }),
     });
     const data = await res.json().catch(() => ({}));
     setLoading(false);
@@ -60,15 +49,11 @@ export default function ForgotPasswordForm() {
   async function resend() {
     setError("");
     setInfo("");
-    if (captchaNeeded && !resendToken) {
-      setError("Please complete the bot check to resend the code.");
-      return;
-    }
     setLoading(true);
     const res = await fetch("/api/auth/reset", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, captchaToken: resendToken || "" }),
+      body: JSON.stringify({ email }),
     });
     const data = await res.json().catch(() => ({}));
     setLoading(false);
@@ -115,7 +100,6 @@ export default function ForgotPasswordForm() {
             placeholder="you@example.com"
           />
         </div>
-        <CaptchaWidget onToken={setCaptchaToken} />
         {error && (
           <p className="inline-flex w-full items-center gap-2 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
             <TriangleAlert size={15} className="shrink-0" aria-hidden="true" />
@@ -208,9 +192,6 @@ export default function ForgotPasswordForm() {
           Code not arrived? Check your spam folder, then send a new one — the older code stops
           working.
         </p>
-        <div className="mt-2">
-          <CaptchaWidget onToken={setResendToken} />
-        </div>
         <div className="mt-2 flex gap-2">
           <button
             type="button"

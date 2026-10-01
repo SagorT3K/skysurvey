@@ -16,7 +16,7 @@ Deployed: <https://skysurvey.vercel.app>
 
 | Area | What it does |
 | --- | --- |
-| Accounts | Email signup with a hashed verification code by mail (Brevo), password reset by emailed code, login with httpOnly JWT cookies, optional Cloudflare Turnstile / reCAPTCHA on the forms |
+| Accounts | Email signup with a hashed verification code by mail (Brevo), password reset by emailed code, login with httpOnly JWT cookies that a password change revokes |
 | Dashboard | Live surveys as individual router offers or one survey wall, attempt tracking per user |
 | Earnings | Coin ledger, daily check-in bonus, level progression, leaderboard, referral links |
 | Rewards | Redeem coins for PayPal cash or gift cards, admin approval queue, hold period before payout |
@@ -218,7 +218,7 @@ skysurvey/
 ├── src/app/                 pages (dashboard, rewards, leaderboard, profile, legal …),
 │                            the /admin panel, and the API route handlers
 ├── src/components/          UI components + admin components
-├── src/lib/                 auth, captcha, config, ledger, score, fraud, mailer,
+├── src/lib/                 auth, support, config, ledger, score, fraud, mailer,
 │                            providers, redeem, notify, live-surveys
 ├── prisma/schema.prisma     13 models; dev.db is the local SQLite file
 ├── prisma/seed.js           config + admin + demo surveys
@@ -240,7 +240,7 @@ credentials and fraud-vendor keys are environment variables — see
 Sign-up and password reset each email a six-digit code through Brevo's HTTP API.
 `src/lib/mailer.ts` is the only place mail leaves the app, and its callers are
 `/api/auth/signup` (with its `resend` route) and `/api/auth/reset` (with `/confirm`).
-Sign-in sends nothing — it checks the password and the captcha only — so there is no
+Sign-in sends nothing — it checks the password only — so there is no
 code to receive when logging in. With no `BREVO_API_KEY` the code is written to the
 server log instead, which is what local development wants; in production a missing
 key makes signup and reset answer 503 "Email service is not configured" rather than
@@ -263,6 +263,26 @@ Check what the app is configured to send from, by posting one real message:
 ```bash
 npm run mail:test -- you@example.com
 ```
+
+### Bot protection
+
+The captcha (Cloudflare Turnstile or Google reCAPTCHA) is **not wired up**: it was
+removed from the signup, sign-in, admin sign-in and password-reset forms together
+with its server-side check, and `src/lib/captcha.ts` plus
+`src/components/CaptchaWidget.tsx` were deleted rather than switched off, so nothing
+keeps verifying silently. `TURNSTILE_*` / `RECAPTCHA_*` variables left on a
+deployment are inert — delete them.
+
+What still limits abuse without it:
+
+- signup and reset only send a code to a domain whose MX record resolves, and each
+  address has a 60-second cooldown plus a five-codes-an-hour cap
+- codes are six digits from a CSPRNG, stored hashed, capped at five wrong guesses
+- sign-in has no such brake: credential stuffing against `/api/auth/login` is slowed
+  only by bcrypt, so bring the check back before the site sees real traffic
+
+To reintroduce it, restore those two files and the `verifyCaptcha` calls — they are
+in the history of the commit that removed them — then set the vendor keys again.
 
 ### Password reset
 

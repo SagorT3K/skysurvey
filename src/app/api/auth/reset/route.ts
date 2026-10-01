@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { clientIp, userAgent } from "@/lib/auth";
-import { verifyCaptcha, captchaError } from "@/lib/captcha";
 import { sendMail } from "@/lib/mailer";
 import { newCode, hashCode } from "@/lib/signup-verify";
 import { passwordResetEmail } from "@/lib/password-reset";
@@ -23,7 +22,6 @@ const MAX_SENDS_PER_HOUR = 5;
 export async function POST(req: Request) {
   const body = await req.json().catch(() => null);
   const email = String(body?.email || "").trim().toLowerCase();
-  const captchaToken = String(body?.captchaToken || body?.captcha_token || "");
 
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return NextResponse.json(
@@ -33,10 +31,6 @@ export async function POST(req: Request) {
   }
 
   const ip = clientIp(req);
-  const captcha = await verifyCaptcha(captchaToken, ip);
-  if (!captcha.ok) {
-    return NextResponse.json({ error: captchaError(captcha.reason) }, { status: 400 });
-  }
 
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user) {

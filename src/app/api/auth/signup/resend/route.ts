@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { clientIp } from "@/lib/auth";
-import { verifyCaptcha, captchaError } from "@/lib/captcha";
 import { sendMail } from "@/lib/mailer";
 import { newCode, hashCode, verificationEmail } from "@/lib/signup-verify";
 import { CODE_TTL_MINUTES } from "../route";
@@ -9,20 +7,16 @@ import { CODE_TTL_MINUTES } from "../route";
 const RESEND_COOLDOWN_SECONDS = 60;
 const MAX_SENDS_PER_HOUR = 5;
 
-/** Re-send the signup code. Captcha is required so one inbox can't be spammed. */
+/**
+ * Re-send the signup code. The cooldown and hourly cap below are what stop one
+ * inbox (or one attacker) being sprayed with codes.
+ */
 export async function POST(req: Request) {
   const body = await req.json().catch(() => null);
   const email = String(body?.email || "").trim().toLowerCase();
-  const captchaToken = String(body?.captchaToken || body?.captcha_token || "");
 
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return NextResponse.json({ error: "Valid email address is required" }, { status: 400 });
-  }
-
-  const ip = clientIp(req);
-  const captcha = await verifyCaptcha(captchaToken, ip);
-  if (!captcha.ok) {
-    return NextResponse.json({ error: captchaError(captcha.reason) }, { status: 400 });
   }
 
   const pending = await prisma.pendingSignup.findUnique({ where: { email } });

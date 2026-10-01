@@ -4,12 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { BadgeCheck, Eye, EyeOff, LoaderCircle, TriangleAlert } from "lucide-react";
-import CaptchaWidget from "./CaptchaWidget";
 
 const COUNTRIES = ["US", "UK", "CA", "FR", "DE", "AU", "Other"];
-const captchaNeeded =
-  Boolean(process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY) ||
-  Boolean(process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY);
 
 export default function SignupForm({ signupBonus }: { signupBonus: number }) {
   const router = useRouter();
@@ -21,8 +17,6 @@ export default function SignupForm({ signupBonus }: { signupBonus: number }) {
     country: "US",
   });
   const [showPassword, setShowPassword] = useState(false);
-  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
-  const [resendToken, setResendToken] = useState<string | null>(null);
   const [step, setStep] = useState<"details" | "code">("details");
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
@@ -37,16 +31,12 @@ export default function SignupForm({ signupBonus }: { signupBonus: number }) {
     e.preventDefault();
     setError("");
     setInfo("");
-    if (captchaNeeded && !captchaToken) {
-      setError("Please complete the bot check and try again.");
-      return;
-    }
     setLoading(true);
     const ref = params.get("ref") || "";
     const res = await fetch("/api/auth/signup", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...form, ref, captchaToken: captchaToken || "" }),
+      body: JSON.stringify({ ...form, ref }),
     });
     const data = await res.json().catch(() => ({}));
     setLoading(false);
@@ -82,15 +72,11 @@ export default function SignupForm({ signupBonus }: { signupBonus: number }) {
   async function resend() {
     setError("");
     setInfo("");
-    if (captchaNeeded && !resendToken) {
-      setError("Please complete the bot check to resend the code.");
-      return;
-    }
     setLoading(true);
     const res = await fetch("/api/auth/signup/resend", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: form.email, captchaToken: resendToken || "" }),
+      body: JSON.stringify({ email: form.email }),
     });
     const data = await res.json().catch(() => ({}));
     setLoading(false);
@@ -186,7 +172,6 @@ export default function SignupForm({ signupBonus }: { signupBonus: number }) {
                 Must match your actual residence. Accounts are verified against your IP location.
               </p>
             </div>
-            <CaptchaWidget onToken={setCaptchaToken} />
             {error && (
               <p className="inline-flex w-full items-center gap-2 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">
                 <TriangleAlert size={15} className="shrink-0" aria-hidden="true" />
@@ -257,9 +242,6 @@ export default function SignupForm({ signupBonus }: { signupBonus: number }) {
             </button>
             <div className="rounded-xl bg-stone-50 p-3">
               <p className="text-xs text-stone-500">Didn&apos;t get the code?</p>
-              <div className="mt-2">
-                <CaptchaWidget onToken={setResendToken} />
-              </div>
               <div className="mt-2 flex gap-2">
                 <button
                   type="button"
