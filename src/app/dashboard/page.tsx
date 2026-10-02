@@ -82,7 +82,10 @@ export default async function DashboardPage() {
   const surveys = fresh.slice(0, 12);
 
   const share = effectiveSharePercent(config.reward_share_percent, user.score);
-  const toCoins = (cpiCents: number) => Math.floor((cpiCents * share) / 100 / config.coin_rate_cents);
+  // Must match coinsForPayout() in src/lib/ledger.ts (Math.round): the card shows the
+  // estimate, the postback settles the exact payout, so floor here would promise less
+  // than the user actually receives on fractional-coin surveys.
+  const toCoins = (cpiCents: number) => Math.max(0, Math.round((cpiCents * share) / 100 / config.coin_rate_cents));
 
   // Live router inventory: every provider with a SURVEYS_URL is asked for this
   // user's targeted offers (cached ~2 min per router policy). Failures or slow

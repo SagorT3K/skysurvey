@@ -94,13 +94,17 @@ async function handle(req: Request, providerKey: string) {
       provider: provider.key,
       providerTxId: parsed.providerTxId,
     });
+    // A completion the router priced at (near-)zero still lands as "credited" —
+    // the attempt and the ledger stay consistent, but a plain "credited" row hides
+    // the fact that the user got nothing, so flag it for support in the log.
+    const zeroPayout = result.ok && !result.duplicate && result.coins === 0;
     await log(result.duplicate ? "duplicate" : "credited", {
       txId: parsed.txId,
       payoutCents: result.payoutCents,
       coins: result.coins,
       // A follow-on is another completion from the same wall session — exactly the
       // case that used to be dropped as a duplicate because our sub id repeats.
-      note: result.followOn ? "extra completion in the same wall session" : "",
+      note: result.followOn ? "extra completion in the same wall session" : zeroPayout ? "zero payout from router" : "",
     });
     return NextResponse.json({ ok: true, duplicate: result.duplicate, coins: result.coins });
   }

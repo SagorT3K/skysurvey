@@ -186,11 +186,14 @@ export async function completeAttempt(opts: {
       body: `You earned ${coins} coins from ${partner}. Keep going — more surveys are waiting.`,
     });
   } else {
+    // Genuine zero-payout completion (the router priced it at ~nothing): still
+    // tell the user it was validated, but never with coin language — an "earned"
+    // message next to an unchanged balance is exactly the "no coins added" report.
     await notify({
       userId: attempt.userId,
       type: "survey",
       title: "Survey completed",
-      body: "Your survey was validated. Bigger surveys pay more — keep going!",
+      body: "Your survey was validated, but this one carried no reward from the research partner. Bigger surveys pay more — keep going!",
     });
   }
 
@@ -270,11 +273,14 @@ export async function reverseAttempt(opts: {
     detail: `Survey #${attempt.surveyId} rejected by partner · ${opts.source}`,
   });
 
+  // The reversal arrives days after the "you earned N coins" notification, so the
+  // user compares the old celebration with today's lower balance and reports "no
+  // coins added". Name the original amount and reason, and point at the ledger.
   await notify({
     userId: attempt.userId,
     type: "screenout",
-    title: "A survey reward was reversed",
-    body: `${coins} coins were deducted because the research partner rejected the response. Contact support if you think this is a mistake.`,
+    title: `A ${coins}-coin survey reward was reversed`,
+    body: `${coins} coins were deducted because the research partner rejected the response — see your Rewards ledger for the matching entry. Contact support if you think this is a mistake.`,
   });
 
   return { ok: true, duplicate: false, coins };
